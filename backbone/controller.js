@@ -3,10 +3,12 @@
 define(
 [
 	'lodash',
-	'backbone'
+	'backbone',
+	'forge/backbone/view'
 ], function(
 	lodash,
-	Backbone
+	Backbone,
+	View
 )
 {
 	/**
@@ -35,6 +37,11 @@ define(
 	{
 		options = options || {};
 		lodash.extend(this, options);
+
+		if (this.views === null)
+		{
+			this.views = {};
+		}
 
 		this.cid = lodash.uniqueId('controller');
 
@@ -65,6 +72,57 @@ define(
 		defaultAction:
 		{
 			value: 'index',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * the default view for this controller.
+		 *
+		 * @var {View}
+		 */
+		view:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * default element for the default view
+		 */
+		viewElement:
+		{
+			value: '#content',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * instance of the default view for this controller.
+		 *
+		 * @var {View}
+		 */
+		viewInstance:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * a list of views for this controller. will be only removed if controller
+		 * is removing
+		 *
+		 * @var {Object}
+		 */
+		views:
+		{
+			value: null,
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -137,7 +195,18 @@ define(
 	 */
 	Controller.prototype.indexAction = function()
 	{
-		throw new Error('The index action of a controller must be overwritten!');
+		if (this.view === null)
+		{
+			throw new Error('The index action of a controller must be overwritten or define a default view!');
+		}
+
+		// create the view
+		this.viewInstance = this.view;
+		var view = this.view;
+		this.view = new view(
+		{
+			el: this.viewElement
+		});
 
 		return this;
 	};
@@ -150,6 +219,30 @@ define(
 	 */
 	Controller.prototype.initialize = function(options)
 	{
+		return this;
+	};
+
+	/**
+	 * removing
+	 *
+	 * @returns {Controller}
+	 */
+	Controller.prototype.remove = function()
+	{
+		if (this.view instanceof View)
+		{
+			this.view.remove();
+			this.view = this.viewInstance;
+		}
+
+		lodash.each(this.views, function(view)
+		{
+			if (this.view instanceof View)
+			{
+				this.view.remove();
+			}
+		});
+
 		return this;
 	};
 

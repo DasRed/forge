@@ -170,7 +170,21 @@ define(
 	Router.extend = Backbone.Router.extend;
 
 	// prototype
-	Router.prototype = Object.create(Backbone.Router.prototype);
+	Router.prototype = Object.create(Backbone.Router.prototype,
+	{
+		/**
+		 * the current controller
+		 *
+		 * @var {Controller}
+		 */
+		controller:
+		{
+			value: null,
+			enumerable: false,
+			configurable: true,
+			writable: true
+		}
+	});
 
 	/**
 	 * handles the route config
@@ -185,6 +199,13 @@ define(
 	{
 		console.debug('navigate to "' + route.name + '" (url://' + route.route + ').');
 
+		// remove previous controller
+		if (this.controller !== null)
+		{
+			this.controller.remove();
+			this.controller = null;
+		}
+
 		var parameters = lodash.toArray(arguments);
 
 		// if the last value in parameters undefined or null, remove it. it is an bug from Backbone.Router
@@ -198,12 +219,13 @@ define(
 		{
 			config.controller = new config.controller();
 		}
+		this.controller = config.controller;
 
 		// add parts to the parameters
 		parameters.splice(2, 0, route.parts);
 
 		// dispatch
-		config.controller.dispatch.apply(config.controller, parameters);
+		this.controller.dispatch.apply(this.controller, parameters);
 
 		console.debug('navigated to "' + route.name + '" (url://' + route.route + ').');
 

@@ -19,7 +19,7 @@ define(
 	{
 		$el: true,
 		attributes: true,
-		className: true,
+		//className: true,
 		collection: true,
 		el: true,
 		events: true,
@@ -448,6 +448,12 @@ define(
 	 */
 	View.prototype.remove = function()
 	{
+		// remove class name
+		if (this.className !== null)
+		{
+			this.$el.removeClass(this.className);
+		}
+
 		this.trigger('remove');
 
 		Backbone.View.prototype.remove.apply(this, arguments);
@@ -473,6 +479,12 @@ define(
 		if (data === undefined)
 		{
 			data = {};
+		}
+
+		// add class name
+		if (this.className !== null)
+		{
+			this.$el.addClass(this.className);
 		}
 
 		// nothing to do
