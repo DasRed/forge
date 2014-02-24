@@ -13,6 +13,19 @@ define(
 	Model
 )
 {
+	var excludeProperties =
+	{
+		$el: true,
+		attributes: true,
+		className: true,
+		collection: true,
+		el: true,
+		events: true,
+		id: true,
+		model: true,
+		tagName: true
+	};
+
 	/**
 	 * View
 	 *
@@ -21,8 +34,29 @@ define(
 	 */
 	var View = function(options)
 	{
-		this.bindings = {};
-		this.events = {};
+		if (this.bindings === null)
+		{
+			this.bindings = {};
+		}
+
+		if (this.events === null)
+		{
+			this.events = {};
+		}
+
+		// copy options
+		lodash.each(options, function(value, key)
+		{
+			if (excludeProperties[key] === true)
+			{
+				return;
+
+			}
+			if (this[key] !== undefined)
+			{
+				this[key] = value;
+			}
+		}, this);
 
 		Backbone.View.apply(this, arguments);
 
@@ -184,6 +218,17 @@ define(
 		},
 
 		/**
+		 * @var {Layout}
+		 */
+		layout:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * @var {Model}
 		 */
 		model:
@@ -214,6 +259,11 @@ define(
 							set: this.onModelPropertyChange.bind(this)
 						}
 					});
+				}
+
+				if (model === null)
+				{
+					model = undefined;
 				}
 
 				this._model = model;
@@ -262,13 +312,31 @@ define(
 			},
 			set: function(template)
 			{
-				if ((template instanceof Function) === false)
+				if (template === null)
+				{
+					template = undefined;
+				}
+
+				if (template !== undefined && (template instanceof Function) === false)
 				{
 					template = lodash.template(template);
 				}
 
 				this._template = template;
 			}
+		},
+
+		/**
+		 * some template date which will be taken to render
+		 *
+		 * @var {Object}
+		 */
+		templateData:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
 		}
 	});
 
@@ -357,26 +425,46 @@ define(
 	};
 
 	/**
+	 * renders the template.
+	 * all data from this function, templateData property and Model attributes property will be
+	 * given to the template
+	 *
+	 * the data will be merge in following order from left to right
+	 * - templateData
+	 * - model attributes
+	 * - function data
+	 *
+	 * @param {Object} data
 	 * @returns {View}
 	 */
-	View.prototype.render = function()
+	View.prototype.render = function(data)
 	{
-		var attributes = {};
-		var template = this.template;
+		if (data === undefined)
+		{
+			data = {};
+		}
 
 		// nothing to do
-		if (template === undefined || template === null)
+		if ((this.template instanceof Function) === false)
 		{
 			return this;
 		}
 
 		// get model data if there is a model
-		if (this.model !== null)
+		var dataModel = {};
+		if (this.model instanceof Model)
 		{
-			attributes = this.model.attributes;
+			dataModel = this.model.attributes;
 		}
 
-		this.$el.html(template(attributes));
+		// get template Data
+		var dataTemplate = this.templateData;
+		if ((dataTemplate instanceof Object) === false)
+		{
+			dataTemplate = {};
+		}
+
+		this.$el.html(this.template(lodash.extend({}, dataTemplate, dataModel, data)));
 
 		return this;
 	};
