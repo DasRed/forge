@@ -2,9 +2,11 @@
 
 define(
 [
-	'backbone'
+	'backbone',
+	'forge/backbone/model'
 ], function(
-	Backbone
+	Backbone,
+	Model
 )
 {
 	/**
@@ -26,7 +28,21 @@ define(
 	Collection.extend = Backbone.Collection.extend;
 
 	// prototype
-	Collection.prototype = Object.create(Backbone.Collection.prototype);
+	Collection.prototype = Object.create(Backbone.Collection.prototype,
+	{
+		/**
+		 * default model for data
+		 *
+		 * @var {Model}
+		 */
+		model:
+		{
+			value: Model,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		}
+	});
 
 	return Collection;
 });

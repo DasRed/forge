@@ -174,7 +174,7 @@ define(
 		if ((this.defaultAction !== undefined || this.defaultAction !== null) && (actionMethod === undefined || (this[actionMethod] instanceof Function) === false))
 		{
 			actionMethod = this.defaultAction + 'Action';
-			console.warn('route "' + route.name + '" (url://' + route.route + ') as no action method. Using default action method "' + actionMethod + '".');
+			console.info('route "' + route.name + '" (url://' + route.route + ') as no action method. Using default action method "' + actionMethod + '".');
 		}
 
 		if ((this[actionMethod] instanceof Function) === false)

@@ -19,6 +19,7 @@ define(
 	/**
 	 * Router
 	 *
+	 * @event {void} testRight({Router}, {Rights}) if rights defined on an route entry, this event will be called. if the event THROWs an Error, routing will be aboard
 	 * @param {Array} configs
 	 * @param {Object} options
 	 * @returns {Router}
@@ -40,7 +41,11 @@ define(
 	 *
 	 *						// defines a route
 	 *						// @see http://backbonejs.org/#Router-routes
-	 *						route: 'home'
+	 *						route: 'home',
+	 *
+	 *						// rights to test for a route. if it tests, the event "testRight" will be triggered
+	 *						// if the event THROWs an Error, routing will be aboard
+	 *						rights: [],
 	 *
 	 *						// defines the name of the route. This property is optional.
 	 *						// @see http://backbonejs.org/#Router-routes
@@ -198,6 +203,24 @@ define(
 	Router.prototype.handleRouteFromConfig = function(config, route)
 	{
 		console.debug('navigate to "' + route.name + '" (url://' + route.route + ').');
+
+		if (route.rights !== undefined)
+		{
+			try
+			{
+				this.trigger('testRight', this, route.rights);
+			}
+			catch (exception)
+			{
+				console.error('User has opened the route "' + route.name + '" (url://' + route.route + ') without the rights to open.');
+				this.navigate('/',
+				{
+					trigger: true,
+					replace: true
+				});
+				return this;
+			}
+		}
 
 		// remove previous controller
 		if (this.controller !== null)

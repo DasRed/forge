@@ -35,11 +35,11 @@ define(
 	Translation.prototype = Object.create(Base.prototype,
 	{
 		/**
-		 * current defined locale
+		 * current defined language
 		 *
 		 * @var {String}
 		 */
-		locale:
+		language:
 		{
 			value: 'de_DE',
 			enumerable: false,
@@ -74,7 +74,7 @@ define(
 		},
 
 		/**
-		 * translation for the current locale
+		 * translation for the current language
 		 *
 		 * @var {Object}
 		 */
@@ -84,11 +84,11 @@ define(
 			configurable: false,
 			get: function()
 			{
-				if (this.translations[this.locale] === undefined)
+				if (this.translations[this.language] === undefined)
 				{
 					return {};
 				}
-				return this.translations[this.locale];
+				return this.translations[this.language];
 			}
 		},
 
@@ -147,18 +147,18 @@ define(
 	 */
 	Translation.prototype.setTranslations = function(translations)
 	{
-		for (var locale in translations)
+		for (var language in translations)
 		{
-			if (this.translations[locale] === undefined)
+			if (this.translations[language] === undefined)
 			{
-				this.translations[locale] = {};
+				this.translations[language] = {};
 			}
 
-			for (var fileName in translations[locale])
+			for (var fileName in translations[language])
 			{
-				for (var trKey in translations[locale][fileName])
+				for (var trKey in translations[language][fileName])
 				{
-					this.translations[locale][fileName + '.' + trKey] = translations[locale][fileName][trKey];
+					this.translations[language][fileName + '.' + trKey] = translations[language][fileName][trKey];
 				}
 			}
 		}
