@@ -93,7 +93,7 @@ define(
 		/**
 		 * default element for the default view
 		 */
-		viewElement:
+		viewContainer:
 		{
 			value: '#content',
 			enumerable: true,
@@ -205,7 +205,7 @@ define(
 		var view = this.view;
 		this.view = new view(
 		{
-			el: this.viewElement
+			container: this.viewContainer
 		});
 
 		return this;

@@ -74,6 +74,12 @@ define(
 			}
 		}
 
+		// container element
+		if (this.container !== null && this.container !== undefined)
+		{
+			this.container = jQuery(this.container);
+		}
+
 		// parent
 		Backbone.View.apply(this, arguments);
 
@@ -187,6 +193,19 @@ define(
 		 * @var {Collection}
 		 */
 		collection:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * container element to append the view
+		 *
+		 * @var {jQuery}|{HTMLElement}|{String}
+		 */
+		container:
 		{
 			value: null,
 			enumerable: true,
@@ -508,6 +527,12 @@ define(
 		}
 
 		this.$el.html(this.template(lodash.extend({}, dataTemplate, dataModel, data)));
+
+		// append to container
+		if (this.container instanceof jQuery)
+		{
+			this.container.empty().append(this.$el);
+		}
 
 		return this;
 	};
