@@ -189,8 +189,7 @@ define(
 
 			if (value === undefined)
 			{
-				console.warn('Translation for "' + this.locale + '" and "' + name + '" does not exists .');
-				value = '<span style="font-weight: bold; color=#F00">%%' + name + '%% (' + this.locale + ')</span>';
+				return match;
 			}
 
 			return value;

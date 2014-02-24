@@ -4,11 +4,13 @@ define(
 [
 	'lodash',
 	'backbone',
+	'forge/di',
 	'forge/observer/object',
 	'forge/backbone/model'
 ], function(
 	lodash,
 	Backbone,
+	DI,
 	ObserverObject,
 	Model
 )
@@ -44,6 +46,11 @@ define(
 			this.events = {};
 		}
 
+		if (this.templates === null)
+		{
+			this.templates = {};
+		}
+
 		// copy options
 		lodash.each(options, function(value, key)
 		{
@@ -58,8 +65,19 @@ define(
 			}
 		}, this);
 
+		// convert additional templates to template function
+		for (var key in this.templates)
+		{
+			if (typeof this.templates[key] === 'string')
+			{
+				this.templates[key] = lodash.template(this.templates[key]);
+			}
+		}
+
+		// parent
 		Backbone.View.apply(this, arguments);
 
+		// auto render?
 		if (this.autoRender === true)
 		{
 			this.render();
@@ -337,6 +355,19 @@ define(
 			enumerable: true,
 			configurable: true,
 			writable: true
+		},
+
+		/**
+		 * additional templates which will be automatic converted to function
+		 *
+		 * @var {Object}
+		 */
+		templates:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
 		}
 	});
 
@@ -485,6 +516,17 @@ define(
 		Backbone.View.prototype.stopListening.apply(this, arguments);
 
 		return this;
+	};
+
+	/**
+	 * translate text
+	 *
+	 * @param {String}
+	 * @returns {String}
+	 */
+	View.prototype.translate = function(text)
+	{
+		return DI.get('translation').translate(text);
 	};
 
 	return View;
