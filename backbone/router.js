@@ -223,7 +223,7 @@ define(
 		}
 
 		// remove previous controller
-		if (this.controller !== null)
+		if (this.controller !== null && this.controller !== config.controller)
 		{
 			this.controller.remove();
 			this.controller = null;

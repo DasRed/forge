@@ -78,6 +78,19 @@ define(
 		},
 
 		/**
+		 * start for the route parts at index
+		 *
+		 * @var {Number}
+		 */
+		routePartsStartsAtIndex:
+		{
+			value: 0,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * the default view for this controller.
 		 *
 		 * @var {View}
@@ -147,17 +160,24 @@ define(
 		// get all additional parameters
 		var parameters = lodash.toArray(arguments).slice(3);
 
+		// not starting at index 0?
+		if (this.routePartsStartsAtIndex != 0)
+		{
+			routeParts = routeParts.slice(this.routePartsStartsAtIndex);
+		}
+
 		// camel case the parts
 		var parts = lodash.map(routeParts, function(routePart, index)
 		{
-			if (index == 0)
+			// the first is lowercase
+			if (index === 0)
 			{
-				return routePart;
+				return routeParts;
 			}
-
+			
 			return routePart.charAt(0).toUpperCase() + routePart.slice(1);
 		});
-
+		
 		// find calling method
 		var actionMethod = null;
 		var position = parts.length;

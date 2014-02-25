@@ -36,16 +36,34 @@ define(
 	 */
 	var View = function(options)
 	{
+		options = options || {};
+
+		// remapping from el to container for el #content
+		if (options.container === undefined)
+		{
+			switch (true)
+			{
+				case options.el == '#content':
+				case options.el == jQuery('#content'):
+				case options.el == jQuery('#content')[0]:
+					options.container = options.el;
+					delete options.el;
+			}
+		}
+
+		// defaults bindings object
 		if (this.bindings === null)
 		{
 			this.bindings = {};
 		}
 
+		// defaults events object
 		if (this.events === null)
 		{
 			this.events = {};
 		}
 
+		// defaults templates object
 		if (this.templates === null)
 		{
 			this.templates = {};
@@ -57,7 +75,6 @@ define(
 			if (excludeProperties[key] === true)
 			{
 				return;
-
 			}
 			if (this[key] !== undefined)
 			{
@@ -166,6 +183,9 @@ define(
 		 * @example 'modelAttributeValue': Function
 		 * @example 'modelAttributeValue': {selector: 'CSSSelector', callback: Function}
 		 * @example 'modelAttributeValue': {selector: 'CSSSelector', callback: 'function of this'}
+		 * @example CSSSelector will be generated if autoBindings active. in this case, following selectors will be used:
+		 * 				- [data-model="PROPERTYNAME"]
+		 * 				- .PROPERTYNAME
 		 * @callback {Mixed} Function(modelAttributes, propertyName, newValue) function will be executed in the scope of the view.
 		 *																		if the function returns something and a selector is defined,
 		 *																		then will be the return value used
@@ -412,7 +432,7 @@ define(
 
 			bindingOptions =
 			{
-				selector: '.' + propertyName,
+				selector: '[data-model="' + propertyName + '"], .' + propertyName,
 				callback: this['onChange' + propertyName.charAt(0).toUpperCase() + propertyName.slice(1)]
 			};
 		}
@@ -486,9 +506,13 @@ define(
 	 * given to the template
 	 *
 	 * the data will be merge in following order from left to right
-	 * - templateData
+	 * - view property templateData
 	 * - model attributes
 	 * - function data
+	 * all data are also available in data structure with following property names:
+	 * 	- model: model attributes
+	 * 	- template: view property templateData
+	 * 	- data: function data
 	 *
 	 * @param {Object} data
 	 * @returns {View}
@@ -526,7 +550,12 @@ define(
 			dataTemplate = {};
 		}
 
-		this.$el.html(this.template(lodash.extend({}, dataTemplate, dataModel, data)));
+		this.$el.html(this.template(lodash.extend(
+		{
+			model: dataModel,
+			template: dataTemplate,
+			data: data
+		}, dataTemplate, dataModel, data)));
 
 		// append to container
 		if (this.container instanceof jQuery)

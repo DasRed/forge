@@ -17,10 +17,14 @@ define(
 	 */
 	var Layout = function(options)
 	{
-		this.views = [];
+		this.views = {};
 		if (this.configs === null)
 		{
-			this.configs = [];
+			this.configs = {};
+		}
+		if (this.options === null)
+		{
+			this.options = {};
 		}
 
 		View.apply(this, arguments);
@@ -41,7 +45,7 @@ define(
 		 */
 		el:
 		{
-			value: 'body',
+			value: null,
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -50,7 +54,7 @@ define(
 		/**
 		 * list of config to deal with views
 		 *
-		 * @var {Array}
+		 * @var {Object}
 		 */
 		configs:
 		{
@@ -61,9 +65,22 @@ define(
 		},
 
 		/**
+		 * list of additional options for the views
+		 *
+		 * @var {Object}
+		 */
+		options:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * list of all created views
 		 *
-		 *  @var {Array}
+		 *  @var {Object}
 		 */
 		views:
 		{
@@ -73,6 +90,17 @@ define(
 			writable: true
 		}
 	});
+
+	/**
+	 * returns a created view from config
+	 *
+	 * @param {String} key
+	 * @returns {View}
+	 */
+	Layout.prototype.getView = function(key)
+	{
+		return this.views[key]
+	};
 
 	/**
 	 * remove the layout
@@ -86,7 +114,7 @@ define(
 		{
 			view.remove();
 		});
-		this.views = [];
+		this.views = {};
 
 		return View.prototype.remove.apply(this, arguments);
 	};
@@ -100,7 +128,7 @@ define(
 
 		View.prototype.render.apply(this, arguments);
 
-		lodash.each(this.configs, function(config)
+		lodash.each(this.configs, function(config, key)
 		{
 			if (lodash.isPlainObject(config) === false)
 			{
@@ -126,11 +154,23 @@ define(
 			var view = config.view;
 			if ((view instanceof View) === false)
 			{
-				view = new view(lodash.defaults(config.options,
+				// options
+				var options = lodash.clone(config.options);
+	
+				// set constructor options
+				if (self.options[key] !== undefined)
+				{
+					options = lodash.extend(options, self.options[key]);
+				}
+	
+				// set default options
+				lodash.defaults(options,
 				{
 					el: jQuery(config.selector),
 					layout: self
-				}));
+				});
+			
+				view = new view(options);
 			}
 
 			// view is not autorender...
@@ -140,7 +180,7 @@ define(
 			}
 
 			// remember the view
-			self.views.push(view);
+			self.views[key] = view;
 
 			console.debug(view.cid + ' rendered');
 		});
