@@ -299,23 +299,18 @@ define(
 			set: function(model)
 			{
 				// stop previous model observer
-				if (this.observer instanceof ObserverObject)
+				if (this._model instanceof Model && this._modelObserverHandler instanceof Function)
 				{
-					this.observer.unobserve();
-					this.observer = null;
+					this._model.observer.off('set', this._modelObserverHandler);
+					this._modelObserverHandler = undefined;
 				}
 
 				// this is a model and not null or so... create the observer
 				if (model instanceof Model)
 				{
 					// create a observer?
-					this.observer = new ObserverObject(model.attributes,
-					{
-						on:
-						{
-							set: this.onModelPropertyChange.bind(this)
-						}
-					});
+					this._modelObserverHandler = this.onModelPropertyChange.bind(this);
+					model.observer.on('set', this._modelObserverHandler);
 				}
 
 				if (model === null)
@@ -325,17 +320,6 @@ define(
 
 				this._model = model;
 			}
-		},
-
-		/**
-		 * @var {ObserverObject}
-		 */
-		observer:
-		{
-			value: null,
-			enumerable: true,
-			configurable: true,
-			writable: true
 		},
 
 		/**
@@ -411,6 +395,53 @@ define(
 	});
 
 	/**
+	 * creates selectors for elements with different functions call to set a value
+	 *
+	 * @param {String} selector
+	 * @returns {Object}
+	 */
+	View.prototype.createSelectorForPropertyChange = function(selector)
+	{
+		return lodash.reduce(selector.split(','), function(result, selector)
+		{
+			result.html.selector += (result.html.selector !== '' ? ',' : '') + selector.trimRight() + ':not(:input)';
+			result.val.selector += (result.val.selector !== '' ? ',' : '') + selector.trimRight() + ':input:not(:radio):not(:checkbox)';
+			result.radio.selector += (result.radio.selector !== '' ? ',' : '') + selector.trimRight() + ':radio';
+			result.checkbox.selector += (result.checkbox.selector !== '' ? ',' : '') + selector.trimRight() + ':checkbox';
+
+			return result;
+		},
+		{
+			html:
+			{
+				selector: '',
+				callback: 'html'
+			},
+			val:
+			{
+				selector: '',
+				callback: 'val'
+			},
+			radio:
+			{
+				selector: '',
+				callback: function(view, elements, newValue)
+				{
+					elements.val([newValue]);
+				}
+			},
+			checkbox:
+			{
+				selector: '',
+				callback: function(view, elements, newValue)
+				{
+					elements.val([newValue]);
+				}
+			}
+		});
+	};
+
+	/**
 	 * handles the change of model attributes property change
 	 *
 	 * @param {jQuery.Event} event
@@ -436,7 +467,6 @@ define(
 				callback: this['onChange' + propertyName.charAt(0).toUpperCase() + propertyName.slice(1)]
 			};
 		}
-
 
 		// binding options entry is a string, convert it to object with selector
 		if (typeof bindingOptions === 'string')
@@ -474,7 +504,40 @@ define(
 			{
 				newValue = callbackResult;
 			}
-			this.$el.find(bindingOptions.selector).html(newValue);
+
+			// create specific selectors
+			if (bindingOptions.selectors === undefined)
+			{
+				bindingOptions.selectors = this.createSelectorForPropertyChange(bindingOptions.selector);
+			}
+
+			// set on every selector the value
+			lodash.each(bindingOptions.selectors, function(options)
+			{
+				var elements = this.$el.find(options.selector);
+
+				if (elements.length === 0)
+				{
+					return;
+				}
+
+				// direct callback
+				if (options.callback instanceof Function)
+				{
+					options.callback.call(this, this, elements, newValue);
+				}
+				// calling function on element
+				else if (elements[options.callback] instanceof Function)
+				{
+					elements[options.callback](newValue);
+				}
+
+				// don't what to do
+				else
+				{
+					throw new Error('Can not set new value to elements without any function.');
+				}
+			}, this);
 		}
 
 		return this;
@@ -530,7 +593,7 @@ define(
 		{
 			this.container.empty().append(this.$el);
 		}
-		
+
 		// add class name
 		if (this.className !== null)
 		{
@@ -557,6 +620,7 @@ define(
 			dataTemplate = {};
 		}
 
+		// set the html
 		this.$el.html(this.template(lodash.extend(
 		{
 			model: dataModel,
@@ -564,6 +628,12 @@ define(
 			data: data,
 			view: this
 		}, dataTemplate, dataModel, data)));
+
+		// create observing of inputs for observed bindings
+		this.$el.on('change', function(event)
+		{
+			console.log('change', event);
+		});
 
 		return this;
 	};
@@ -576,9 +646,11 @@ define(
 	 */
 	View.prototype.stopListening = function(other, event, callback)
 	{
-		if (this.observer instanceof ObserverObject)
+		// stop previous model observer
+		if (this.model instanceof Model && this._modelObserverHandler instanceof Function)
 		{
-			this.observer.unobserve();
+			this.model.observer.off('set', this._modelObserverHandler);
+			this._modelObserverHandler = undefined;
 		}
 
 		Backbone.View.prototype.stopListening.apply(this, arguments);

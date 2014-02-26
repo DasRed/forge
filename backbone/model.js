@@ -2,9 +2,11 @@
 
 define(
 [
-	'backbone'
+	'backbone',
+	'forge/observer/object'
 ], function(
-	Backbone
+	Backbone,
+	ObserverObject
 )
 {
 	/**
@@ -67,7 +69,25 @@ define(
 			configurable: true,
 			writable: true
 		},
-		
+
+		/**
+		 * @var {ObserverObject}
+		 */
+		observer:
+		{
+			enumerable: true,
+			configurable: true,
+			get: function()
+			{
+				if (this._observer === undefined)
+				{
+					this._observer = new ObserverObject(this.attributes)
+				}
+
+				return this._observer;
+			}
+		},
+
 		/**
 		 * automatic parsing on creation
 		 *
@@ -95,7 +115,7 @@ define(
 		{
 			attributes[this.idAttribute] = Number(attributes[this.idAttribute]);
 		}
-		
+
 		return attributes;
 	};
 
