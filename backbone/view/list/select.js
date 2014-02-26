@@ -112,6 +112,12 @@ define(
 					modelSelected = undefined;
 				}
 
+				// nothing to do
+				if (this._selected === modelSelected)
+				{
+					return;
+				}
+
 				// call function for change. if return false nothing to do
 				if (this.onSelectedChange(this._selected, modelSelected) === false)
 				{
@@ -206,7 +212,7 @@ define(
 	ViewListSelect.prototype.onCollectionReset = function(collection, options)
 	{
 		ViewList.prototype.onCollectionReset.apply(this, arguments);
-		
+
 		// find the model which have the same id
 		if (this.selected !== undefined)
 		{
@@ -218,7 +224,7 @@ define(
 
 		return this;
 	};
-	
+
 	/**
 	 * selection changed
 	 *

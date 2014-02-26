@@ -525,6 +525,12 @@ define(
 			data = {};
 		}
 
+		// append to container
+		if (this.container instanceof jQuery)
+		{
+			this.container.empty().append(this.$el);
+		}
+		
 		// add class name
 		if (this.className !== null)
 		{
@@ -558,12 +564,6 @@ define(
 			data: data,
 			view: this
 		}, dataTemplate, dataModel, data)));
-
-		// append to container
-		if (this.container instanceof jQuery)
-		{
-			this.container.empty().append(this.$el);
-		}
 
 		return this;
 	};

@@ -12,6 +12,10 @@ define(
 )
 {
 	/**
+	 *
+	 * @event {void} createView({Layout} layout, {View} view, {Object} config, {String} key)
+	 * @event {void} createView[:key]({Layout} layout, {View} view, {Object} config, {String} key)
+	 *
 	 * @param {Object} options
 	 * @returns {Layout}
 	 */
@@ -38,6 +42,19 @@ define(
 	// prototype
 	Layout.prototype = Object.create(View.prototype,
 	{
+		/**
+		 * automatic rendering
+		 *
+		 * @var {Boolean}
+		 */
+		autoRender:
+		{
+			value: false,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
 		/**
 		 * defining of default element selector "body"
 		 *
@@ -120,6 +137,29 @@ define(
 	};
 
 	/**
+	 * removes a view
+	 *
+	 * @param {String} key
+	 * @returns {Layout}
+	 */
+	Layout.prototype.removeView = function(key)
+	{
+		if (this.configs[key] === undefined)
+		{
+			throw new Error('Unknown view config key "' + key + '" to remove.');
+		}
+
+		// remove previous view
+		if (this.views[key] instanceof View)
+		{
+			this.views[key].remove();
+			delete this.views[key];
+		}
+
+		return this;
+	};
+
+	/**
 	 * @return {Layout}
 	 */
 	Layout.prototype.render = function()
@@ -139,61 +179,119 @@ define(
 			lodash.defaults(config,
 			{
 				view: undefined,
-				selector: 'body',
+				container: undefined,
+				el: undefined,
+				autoCreate: true,
 				autoRender: true,
 				options: {}
 			});
 
-			// valid?
-			if (config.view === undefined)
+			// only on autoCreate
+			if (config.autoCreate === true)
 			{
-				throw new Error('A layout config view is undefined. A view must be defined.');
+				this.renderView(key);
+			}
+		}, this);
+
+		return this;
+	};
+
+	/**
+	 * renders a view by config key
+	 * was the view rendered before. the view will be removed and then rendered again
+	 *
+	 * @param {String} key
+	 * @param {Object} additionalOptions
+	 * @returns {Layout}
+	 */
+	Layout.prototype.renderView = function(key, additionalOptions)
+	{
+		// remove previous view
+		this.removeView(key);
+
+		// validate
+		if (this.configs[key] === undefined)
+		{
+			throw new Error('Unknown view config key "' + key + '" to render.');
+		}
+
+		var config = this.configs[key];
+
+		if (lodash.isPlainObject(config) === false)
+		{
+			throw new Error('A layout config must be a plain object.');
+		}
+
+		// valid?
+		if (config.view === undefined)
+		{
+			throw new Error('A layout config view is undefined. A view must be defined.');
+		}
+
+		// create instance of view if is it needed
+		var view = config.view;
+		if ((view instanceof View) === false)
+		{
+			// options
+			var options = null;
+
+			// options are function... call the function
+			if (config.options instanceof Function)
+			{
+				options = config.options.call(this, this);
+			}
+			else
+			{
+				options = lodash.clone(config.options);
 			}
 
-			// create instance of view if is it needed
-			var view = config.view;
-			if ((view instanceof View) === false)
+			// set constructor options
+			if (this.options[key] !== undefined)
 			{
-				// options
-				var options = null;
-
-				// options are function... call the function
-				if (config.options instanceof Function)
-				{
-					options = config.options.call(self, self);
-				}
-				else
-				{
-					options = lodash.clone(config.options);
-				}
-
-				// set constructor options
-				if (self.options[key] !== undefined)
-				{
-					options = lodash.extend(options, self.options[key]);
-				}
-
-				// set default options
-				lodash.defaults(options,
-				{
-					el: self.$el.find(config.selector),
-					layout: self
-				});
-
-				view = new view(options);
+				options = lodash.extend(options, this.options[key]);
 			}
 
-			// view is not autorender...
-			if (config.autoRender === false)
+			// set additional options
+			if (additionalOptions !== undefined)
 			{
-				view.render();
+				options = lodash.extend(options, additionalOptions);
 			}
 
-			// remember the view
-			self.views[key] = view;
+			// set container
+			if (config.container !== undefined)
+			{
+				options.container = this.$el.find(config.container);
+			}
+			// set element
+			if (config.el !== undefined)
+			{
+				options.el = this.$el.find(config.el);
+			}
 
-			console.debug(view.cid + ' rendered');
-		});
+			// set default options
+			lodash.defaults(options,
+			{
+				layout: this,
+				autoRender: false
+			});
+
+			view = new view(options);
+
+			// trigger events
+			this.trigger('createView:' + key, this, view, config, key);
+			this.trigger('createView', this, view, config, key);
+		}
+
+		// remember the view
+		this.views[key] = view;
+
+		// view is not autorender...
+		if (config.autoRender === true)
+		{
+			view.render();
+		}
+
+		console.debug(view.cid + ' rendered');
 
 		return this;
 	};

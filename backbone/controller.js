@@ -38,11 +38,6 @@ define(
 		options = options || {};
 		lodash.extend(this, options);
 
-		if (this.views === null)
-		{
-			this.views = {};
-		}
-
 		this.cid = lodash.uniqueId('controller');
 
 		this.initialize.apply(this, arguments);
@@ -78,24 +73,11 @@ define(
 		},
 
 		/**
-		 * start for the route parts at index
+		 * layout view
 		 *
-		 * @var {Number}
+		 * @returns {View}
 		 */
-		routePartsStartsAtIndex:
-		{
-			value: 0,
-			enumerable: true,
-			configurable: true,
-			writable: true
-		},
-
-		/**
-		 * the default view for this controller.
-		 *
-		 * @var {View}
-		 */
-		view:
+		layout:
 		{
 			value: null,
 			enumerable: true,
@@ -106,7 +88,7 @@ define(
 		/**
 		 * default element for the default view
 		 */
-		viewContainer:
+		layoutContainer:
 		{
 			value: '#content',
 			enumerable: true,
@@ -119,7 +101,7 @@ define(
 		 *
 		 * @var {View}
 		 */
-		viewInstance:
+		layoutInstance:
 		{
 			value: null,
 			enumerable: true,
@@ -128,14 +110,13 @@ define(
 		},
 
 		/**
-		 * a list of views for this controller. will be only removed if controller
-		 * is removing
+		 * start for the route parts at index
 		 *
-		 * @var {Object}
+		 * @var {Number}
 		 */
-		views:
+		routePartsStartsAtIndex:
 		{
-			value: null,
+			value: 0,
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -160,6 +141,18 @@ define(
 		// get all additional parameters
 		var parameters = lodash.toArray(arguments).slice(3);
 
+		// convert to correct type
+		parameters = lodash.map(parameters, function(parameter)
+		{
+			var asNumber = Number(parameters);
+			if (isNaN(asNumber) === false)
+			{
+				return asNumber;
+			}
+
+			return parameter;
+		});
+
 		// not starting at index 0?
 		if (this.routePartsStartsAtIndex != 0)
 		{
@@ -174,10 +167,10 @@ define(
 			{
 				return routeParts;
 			}
-			
+
 			return routePart.charAt(0).toUpperCase() + routePart.slice(1);
 		});
-		
+
 		// find calling method
 		var actionMethod = null;
 		var position = parts.length;
@@ -211,22 +204,41 @@ define(
 	};
 
 	/**
+	 * returns the layout
+	 *
+	 * @param {Object} additionalOptions
+	 * @returns {View}
+	 */
+	Controller.prototype.getLayout = function(additionalOptions)
+	{
+		if (this.layoutInstance === null)
+		{
+			// create the view
+			var layout = this.layout;
+			this.layoutInstance = new layout(lodash.extend(
+			{
+				autoRender: false,
+				container: this.layoutContainer
+			}, additionalOptions || {}));
+			
+			this.layoutInstance.render();
+		}
+
+		return this.layoutInstance;
+	};
+
+	/**
 	 * @returns {Controller}
 	 */
 	Controller.prototype.indexAction = function()
 	{
-		if (this.view === null)
+		if (this.layout === null)
 		{
-			throw new Error('The index action of a controller must be overwritten or define a default view!');
+			throw new Error('The index action of a controller must be overwritten or define a default layout!');
 		}
 
 		// create the view
-		this.viewInstance = this.view;
-		var view = this.view;
-		this.view = new view(
-		{
-			container: this.viewContainer
-		});
+		this.getLayout();
 
 		return this;
 	};
@@ -249,19 +261,13 @@ define(
 	 */
 	Controller.prototype.remove = function()
 	{
-		if (this.view instanceof View)
+		if (this.layoutInstance instanceof View)
 		{
-			this.view.remove();
-			this.view = this.viewInstance;
+			this.layoutInstance.remove();
+			this.layoutInstance = null;
 		}
 
-		lodash.each(this.views, function(view)
-		{
-			if (this.view instanceof View)
-			{
-				this.view.remove();
-			}
-		});
+		this.stopListening();
 
 		return this;
 	};

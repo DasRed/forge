@@ -58,6 +58,17 @@ define(
 		},
 
 		/**
+		 * @var {String}
+		 */
+		idAttributeIsNumeric:
+		{
+			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+		
+		/**
 		 * automatic parsing on creation
 		 *
 		 * @var {Boolean}
@@ -80,6 +91,11 @@ define(
 	 */
 	Model.prototype.parse = function(attributes, options)
 	{
+		if (this.idAttributeIsNumeric === true)
+		{
+			attributes[this.idAttribute] = Number(attributes[this.idAttribute]);
+		}
+		
 		return attributes;
 	};
 

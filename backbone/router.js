@@ -57,6 +57,7 @@ define(
 	 *						// the parts will be generated from the route.
 	 *						// @see forge/backbone/controller.js
 	 *						// @example "bundle/edit/nuff/:id" will be [bundle, edit, nuff]
+	 *						// @example parts is string with "bundle/edit/nuff": will be [bundle, edit, nuff]
 	 *						parts: []
 	 *					},
 	 *
@@ -140,7 +141,7 @@ define(
 					};
 				}
 
-				// create parts
+				// create parts from route
 				if (route.parts === undefined)
 				{
 					var routeWithoutParameters = route.route.replace(optionalParam, '');
@@ -154,6 +155,11 @@ define(
 					{
 						return routePart !== null && routePart !== undefined && routePart.length != 0;
 					});
+				}
+				// create parts from string
+				else if (typeof route.parts === 'string')
+				{
+					route.parts = route.parts.split('/');
 				}
 
 				// define route in router
