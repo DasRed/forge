@@ -111,12 +111,45 @@ define(
 	 */
 	Model.prototype.parse = function(attributes, options)
 	{
-		if (this.idAttributeIsNumeric === true)
+		attributes = Backbone.Model.prototype.parse.apply(this, arguments);
+
+		if (this.idAttributeIsNumeric === true && attributes[this.idAttribute] !== undefined)
 		{
-			attributes[this.idAttribute] = Number(attributes[this.idAttribute]);
+			var number = attributes[this.idAttribute];
+
+			if (isNaN(number) === false)
+			{
+				attributes[this.idAttribute] = number;
+			}
 		}
 
 		return attributes;
+	};
+
+	/**
+	 * set function
+	 *
+	 * @param {Object}|{String} key
+	 * @param {Mixed} val
+	 * @param {Object} options
+	 * @returns {Model}
+	 */
+	Model.prototype.set = function(key, val, options)
+	{
+		var success = undefined;
+		if (typeof key === 'object')
+		{
+			options = val;
+		}
+		success	= options.success;
+
+		Backbone.Model.prototype.set.apply(this, arguments);
+		if (success instanceof Function && options.xhr === undefined)
+		{
+			success.call(this, this, undefined, options);
+		}
+
+		return this;
 	};
 
 	return Model;

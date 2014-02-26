@@ -51,10 +51,10 @@ define(
 			}
 		}
 
-		// defaults bindings object
-		if (this.bindings === null)
+		// defaults modelBindings object
+		if (this.modelBindings === null)
 		{
-			this.bindings = {};
+			this.modelBindings = {};
 		}
 
 		// defaults events object
@@ -144,7 +144,7 @@ define(
 		},
 
 		/**
-		 * bind all model attributes keys, which are not defined in this.bindings
+		 * bind all model attributes keys, which are not defined in this.modelBindings
 		 * the selector is '.KEYNAME'
 		 * it will be also tested for a callback function "onChange" + PropertyName on the view
 		 *
@@ -154,7 +154,33 @@ define(
 		 *
 		 * @var {Boolean}
 		 */
-		autoBindings:
+		autoModelBindings:
+		{
+			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * automatic save from inputs to model
+		 *
+		 * @var {Boolean}
+		 */
+		autoModelSave:
+		{
+			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * automatic update from inputs to model
+		 *
+		 * @var {Boolean}
+		 */
+		autoModelUpdate:
 		{
 			value: true,
 			enumerable: true,
@@ -170,29 +196,6 @@ define(
 		autoRender:
 		{
 			value: true,
-			enumerable: true,
-			configurable: true,
-			writable: true
-		},
-
-		/**
-		 * bindings for Model properties to given selector
-		 *
-		 * @var {Object}
-		 * @example 'modelAttributeValue': 'CSSSelector'
-		 * @example 'modelAttributeValue': Function
-		 * @example 'modelAttributeValue': {selector: 'CSSSelector', callback: Function}
-		 * @example 'modelAttributeValue': {selector: 'CSSSelector', callback: 'function of this'}
-		 * @example CSSSelector will be generated if autoBindings active. in this case, following selectors will be used:
-		 * 				- [data-model="PROPERTYNAME"]
-		 * 				- .PROPERTYNAME
-		 * @callback {Mixed} Function(modelAttributes, propertyName, newValue) function will be executed in the scope of the view.
-		 *																		if the function returns something and a selector is defined,
-		 *																		then will be the return value used
-		 */
-		bindings:
-		{
-			value: null,
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -323,6 +326,29 @@ define(
 		},
 
 		/**
+		 * modelBindings for Model properties to given selector
+		 *
+		 * @var {Object}
+		 * @example 'modelAttributeValue': 'CSSSelector'
+		 * @example 'modelAttributeValue': Function
+		 * @example 'modelAttributeValue': {selector: 'CSSSelector', callback: Function}
+		 * @example 'modelAttributeValue': {selector: 'CSSSelector', callback: 'function of this'}
+		 * @example CSSSelector will be generated if autoBindings active. in this case, following selectors will be used:
+		 * 				- [data-model="PROPERTYNAME"]
+		 * 				- .PROPERTYNAME
+		 * @callback {Mixed} Function(modelAttributes, propertyName, newValue) function will be executed in the scope of the view.
+		 *																		if the function returns something and a selector is defined,
+		 *																		then will be the return value used
+		 */
+		modelBindings:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * @var {String}
 		 */
 		tagName:
@@ -391,6 +417,14 @@ define(
 			enumerable: true,
 			configurable: true,
 			writable: true
+		},
+
+		templateSaving:
+		{
+			value: '<i class="fa fa-spinner fa-spin"></i>',
+			enumerable: true,
+			configurable: true,
+			writable: true
 		}
 	});
 
@@ -415,12 +449,18 @@ define(
 			html:
 			{
 				selector: '',
-				callback: 'html'
+				callback: function(view, elements, newValue)
+				{
+					elements.html(newValue);
+				}
 			},
 			val:
 			{
 				selector: '',
-				callback: 'val'
+				callback: function(view, elements, newValue)
+				{
+					elements.val(newValue);
+				}
 			},
 			radio:
 			{
@@ -435,10 +475,167 @@ define(
 				selector: '',
 				callback: function(view, elements, newValue)
 				{
-					elements.val([newValue]);
+					elements.prop('checked', newValue);
+					//elements.val([newValue]);
 				}
 			}
 		});
+	};
+
+	/**
+	 * initialize
+	 *
+	 * @param {Object} options
+	 * @returns {View}
+	 */
+	View.prototype.initialize = function(options)
+	{
+		Backbone.View.prototype.initialize.apply(this, arguments);
+
+		// prepare modelBindings
+		if (this.model instanceof Model)
+		{
+			lodash.each(this.model.attributes, function(value, propertyName)
+			{
+				var bindingOptions = this.modelBindings[propertyName];
+
+				// no auto
+				if (bindingOptions === undefined && this.autoModelBindings !== true)
+				{
+					return this;
+				}
+
+				// binding options entry is a string, convert it to object with selector
+				if (typeof bindingOptions === 'string')
+				{
+					bindingOptions =
+					{
+						selector: bindingOptions
+					};
+				}
+				// binding options entry is a function, convert it to object with callback
+				else if (bindingOptions instanceof Function)
+				{
+					bindingOptions =
+					{
+						callback: bindingOptions
+					};
+				}
+				// no data
+				else if (bindingOptions === undefined)
+				{
+					bindingOptions =
+					{
+						selector: '[data-model="' + propertyName + '"], .' + propertyName,
+						callback: this['onChange' + propertyName.charAt(0).toUpperCase() + propertyName.slice(1)]
+					};
+				}
+
+				// prepare callback
+				// in the options is a callback function as String. call the function from this
+				if (typeof bindingOptions.callback === 'string')
+				{
+					bindingOptions.callback = this[bindingOptions.callback];
+				}
+				// empty function
+				else if ((bindingOptions.callback instanceof Function) === false)
+				{
+					bindingOptions.callback = lodash.noop;
+				}
+
+				// in the options is an selector define. find HTMLElement and update the html with the new value
+				if (bindingOptions.selector !== undefined)
+				{
+					// create specific selectors
+					bindingOptions.selectors = this.createSelectorForPropertyChange(bindingOptions.selector);
+				}
+
+				// set preprare modelBindings
+				this.modelBindings[propertyName] = bindingOptions;
+			}, this);
+		}
+
+		return this;
+	};
+
+	/**
+	 * if a HTMLElement change his value for a model property
+	 *
+	 * @param {jQuery.Event}
+	 * @returns {View}
+	 */
+	View.prototype.onHTMLElementPropertyChange = function(event)
+	{
+		// find element and property
+		var element = jQuery(event.target);
+		var propertyName = element.data('model');
+
+		// no property nothing to do
+		if (propertyName === undefined)
+		{
+			return this;
+		}
+
+		// find bindingOptions
+		var bindingOptions = this.modelBindings[propertyName];
+		// nothing to do
+		if (bindingOptions === undefined)
+		{
+			return this;
+		}
+
+		// no model nothing to do
+		if ((this.model instanceof Model) === false)
+		{
+			return this;
+		}
+
+		// stop event, we can update the model
+		event.stop();
+
+		// get the value from property
+		var newValue = undefined;
+
+		// input is checkbox
+		if (element.is(':checkbox') === true)
+		{
+			newValue = element.prop('checked');
+		}
+		// input is radio element
+		else if (element.is(':radio') === true)
+		{
+			newValue = this.$el.find('[name=' + element.attr('name') + ']:checked').val();
+		}
+		// other inputs
+		else
+		{
+			newValue = element.val();
+		}
+
+		// set it
+		var methodToSet = 'set';
+		// save it
+		if (this.autoModelSave === true)
+		{
+			methodToSet = 'save';
+		}
+
+		// show saving
+		element.addClass('data-model-saving');
+		var elementSaving = jQuery(this.templateSaving);
+		elementSaving.insertAfter(element);
+
+		// set the new value to model and set or save
+		this.model[methodToSet](propertyName, newValue,
+		{
+			success: function()
+			{
+				elementSaving.remove();
+				element.removeClass('data-model-saving');
+			}
+		});
+
+		return this;
 	};
 
 	/**
@@ -452,93 +649,34 @@ define(
 	 */
 	View.prototype.onModelPropertyChange = function(event, modelAttributes, propertyName, newValue)
 	{
-		var bindingOptions = this.bindings[propertyName];
+		var bindingOptions = this.modelBindings[propertyName];
 
+		// nothing to do
 		if (bindingOptions === undefined)
 		{
-			if (this.autoBindings !== true)
-			{
-				return this;
-			}
-
-			bindingOptions =
-			{
-				selector: '[data-model="' + propertyName + '"], .' + propertyName,
-				callback: this['onChange' + propertyName.charAt(0).toUpperCase() + propertyName.slice(1)]
-			};
+			return this;
 		}
 
-		// binding options entry is a string, convert it to object with selector
-		if (typeof bindingOptions === 'string')
-		{
-			bindingOptions =
-			{
-				selector: bindingOptions
-			};
-		}
-		// binding options entry is a function, convert it to object with callback
-		else if (bindingOptions instanceof Function)
-		{
-			bindingOptions =
-			{
-				callback: bindingOptions
-			};
-		}
-
-		var callbackResult = undefined;
 		// in the options is a callback function as Function. call the function
-		if (bindingOptions.callback instanceof Function)
+		var callbackResult = bindingOptions.callback.call(this, modelAttributes, propertyName, newValue);
+		if (callbackResult !== undefined)
 		{
-			callbackResult = bindingOptions.callback.call(this, modelAttributes, propertyName, newValue);
-		}
-		// in the options is a callback function as String. call the function from this
-		else if (typeof bindingOptions.callback === 'string')
-		{
-			callbackResult = this[bindingOptions.callback](modelAttributes, propertyName, newValue);
+			newValue = callbackResult;
 		}
 
-		// in the options is an selector define. find HTMLElement and update the html with the new value
-		if (bindingOptions.selector !== undefined)
+		// set on every selector the value
+		lodash.each(bindingOptions.selectors, function(options)
 		{
-			if (callbackResult !== undefined)
+			var elements = this.$el.find(options.selector);
+
+			if (elements.length === 0)
 			{
-				newValue = callbackResult;
+				return;
 			}
 
-			// create specific selectors
-			if (bindingOptions.selectors === undefined)
-			{
-				bindingOptions.selectors = this.createSelectorForPropertyChange(bindingOptions.selector);
-			}
-
-			// set on every selector the value
-			lodash.each(bindingOptions.selectors, function(options)
-			{
-				var elements = this.$el.find(options.selector);
-
-				if (elements.length === 0)
-				{
-					return;
-				}
-
-				// direct callback
-				if (options.callback instanceof Function)
-				{
-					options.callback.call(this, this, elements, newValue);
-				}
-				// calling function on element
-				else if (elements[options.callback] instanceof Function)
-				{
-					elements[options.callback](newValue);
-				}
-
-				// don't what to do
-				else
-				{
-					throw new Error('Can not set new value to elements without any function.');
-				}
-			}, this);
-		}
+			// direct callback
+			options.callback.call(this, this, elements, newValue);
+		}, this);
 
 		return this;
 	};
@@ -629,11 +767,11 @@ define(
 			view: this
 		}, dataTemplate, dataModel, data)));
 
-		// create observing of inputs for observed bindings
-		this.$el.on('change', function(event)
+		// create observing of inputs for observed modelBindings
+		if (this.autoModelUpdate === true)
 		{
-			console.log('change', event);
-		});
+			this.$el.find('[data-model]').on('change.model', this.onHTMLElementPropertyChange.bind(this));
+		}
 
 		return this;
 	};
