@@ -513,6 +513,7 @@ define(
 	 * 	- model: model attributes
 	 * 	- template: view property templateData
 	 * 	- data: function data
+	 * 	- view: current view
 	 *
 	 * @param {Object} data
 	 * @returns {View}
@@ -554,7 +555,8 @@ define(
 		{
 			model: dataModel,
 			template: dataTemplate,
-			data: data
+			data: data,
+			view: this
 		}, dataTemplate, dataModel, data)));
 
 		// append to container

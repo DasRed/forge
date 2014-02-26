@@ -5,12 +5,14 @@ define(
 	'lodash',
 	'forge/backbone/collection',
 	'forge/backbone/model',
-	'forge/backbone/view'
+	'forge/backbone/view',
+	'forge/backbone/view/list/entry'
 ], function(
 	lodash,
 	Collection,
 	Model,
-	View
+	View,
+	ViewListEntry
 )
 {
 	/**
@@ -260,6 +262,11 @@ define(
 			model: model
 		});
 
+		if ((instance instanceof ViewListEntry) === false)
+		{
+			throw new Error('The view instance from an entry of a list must be instance of ViewListEntry.');
+		}
+
 		console.debug('view for model (id: "' + (model ? model.id : model) + '") created.');
 
 		return instance;
@@ -308,8 +315,19 @@ define(
 	 */
 	ViewList.prototype.onCollectionReset = function(collection, options)
 	{
+		// remove all views
+		lodash.each(this.viewEntries, function(view)
+		{
+			view.remove();
+		});
+		this.viewEntries = {};
+
+		// render each entry
+		this.collection.each(this.renderEntry, this);
+
 		console.debug('collection was reseted.');
-		throw new Error('hmmmmmmmmmmmmmmmmmmmmm');
+
+		return this;
 	};
 
 	/**

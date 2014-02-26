@@ -155,21 +155,31 @@ define(
 			if ((view instanceof View) === false)
 			{
 				// options
-				var options = lodash.clone(config.options);
-	
+				var options = null;
+
+				// options are function... call the function
+				if (config.options instanceof Function)
+				{
+					options = config.options.call(self, self);
+				}
+				else
+				{
+					options = lodash.clone(config.options);
+				}
+
 				// set constructor options
 				if (self.options[key] !== undefined)
 				{
 					options = lodash.extend(options, self.options[key]);
 				}
-	
+
 				// set default options
 				lodash.defaults(options,
 				{
-					el: jQuery(config.selector),
+					el: self.$el.find(config.selector),
 					layout: self
 				});
-			
+
 				view = new view(options);
 			}
 

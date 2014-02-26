@@ -2,9 +2,9 @@
 
 define(
 [
-	'forge/backbone/view'
+	'forge/backbone/view/list/entry'
 ], function(
-	View
+	ViewListEntry
 )
 {
 	/**
@@ -16,16 +16,16 @@ define(
 	 */
 	var ViewListSelectEntry = function(options)
 	{
-		View.apply(this, arguments);
+		ViewListEntry.apply(this, arguments);
 
 		return this;
 	};
 
 	// compatibility
-	ViewListSelectEntry.extend = View.extend;
+	ViewListSelectEntry.extend = ViewListEntry.extend;
 
 	// prototypew
-	ViewListSelectEntry.prototype = Object.create(View.prototype,
+	ViewListSelectEntry.prototype = Object.create(ViewListEntry.prototype,
 	{
 		/**
 		 * css class names for selected elements
@@ -114,10 +114,12 @@ define(
 	 */
 	ViewListSelectEntry.prototype.render = function()
 	{
-		View.prototype.render.apply(this, arguments);
+		ViewListEntry.prototype.render.apply(this, arguments);
 
 		var element = this.selectorToSelect !== undefined && this.selectorToSelect !== null ? this.$el.find(this.selectorToSelect) : this.$el;
 		element.on(this.eventToSelect, this.onEventToSelect.bind(this));
+
+		this.$el.data('modelCid', this.model.cid);
 
 		return this;
 	};

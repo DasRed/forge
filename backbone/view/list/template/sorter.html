@@ -1,0 +1,19 @@
+<div class="sorter simpleSelect">
+	<a class="direction ${view.direction}">
+		{admin.adminSortBy} <span class="fieldName">${currentText}</span>
+		<i class="fa fa-arrow-down"></i>
+		<i class="fa fa-arrow-up"></i>
+	</a>
+
+	<a class="selector"><i class="fa fa-caret-down"></i></a>
+
+	<span class="selection">
+		<ul>
+			<% _.each(view.properties, function(propertyText, propertyName) {%>
+				<li>
+					<a class="selectLink" data-property="${propertyName}">${propertyText}</a>
+				</li>
+			<% }); %>
+		</ul>
+	</span>
+</div>

@@ -197,6 +197,29 @@ define(
 	};
 
 	/**
+	 * the collection was completly reseted
+	 *
+	 * @param {Collection} collection
+	 * @param {Object} object
+	 * @returns {ViewList}
+	 */
+	ViewListSelect.prototype.onCollectionReset = function(collection, options)
+	{
+		ViewList.prototype.onCollectionReset.apply(this, arguments);
+		
+		// find the model which have the same id
+		if (this.selected !== undefined)
+		{
+			this.selected = this.collection.find(function(model)
+			{
+				return model.id == this.id;
+			}, this.selected);
+		}
+
+		return this;
+	};
+	
+	/**
 	 * selection changed
 	 *
 	 * @param {Model} modelSelectedOld
