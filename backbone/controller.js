@@ -4,10 +4,12 @@ define(
 [
 	'lodash',
 	'backbone',
+	'forge/backbone/compatibility',
 	'forge/backbone/view'
 ], function(
 	lodash,
 	Backbone,
+	compatibility,
 	View
 )
 {
@@ -44,9 +46,6 @@ define(
 
 		return this;
 	};
-
-	// compatibility
-	Controller.extend = Backbone.View.extend;
 
 	// prototyping
 	Controller.prototype = Object.create(Backbone.Events,
@@ -165,7 +164,7 @@ define(
 			// the first is lowercase
 			if (index === 0)
 			{
-				return routeParts;
+				return routePart;
 			}
 
 			return routePart.charAt(0).toUpperCase() + routePart.slice(1);
@@ -220,7 +219,7 @@ define(
 				autoRender: false,
 				container: this.layoutContainer
 			}, additionalOptions || {}));
-			
+
 			this.layoutInstance.render();
 		}
 
@@ -272,5 +271,5 @@ define(
 		return this;
 	};
 
-	return Controller;
+	return compatibility(Controller);
 });

@@ -2,8 +2,10 @@
 
 define(
 [
+	'forge/backbone/compatibility',
 	'forge/backbone/view/list/entry'
 ], function(
+	compatibility,
 	ViewListEntry
 )
 {
@@ -21,10 +23,7 @@ define(
 		return this;
 	};
 
-	// compatibility
-	ViewListSelectEntry.extend = ViewListEntry.extend;
-
-	// prototypew
+	// prototype
 	ViewListSelectEntry.prototype = Object.create(ViewListEntry.prototype,
 	{
 		/**
@@ -62,6 +61,17 @@ define(
 		selectorToSelect:
 		{
 			value: null,
+			enumerable: true,
+			configureable: true,
+			writable: true
+		},
+
+		/**
+		 * @var {String}
+		 */
+		tagName:
+		{
+			value: 'li',
 			enumerable: true,
 			configureable: true,
 			writable: true
@@ -124,5 +134,5 @@ define(
 		return this;
 	};
 
-	return ViewListSelectEntry;
+	return compatibility(ViewListSelectEntry);
 });

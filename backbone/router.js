@@ -4,11 +4,13 @@ define(
 	'lodash',
 	'jQuery',
 	'backbone',
+	'forge/backbone/compatibility',
 	'forge/backbone/controller'
 ], function(
 	lodash,
 	jQuery,
 	Backbone,
+	compatibility,
 	Controller
 )
 {
@@ -177,9 +179,6 @@ define(
 		return this;
 	};
 
-	// compatibility
-	Router.extend = Backbone.Router.extend;
-
 	// prototype
 	Router.prototype = Object.create(Backbone.Router.prototype,
 	{
@@ -261,5 +260,5 @@ define(
 		return this;
 	};
 
-	return Router;
+	return compatibility(Router);
 });

@@ -2,8 +2,10 @@
 
 define(
 [
+	'forge/backbone/compatibility',
 	'forge/backbone/view'
 ], function(
+	compatibility,
 	View
 )
 {
@@ -20,13 +22,9 @@ define(
 		return this;
 	};
 
-	// compatibility
-	ViewListEntry.extend = View.extend;
 
 	// prototypew
-	ViewListEntry.prototype = Object.create(View.prototype,
-	{
-	});
+	ViewListEntry.prototype = Object.create(View.prototype);
 
 	/**
 	 * render
@@ -42,5 +40,5 @@ define(
 		return this;
 	};
 
-	return ViewListEntry;
+	return compatibility(ViewListEntry);
 });

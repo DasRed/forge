@@ -3,12 +3,14 @@
 define(
 [
 	'lodash',
+	'forge/backbone/compatibility',
 	'forge/backbone/collection',
 	'forge/backbone/model',
 	'forge/backbone/view',
 	'forge/backbone/view/list/entry'
 ], function(
 	lodash,
+	compatibility,
 	Collection,
 	Model,
 	View,
@@ -23,6 +25,23 @@ define(
 	 */
 	var ViewList = function(options)
 	{
+		options = options || {};
+
+		// take collection from options
+		if (options.collection !== undefined)
+		{
+			this.collection = options.collection;
+			delete options.collection;
+		}
+
+		// take viewEntry from options
+		if (options.viewEntry !== undefined)
+		{
+			this.viewEntry = options.viewEntry;
+			delete options.viewEntry;
+		}
+
+		// validate
 		if (this.collection === null || this.collection === undefined)
 		{
 			throw new Error('Collection can not be undefined for a view list');
@@ -51,9 +70,6 @@ define(
 
 		return this;
 	};
-
-	// compatibility
-	ViewList.extend = View.extend;
 
 	// prototype
 	ViewList.prototype = Object.create(View.prototype,
@@ -197,6 +213,11 @@ define(
 		var elementParent = this.selectorContainer === null || this.selectorContainer === undefined ? this.$el : this.$el.find(this.selectorContainer);
 		var elementEntry = this.getViewEntryByModel(model).$el.detach();
 		var elementChilds = elementParent.find('>');
+
+		if (elementParent.length === 0)
+		{
+			throw new Error('Can not find parent element "' + this.selectorContainer + '" for view list.');
+		}
 
 		// append
 		if (elementChilds.length == 0 || elementChilds.length - 1 <= index)
@@ -432,5 +453,5 @@ define(
 		return this;
 	};
 
-	return ViewList;
+	return compatibility(ViewList);
 });

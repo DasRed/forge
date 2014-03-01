@@ -4,14 +4,14 @@ define(
 [
 	'lodash',
 	'backbone',
-	'forge/di',
 	'forge/observer/object',
+	'forge/backbone/compatibility',
 	'forge/backbone/model'
 ], function(
 	lodash,
 	Backbone,
-	DI,
 	ObserverObject,
+	compatibility,
 	Model
 )
 {
@@ -31,11 +31,23 @@ define(
 	/**
 	 * View
 	 *
+	 * @event {void} remove({View} view)
+	 * @event {void} modelPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue)
+	 * @event {void} modelPropertyChange[:PROPERTYNAME]({View} view, {Model} model, {String} propertyName, {Mixed} newValue)
+	 * @eventMethodObject onModelPropertyChange({String} propertyName, {Mixed} newValue)
+	 * @eventMethodObject onModelPropertyChange[:PROPERTYNAME]({Mixed} newValue)
+	 *
 	 * @param {Object} options
 	 * @returns {View}
 	 */
 	var View = function(options)
 	{
+		// read set model to view.. in start mode, backbone made strange things with prototype :( and so we have the initial event binding and fetching here
+		if (this.model instanceof Model)
+		{
+			this.model = this.model;
+		}
+
 		options = options || {};
 
 		// remapping from el to container for el #content
@@ -55,6 +67,12 @@ define(
 		if (this.modelBindings === null)
 		{
 			this.modelBindings = {};
+		}
+
+		// model formatters
+		if (this.formatter === null)
+		{
+			this.formatter = {};
 		}
 
 		// defaults events object
@@ -108,9 +126,6 @@ define(
 
 		return this;
 	};
-
-	// compatibility
-	View.extend = Backbone.View.extend;
 
 	// prototype
 	View.prototype = Object.create(Backbone.View.prototype,
@@ -202,6 +217,19 @@ define(
 		},
 
 		/**
+		 * append templates automatic to main template. works only if a template is defined
+		 *
+		 * @var {Boolean}
+		 */
+		autoTemplatesAppend:
+		{
+			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * @var {String}
 		 */
 		className:
@@ -259,6 +287,19 @@ define(
 		 * @var {Object}
 		 */
 		events:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * object of model properties to format
+		 * @example 'modelAttributeValue': {get: (Function | 'function of this'), set: (Function | 'function of this')}
+		 * @see View::modelBindings
+		 */
+		formatter:
 		{
 			value: null,
 			enumerable: true,
@@ -329,16 +370,16 @@ define(
 		 * modelBindings for Model properties to given selector
 		 *
 		 * @var {Object}
-		 * @example 'modelAttributeValue': 'CSSSelector'
+		 * @example 'modelAttributeValue': 'CSSSelector' for parent containers
 		 * @example 'modelAttributeValue': Function
-		 * @example 'modelAttributeValue': {selector: 'CSSSelector', callback: Function}
-		 * @example 'modelAttributeValue': {selector: 'CSSSelector', callback: 'function of this'}
+		 * @example 'modelAttributeValue': {selector: 'CSSSelector', callback: (Function | 'function of this'), formatter: (Function | 'function of this')} <- formatter will be used as getter only
+		 * @example 'modelAttributeValue': {selector: 'CSSSelector', callback: (Function | 'function of this'), formatter: {get: (Function | 'function of this'), set: (Function | 'function of this')}}
 		 * @example CSSSelector will be generated if autoBindings active. in this case, following selectors will be used:
 		 * 				- [data-model="PROPERTYNAME"]
-		 * 				- .PROPERTYNAME
-		 * @callback {Mixed} Function(modelAttributes, propertyName, newValue) function will be executed in the scope of the view.
+		 * @callback {Mixed} Function(newValue, modelAttributes, propertyName) function will be executed in the scope of the view.
 		 *																		if the function returns something and a selector is defined,
 		 *																		then will be the return value used
+		 * @formatter {Mixed} Function(value, modelAttributes, propertyName) function will be executed in the scope of the view. If the function returns undefined, the original value will be used
 		 */
 		modelBindings:
 		{
@@ -346,6 +387,16 @@ define(
 			enumerable: true,
 			configurable: true,
 			writable: true
+		},
+
+		selectorDataModel:
+		{
+			enumerable: true,
+			configurable: true,
+			get: function()
+			{
+				return '[data-model-view-' + this.cid + ']';
+			}
 		},
 
 		/**
@@ -419,6 +470,11 @@ define(
 			writable: true
 		},
 
+		/**
+		 * template for saving
+		 *
+		 * @var {String}
+		 */
 		templateSaving:
 		{
 			value: '<i class="fa fa-spinner fa-spin"></i>',
@@ -431,17 +487,20 @@ define(
 	/**
 	 * creates selectors for elements with different functions call to set a value
 	 *
+	 * @param {String} propertyName
 	 * @param {String} selector
 	 * @returns {Object}
 	 */
-	View.prototype.createSelectorForPropertyChange = function(selector)
+	View.prototype.createSelectorForPropertyChange = function(propertyName, selector)
 	{
 		return lodash.reduce(selector.split(','), function(result, selector)
 		{
-			result.html.selector += (result.html.selector !== '' ? ',' : '') + selector.trimRight() + ':not(:input)';
-			result.val.selector += (result.val.selector !== '' ? ',' : '') + selector.trimRight() + ':input:not(:radio):not(:checkbox)';
-			result.radio.selector += (result.radio.selector !== '' ? ',' : '') + selector.trimRight() + ':radio';
-			result.checkbox.selector += (result.checkbox.selector !== '' ? ',' : '') + selector.trimRight() + ':checkbox';
+			var selectorDataModel = this.selectorDataModel.slice(0, -1) + '="' + propertyName + '"]';
+
+			result.html.selector += (result.html.selector !== '' ? ',' : '') + selector.trimRight() + ' ' + selectorDataModel + ':not(:input)';
+			result.val.selector += (result.val.selector !== '' ? ',' : '') + selector.trimRight() + ' ' + selectorDataModel + ':input:not(:radio):not(:checkbox)';
+			result.radio.selector += (result.radio.selector !== '' ? ',' : '') + selector.trimRight() + ' ' + selectorDataModel + ':radio';
+			result.checkbox.selector += (result.checkbox.selector !== '' ? ',' : '') + selector.trimRight() + ' ' + selectorDataModel + ':checkbox';
 
 			return result;
 		},
@@ -479,7 +538,107 @@ define(
 					//elements.val([newValue]);
 				}
 			}
-		});
+		}, this);
+	};
+
+	/**
+	 * formattes given model Property and return the result
+	 *
+	 * @param {String} propertyName
+	 * @param {Mixed} value
+	 * @param {String} method can be one of the formatter methods default is 'get'
+	 * @returns {Mixed}
+	 */
+	View.prototype.formatModelProperty = function(propertyName, value, method)
+	{
+		method = method || 'get';
+
+		// find bindings options
+		var bindingOption = this.modelBindings[propertyName];
+		if (bindingOption === undefined)
+		{
+			return value;
+		}
+
+		// get the callback
+		var callback = bindingOption.formatter[method];
+		if ((callback instanceof Function) === false)
+		{
+			throw new Error('Invalid formatter method name "' + method + '" for model property "' + propertyName + '".');
+		}
+
+		// format the value
+		var valueFormatted = callback.call(this, value, this.model.attributes, propertyName);
+		if (valueFormatted === undefined)
+		{
+			return value;
+		}
+
+		return valueFormatted;
+	};
+
+	/**
+	 * formattes all model Properties and return the result
+	 *
+	 * @returns {Object}
+	 */
+	View.prototype.getFormattedModelProperties = function()
+	{
+		if ((this.model instanceof Model) === false)
+		{
+			return {};
+		}
+
+		return lodash.reduce(this.modelBindings, function(dataModel, bindingOption, propertyName)
+		{
+			dataModel[propertyName] = this.formatModelProperty(propertyName, dataModel[propertyName], 'get');
+			return dataModel;
+		}, lodash.clone(this.model.attributes), this);
+	};
+
+	/**
+	 * hide last show saving
+	 *
+	 * @returns {View}
+	 */
+	View.prototype.hideSaving = function()
+	{
+		if (this._elementCurrentSaving !== undefined)
+		{
+			this._elementCurrentSaving.saving.remove();
+			this._elementCurrentSaving.element.removeClass('data-model-saving');
+			delete this._elementCurrentSaving;
+		}
+
+		return this;
+	};
+
+	/**
+	 * replace current html with  html to element of view
+	 * this function is needed so that other can overload and "translate"
+	 *
+	 * @param {String} html
+	 * @returns {View}
+	 */
+	View.prototype.html = function(html)
+	{
+		this.$el.html(html);
+
+		return this;
+	};
+
+	/**
+	 * append html to element of view
+	 * this function is needed so that other can overload and "translate"
+	 *
+	 * @param {String} html
+	 * @returns {View}
+	 */
+	View.prototype.htmlAppend = function(html)
+	{
+		this.$el.append(html);
+
+		return this;
 	};
 
 	/**
@@ -526,7 +685,7 @@ define(
 				{
 					bindingOptions =
 					{
-						selector: '[data-model="' + propertyName + '"], .' + propertyName,
+						selector: '',
 						callback: this['onChange' + propertyName.charAt(0).toUpperCase() + propertyName.slice(1)]
 					};
 				}
@@ -537,17 +696,61 @@ define(
 				{
 					bindingOptions.callback = this[bindingOptions.callback];
 				}
-				// empty function
-				else if ((bindingOptions.callback instanceof Function) === false)
+				// not a function
+				if ((bindingOptions.callback instanceof Function) === false)
 				{
 					bindingOptions.callback = lodash.noop;
+				}
+
+				// formatter options of view overwrites formatter settings in modelBindings
+				if (this.formatter[propertyName] !== undefined)
+				{
+					bindingOptions.formatter = this.formatter[propertyName];
+				}
+
+				// formatter
+				if (bindingOptions.formatter === undefined)
+				{
+					bindingOptions.formatter = {};
+				}
+				// convert formatter settings to getter only
+				if (bindingOptions.formatter instanceof Function)
+				{
+					bindingOptions.formatter =
+					{
+						get: bindingOptions.formatter
+					};
+				}
+
+				// formatter getter
+				// formatter getter is a string, use function from this
+				if (typeof bindingOptions.formatter.get === 'string')
+				{
+					bindingOptions.formatter.get = this[bindingOptions.formatter.get];
+				}
+				// formatter getter not a function
+				if ((bindingOptions.formatter.get instanceof Function) === false)
+				{
+					bindingOptions.formatter.get = lodash.noop;
+				}
+
+				// formatter setter
+				// formatter setter is a string, use function from this
+				if (typeof bindingOptions.formatter.set === 'string')
+				{
+					bindingOptions.formatter.set = this[bindingOptions.formatter.set];
+				}
+				// formatter getter not a function
+				if ((bindingOptions.formatter.set instanceof Function) === false)
+				{
+					bindingOptions.formatter.set = lodash.noop;
 				}
 
 				// in the options is an selector define. find HTMLElement and update the html with the new value
 				if (bindingOptions.selector !== undefined)
 				{
 					// create specific selectors
-					bindingOptions.selectors = this.createSelectorForPropertyChange(bindingOptions.selector);
+					bindingOptions.selectors = this.createSelectorForPropertyChange(propertyName, bindingOptions.selector);
 				}
 
 				// set preprare modelBindings
@@ -612,6 +815,9 @@ define(
 			newValue = element.val();
 		}
 
+		// format the value
+		newValue = this.formatModelProperty(propertyName, newValue, 'set');
+
 		// set it
 		var methodToSet = 'set';
 		// save it
@@ -621,18 +827,13 @@ define(
 		}
 
 		// show saving
-		element.addClass('data-model-saving');
-		var elementSaving = jQuery(this.templateSaving);
-		elementSaving.insertAfter(element);
+		this.showSaving(element);
 
 		// set the new value to model and set or save
 		this.model[methodToSet](propertyName, newValue,
 		{
-			success: function()
-			{
-				elementSaving.remove();
-				element.removeClass('data-model-saving');
-			}
+			// TODO modelPropertyChange events and Functions onComplete
+			complete: this.hideSaving.bind(this)
 		});
 
 		return this;
@@ -658,25 +859,33 @@ define(
 		}
 
 		// in the options is a callback function as Function. call the function
-		var callbackResult = bindingOptions.callback.call(this, modelAttributes, propertyName, newValue);
+		var callbackResult = bindingOptions.callback.call(this, newValue, modelAttributes, propertyName);
 		if (callbackResult !== undefined)
 		{
 			newValue = callbackResult;
 		}
 
-		// set on every selector the value
-		lodash.each(bindingOptions.selectors, function(options)
+		// set in the html
+		this.updateModelPropertyInHtml(propertyName, newValue);
+
+		// trigger event for property
+		this.trigger('modelPropertyChange:' + propertyNameUcFirst, this, this.model, propertyName, newValue);
+
+		// method for property
+		var propertyNameUcFirst = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
+		if (this['onModelPropertyChange' + propertyNameUcFirst] instanceof Function)
 		{
-			var elements = this.$el.find(options.selector);
+			this['onModelPropertyChange' + propertyNameUcFirst](newValue);
+		}
 
-			if (elements.length === 0)
-			{
-				return;
-			}
+		// trigger event
+		this.trigger('modelPropertyChange', this, this.model, propertyName, newValue);
 
-			// direct callback
-			options.callback.call(this, this, elements, newValue);
-		}, this);
+		// method for property
+		if (this['onModelPropertyChange'] instanceof Function)
+		{
+			this['onModelPropertyChange'](propertyName, newValue);
+		}
 
 		return this;
 	};
@@ -694,7 +903,7 @@ define(
 			this.$el.removeClass(this.className);
 		}
 
-		this.trigger('remove');
+		this.trigger('remove', this);
 
 		Backbone.View.prototype.remove.apply(this, arguments);
 
@@ -745,11 +954,7 @@ define(
 		}
 
 		// get model data if there is a model
-		var dataModel = {};
-		if (this.model instanceof Model)
-		{
-			dataModel = this.model.attributes;
-		}
+		var dataModel = this.getFormattedModelProperties();
 
 		// get template Data
 		var dataTemplate = this.templateData;
@@ -758,20 +963,62 @@ define(
 			dataTemplate = {};
 		}
 
-		// set the html
-		this.$el.html(this.template(lodash.extend(
+		// create data for template
+		var dataComplete = lodash.extend(
 		{
 			model: dataModel,
 			template: dataTemplate,
 			data: data,
 			view: this
-		}, dataTemplate, dataModel, data)));
+		}, dataTemplate, dataModel, data);
+
+		// set the html
+		this.html(this.template(dataComplete));
+
+		// auto append templates
+		if (this.autoTemplatesAppend === true)
+		{
+			lodash.each(this.templates, function(template)
+			{
+				if (template instanceof Function)
+				{
+					this.htmlAppend(template(dataComplete));
+				}
+			}, this);
+		}
+
+		// remap to unique view selector
+		lodash.each(this.$el.find('[data-model]'), function(element)
+		{
+			element = jQuery(element);
+			element.attr(this.selectorDataModel.slice(1, -1), element.data('model'));
+		}, this);
 
 		// create observing of inputs for observed modelBindings
 		if (this.autoModelUpdate === true)
 		{
-			this.$el.find('[data-model]').on('change.model', this.onHTMLElementPropertyChange.bind(this));
+			this.$el.find(this.selectorDataModel + ':input').on('change.model', this.onHTMLElementPropertyChange.bind(this));
 		}
+
+		// fill in the model data into template
+		this.updateModelPropertiesToHtml();
+
+		return this;
+	};
+
+	/**
+	 * show saving
+	 *
+	 * @param {jQuery}|{HTMLElement} element
+	 * @returns {View}
+	 */
+	View.prototype.showSaving = function(element)
+	{
+		element = jQuery(element);
+		this._elementCurrentSaving = {
+			element: element.addClass('data-model-saving'),
+			saving: jQuery(this.templateSaving).insertAfter(element)
+		};
 
 		return this;
 	};
@@ -797,15 +1044,61 @@ define(
 	};
 
 	/**
-	 * translate text
+	 * updates all binded model property in html
 	 *
-	 * @param {String}
-	 * @returns {String}
+	 * @returns {View}
 	 */
-	View.prototype.translate = function(text)
+	View.prototype.updateModelPropertiesToHtml = function()
 	{
-		return DI.get('translation').translate(text);
+		if ((this.model instanceof Model) === false)
+		{
+			return this;
+		}
+
+		lodash.each(this.modelBindings, function(bindingOption, propertyName)
+		{
+			this.updateModelPropertyInHtml(propertyName, this.model.attributes[propertyName]);
+		}, this);
+
+		return this;
 	};
 
-	return View;
+	/**
+	 * updates a binded model property in html
+	 *
+	 * @param {String} propertyName
+	 * @param {Mixed} value
+	 * @returns {View}
+	 */
+	View.prototype.updateModelPropertyInHtml = function(propertyName, value)
+	{
+		var bindingOptions = this.modelBindings[propertyName];
+
+		// nothing to do
+		if (bindingOptions === undefined)
+		{
+			return this;
+		}
+
+		// format the value
+		value = this.formatModelProperty(propertyName, value);
+
+		// set on every selector the value
+		lodash.each(bindingOptions.selectors, function(options)
+		{
+			var elements = this.$el.find(options.selector);
+
+			if (elements.length === 0)
+			{
+				return;
+			}
+
+			// direct callback
+			options.callback.call(this, this, elements, value);
+		}, this);
+
+		return this;
+	};
+
+	return compatibility(View);
 });

@@ -3,10 +3,12 @@
 define(
 [
 	'lodash',
-	'backbone'
+	'backbone',
+	'forge/backbone/compatibility'
 ], function(
 	lodash,
-	Backbone
+	Backbone,
+	compatibility
 )
 {
 
@@ -22,9 +24,6 @@ define(
 
 		return this;
 	};
-
-	// compatibility
-	History.extend = Backbone.History.extend;
 
 	// prototype creation
 	History.prototype = Object.create(Backbone.History.prototype);
@@ -81,5 +80,5 @@ define(
 		return this;
 	};
 
-	return History;
+	return compatibility(History);
 });

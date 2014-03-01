@@ -3,10 +3,12 @@
 define(
 [
 	'backbone',
-	'forge/observer/object'
+	'forge/observer/object',
+	'forge/backbone/compatibility'
 ], function(
 	Backbone,
-	ObserverObject
+	ObserverObject,
+	compatibility
 )
 {
 	/**
@@ -28,9 +30,6 @@ define(
 
 		return this;
 	};
-
-	// compatibility
-	Model.extend = Backbone.Model.extend;
 
 	// prototype
 	Model.prototype = Object.create(Backbone.Model.prototype,
@@ -99,8 +98,48 @@ define(
 			enumerable: true,
 			configurable: true,
 			writable: true
+		},
+
+		/**
+		 * @var {Boolean}
+		 */
+		waitDefault:
+		{
+			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
 		}
 	});
+
+	/**
+	 * correct clonig
+	 *
+	 * @returns {Model}
+	 */
+	Model.prototype.clone = function()
+	{
+		var attributes = this.toJSON();
+		var construct = this.constructor;
+
+		return new construct(attributes);
+	};
+
+	/**
+	 * destroy with default wait
+	 *
+	 * @param {Object} options
+	 * @returns {Model}
+	 */
+	Model.prototype.destroy = function(options)
+	{
+		options = options || {};
+		options.wait = options.wait !== undefined ? options.wait : this.waitDefault;
+
+		Backbone.Model.prototype.destroy.call(this, options);
+
+		return this;
+	};
 
 	/**
 	 * parsing of the attributes
@@ -115,7 +154,7 @@ define(
 
 		if (this.idAttributeIsNumeric === true && attributes[this.idAttribute] !== undefined)
 		{
-			var number = attributes[this.idAttribute];
+			var number = Number(attributes[this.idAttribute]);
 
 			if (isNaN(number) === false)
 			{
@@ -137,20 +176,59 @@ define(
 	Model.prototype.set = function(key, val, options)
 	{
 		var success = undefined;
-		if (typeof key === 'object')
+		var complete = undefined;
+
+		if (key == null || typeof key === 'object')
 		{
 			options = val;
 		}
-		success	= options.success;
+
+		if (options !== undefined)
+		{
+			success	= options.success;
+			complete = options.complete;
+		}
 
 		Backbone.Model.prototype.set.apply(this, arguments);
+
 		if (success instanceof Function && options.xhr === undefined)
 		{
 			success.call(this, this, undefined, options);
 		}
 
+		if (complete instanceof Function && options.xhr === undefined)
+		{
+			complete.call(this, this, undefined, options);
+		}
+
 		return this;
 	};
 
-	return Model;
+	/**
+	 * save with default wait
+	 *
+	 * @param {Object}|{String} key
+	 * @param {Mixed} val
+	 * @param {Object} options
+	 * @returns {Model}
+	 */
+	Model.prototype.save = function(key, val, options)
+	{
+		if (key == null || typeof key === 'object')
+		{
+			val = val || {};
+			val.wait = val.wait !== undefined ? val.wait : this.waitDefault;
+		}
+		else
+		{
+			options = options || {};
+			options.wait = options.wait !== undefined ? options.wait : this.waitDefault;
+		}
+
+		Backbone.Model.prototype.save.call(this, key, val, options);
+
+		return this;
+	};
+
+	return compatibility(Model);
 });

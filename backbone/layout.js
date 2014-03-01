@@ -4,10 +4,12 @@ define(
 [
 	'lodash',
 	'jQuery',
+	'forge/backbone/compatibility',
 	'forge/backbone/view'
 ], function(
 	lodash,
 	jQuery,
+	compatibility,
 	View
 )
 {
@@ -35,9 +37,6 @@ define(
 
 		return this;
 	};
-
-	// compatibility
-	Layout.extend = View.extend;
 
 	// prototype
 	Layout.prototype = Object.create(View.prototype,
@@ -296,5 +295,5 @@ define(
 		return this;
 	};
 
-	return Layout;
+	return compatibility(Layout);
 });

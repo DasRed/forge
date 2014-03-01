@@ -2,17 +2,17 @@
 
 define(
 [
-	'forge/backbone/model',
+	'forge/backbone/compatibility',
 	'forge/backbone/view/list',
 	'forge/backbone/view/list/select/entry'
 ], function(
-	Model,
+	compatibility,
 	ViewList,
 	ViewListSelectEntry
 )
 {
 	/**
-	 * list of view with selectin
+	 * list of view with selection
 	 *
 	 * @event {void} change({ViewListSelect} view, {Model} modelSelectedOld, {View} viewModelSelectedOld, {Model} modelSelectedNew, {View} viewModelSelectedNew)
 	 * @param {Object} options
@@ -25,9 +25,6 @@ define(
 		return this;
 	};
 
-	// compatibility
-	ViewListSelect.extend = ViewList.extend;
-
 	// prototype
 	ViewListSelect.prototype = Object.create(ViewList.prototype,
 	{
@@ -37,6 +34,19 @@ define(
 		 * @var {Boolean}
 		 */
 		autoSelect:
+		{
+			value: false,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * selectable by user or not
+		 *
+		 * @var {Boolean}
+		 */
+		selectable:
 		{
 			value: true,
 			enumerable: true,
@@ -100,12 +110,6 @@ define(
 					});
 				}
 
-				// autoselect the first if nothing is selected
-				if (this.autoSelect === true && (modelSelected === null || modelSelected === undefined))
-				{
-					modelSelected = this.collection.first();
-				}
-
 				// no null
 				if (modelSelected === null)
 				{
@@ -148,7 +152,10 @@ define(
 		// listing on the select event
 		view.on('select', function(viewEntry)
 		{
-			this.selected = viewEntry.model;
+			if (this.selectable === true)
+			{
+				this.selected = viewEntry.model;
+			}
 		}, this);
 
 		return view;
@@ -156,6 +163,12 @@ define(
 
 	/**
 	 * on selection change
+	 *
+	 * @param {Model} modelSelectedOld
+	 * @param {View} viewModelSelectedOld
+	 * @param {Model} modelSelectedNew
+	 * @param {View} viewModelSelectedNew
+	 * @returns {ViewListSelect}
 	 */
 	ViewListSelect.prototype.onChange = function(modelSelectedOld, viewModelSelectedOld, modelSelectedNew, viewModelSelectedNew)
 	{
@@ -197,6 +210,11 @@ define(
 		if (this.selected === model)
 		{
 			this.selected = undefined;
+		}
+
+		if (this.autoSelect === true && this.selected === undefined && this.collection.length != 0)
+		{
+			this.selected = this.collection.first();
 		}
 
 		return this;
@@ -264,6 +282,11 @@ define(
 	{
 		ViewList.prototype.render.apply(this, arguments);
 
+		if (this.selectable === true)
+		{
+			this.$el.addClass('selectable');
+		}
+
 		if (this.autoSelect === true && this.selected === undefined && this.collection.length > 0)
 		{
 			this.selected = this.collection.models[0];
@@ -272,6 +295,5 @@ define(
 		return this;
 	};
 
-
-	return ViewListSelect;
+	return compatibility(ViewListSelect);
 });

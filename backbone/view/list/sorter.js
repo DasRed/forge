@@ -214,7 +214,7 @@ define(
 			});
 
 			// on entry... no field selection
-			if (this.properties.length <= 1)
+			if (lodash.size(this.properties) <= 1)
 			{
 				this.$el.find('.selector').hide();
 			}

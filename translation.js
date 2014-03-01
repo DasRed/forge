@@ -2,14 +2,10 @@
 
 define(
 [
-	'text',
 	'lodash',
-	'jQuery',
 	'forge/object/base'
 ], function(
-	text,
 	lodash,
-	jQuery,
 	Base
 )
 {
@@ -26,7 +22,7 @@ define(
 
 		Base.call(this, options);
 
-		this.setTranslations(translations).initialize();
+		this.setTranslations(translations);
 
 		return this;
 	};
@@ -112,34 +108,6 @@ define(
 	});
 
 	/**
-	 * initialize and starting auto translation
-	 *
-	 * @returns {Translation}
-	 */
-	Translation.prototype.initialize = function()
-	{
-		// overwrite require text onload function
-		var textFinishLoad = text.finishLoad;
-		text.finishLoad = (function(name, strip, content, onLoad)
-		{
-			content = this.translate(content);
-
-			return textFinishLoad.call(text, name, strip, content, onLoad);
-		}).bind(this);
-
-		// find all loaded text
-		for (var key in require.s.contexts._.defined)
-		{
-			if (key.substr(0, 5) === 'text!')
-			{
-				window.require.s.contexts._.defined[key] = this.translate(require.s.contexts._.defined[key]);
-			}
-		}
-
-		return this;
-	};
-
-	/**
 	 * set Translations
 	 *
 	 * @param {Object} translations
@@ -169,13 +137,48 @@ define(
 	/**
 	 * translate a text with given parameters
 	 *
-	 * @param {String} test
+	 * @param {String} key
+	 * @param {Object} parameters
+	 * @param {String} defaults
 	 * @returns {String}
 	 */
-	Translation.prototype.translate = function(text)
+	Translation.prototype.translate = function(key, parameters, defaults)
+	{
+		if (key.charAt(0) === '{')
+		{
+			key = key.slice(1);
+		}
+		if (key.charAt(key.length - 1) === '}')
+		{
+			key = key.slice(0, key.length - 1);
+		}
+
+		var text = this.translation[key];
+
+		if (text === undefined)
+		{
+			text = defaults !== undefined ? defaults : key;
+		}
+
+		// parameter replacemant
+		text = lodash.reduce(parameters, function(text, value, name)
+		{
+			return text.replace(new RegExp('\\[' + name + '\\]', 'gi'), value);
+		}, text);
+
+		return text;
+	};
+
+	/**
+	 * inline translation
+	 *
+	 * @param {String} text
+	 * @returns {String}
+	 */
+	Translation.prototype.translateInline = function(text)
 	{
 		// replace the text
-		text = text.replace(this.regexpTranslations, (function(match, name)
+		text = text.replace(this.regexpTranslations, (function(match, key)
 		{
 			switch (match.charAt(0))
 			{
@@ -185,17 +188,10 @@ define(
 					return match;
 			}
 
-			var value = this.translation[name];
-
-			if (value === undefined)
-			{
-				return match;
-			}
-
-			return value;
+			return this.translate(key, undefined, match);
 		}).bind(this));
 
-		// replace the parameters
+		// parameters conversion
 		text = text.replace(this.regexpParameters, '${$1}')
 
 		return text;

@@ -44,7 +44,7 @@ define(
 		events:
 		{
 			'click .clear, tap .clear': 'onClickClear',
-			'keyup .input': 'onKeyUpInput',
+			'keyup input': 'onKeyUpInput',
 		},
 
 		/**
@@ -125,6 +125,10 @@ define(
 			}
 			this.containerList = jQuery(this.containerList);
 
+			// collection is changing
+			this.collection.on('add', this.filter, this);
+			this.collection.on('reset', this.filter, this);
+
 			return this;
 		},
 
@@ -138,7 +142,7 @@ define(
 			event.stop();
 
 			this.current = '';
-			this.$el.find('.input').val(this.current);
+			this.$el.find('input').val(this.current);
 
 			this.filter();
 
@@ -154,7 +158,7 @@ define(
 		{
 			event.stop();
 
-			this.current = this.$el.find('.input').val();
+			this.current = this.$el.find('input').val();
 			this.filter();
 
 			return this;
