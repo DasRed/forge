@@ -3,6 +3,7 @@
 define(
 [
 	'lodash',
+	'jQuery',
 	'forge/backbone/compatibility',
 	'forge/backbone/collection',
 	'forge/backbone/model',
@@ -10,6 +11,7 @@ define(
 	'forge/backbone/view/list/entry'
 ], function(
 	lodash,
+	jQuery,
 	compatibility,
 	Collection,
 	Model,
@@ -61,8 +63,10 @@ define(
 		this.collection.on('remove', this.onCollectionRemove, this);
 		this.collection.on('reset', this.onCollectionReset, this);
 		this.collection.on('sort', this.onCollectionSort, this);
+		this.collection.on('fetching', this.showLoadingScreen, this);
+		this.collection.on('fetched', this.hideLoadingScreen, this);
 
-		if (this.autoFetch === true)
+		if (this.autoFetch === true && this.collection.length === 0)
 		{
 			// fetch the data
 			this.collection.fetch();
@@ -133,10 +137,12 @@ define(
 					collection.on('remove', this.onCollectionRemove, this);
 					collection.on('reset', this.onCollectionReset, this);
 					collection.on('sort', this.onCollectionSort, this);
+					collection.on('fetching', this.showLoadingScreen, this);
+					collection.on('fetched', this.hideLoadingScreen, this);
 
+					// fetch the data
 					if (this.autoFetch === true)
 					{
-						// fetch the data
 						this.collection.fetch();
 					}
 				}
@@ -157,6 +163,58 @@ define(
 			enumerable: true,
 			configurable: true,
 			writable: true
+		},
+
+		/**
+		 * css selector for the container for loading element. if not defined or found, selectorContainer rules will be taken
+		 *
+		 * @var {String}
+		 */
+		selectorLoading:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * show the loading
+		 *
+		 * @var {Boolean}
+		 */
+		showLoading:
+		{
+			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * tag name of list
+		 *
+		 * @var {String}
+		 */
+		tagName:
+		{
+			value: 'ul',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * template for loading
+		 *
+		 * @var {String}
+		 */
+		templateLoading:
+		{
+			value: '<div class="loaderScreen"><i class="fa fa-spinner fa-spin"></i></div>',
+			enumerable: true,
+			configurable: true,
+			writabke: true
 		},
 
 		/**
@@ -210,14 +268,9 @@ define(
 	 */
 	ViewList.prototype.appendEntryToIndex = function(model, index)
 	{
-		var elementParent = this.selectorContainer === null || this.selectorContainer === undefined ? this.$el : this.$el.find(this.selectorContainer);
+		var elementParent = this.getElementContainerEntry();
 		var elementEntry = this.getViewEntryByModel(model).$el.detach();
 		var elementChilds = elementParent.find('>');
-
-		if (elementParent.length === 0)
-		{
-			throw new Error('Can not find parent element "' + this.selectorContainer + '" for view list.');
-		}
 
 		// append
 		if (elementChilds.length == 0 || elementChilds.length - 1 <= index)
@@ -231,6 +284,54 @@ define(
 		}
 
 		return this;
+	};
+
+	/**
+	 * returns the parent element for entries
+	 *
+	 * @param {Boolean} throwError default TRUE
+	 * @returns {jQuery}
+	 */
+	ViewList.prototype.getElementContainerEntry = function(throwError)
+	{
+		var elementParent = this.selectorContainer === null || this.selectorContainer === undefined ? this.$el : this.$el.find(this.selectorContainer);
+		if (elementParent.length === 0)
+		{
+			if (throwError === undefined || throwError === true)
+			{
+				throw new Error('Can not find parent element "' + this.selectorContainer + '" for view list.');
+			}
+			return undefined;
+		}
+
+		return elementParent;
+	};
+
+	/**
+	 * returns the parent element for loading
+	 *
+	 * @param {Boolean} throwError default TRUE
+	 * @returns {jQuery}
+	 */
+	ViewList.prototype.getElementContainerLoading = function(throwError)
+	{
+		var elementParent = null;
+		if (this.selectorLoading !== null && this.selectorLoading !== undefined)
+		{
+			elementParent = this.$el.find(this.selectorLoading);
+		}
+
+		if ((elementParent === null || elementParent.length === 0) && this.$el.is(this.selectorLoading) === true)
+		{
+			elementParent = this.$el;
+		}
+
+		if (elementParent === null || elementParent.length === 0)
+		{
+			elementParent = this.getElementContainerEntry(false) || this.$el;
+		}
+
+		return elementParent;
 	};
 
 	/**
@@ -270,18 +371,20 @@ define(
 	 * returns the view instance
 	 *
 	 * @param {Model} model
+	 * @param {Object} options
 	 * @returns {View}
 	 */
-	ViewList.prototype.getViewInstance = function(model)
+	ViewList.prototype.getViewInstance = function(model, options)
 	{
 		var view = this.viewEntry;
 
 		// create the view and remember. note: auto render is on
-		var instance = new view(
+		var instance = new view(lodash.extend({}, options || {},
 		{
 			autoRender: true,
-			model: model
-		});
+			model: model,
+			list: this
+		}));
 
 		if ((instance instanceof ViewListEntry) === false)
 		{
@@ -291,6 +394,22 @@ define(
 		console.debug('view for model (id: "' + (model ? model.id : model) + '") created.');
 
 		return instance;
+	};
+
+	/**
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.hideLoadingScreen = function()
+	{
+		if (this.showLoadingElement)
+		{
+			this.showLoadingElement.remove();
+			delete this.showLoadingElement;
+		}
+
+		this.getElementContainerLoading().removeClass('fetching');
+
+		return this;
 	};
 
 	/**
@@ -419,6 +538,10 @@ define(
 	{
 		View.prototype.render.apply(this, arguments);
 
+		if (this.showLoadingElement !== undefined)
+		{
+			this.hideLoadingScreen().showLoadingScreen();
+		}
 		// render each entry
 		this.collection.each(this.renderEntry, this);
 
@@ -449,6 +572,19 @@ define(
 
 		// append to index
 		this.appendEntryToIndex(model, index);
+
+		return this;
+	};
+
+	/**
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.showLoadingScreen = function()
+	{
+		this.hideLoadingScreen();
+
+		this.showLoadingElement = jQuery(this.templateLoading);
+		this.getElementContainerLoading().addClass('fetching').append(this.showLoadingElement);
 
 		return this;
 	};

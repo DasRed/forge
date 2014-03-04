@@ -260,13 +260,36 @@ define(
 	 */
 	Controller.prototype.remove = function()
 	{
+		this.removeLayout().stopListening();
+
+		return this;
+	};
+
+	/**
+	 * removing layout
+	 *
+	 * @returns {Controller}
+	 */
+	Controller.prototype.removeLayout = function()
+	{
 		if (this.layoutInstance instanceof View)
 		{
 			this.layoutInstance.remove();
 			this.layoutInstance = null;
 		}
 
-		this.stopListening();
+		return this;
+	};
+
+	/**
+	 * setting layout
+	 *
+	 * @param {View} layout
+	 * @returns {Controller}
+	 */
+	Controller.prototype.setLayout = function(layout)
+	{
+		this.removeLayout().layoutInstance = layout;
 
 		return this;
 	};

@@ -138,9 +138,10 @@ define(
 	 * returns the view instance
 	 *
 	 * @param {Model} model
+	 * @param {Object} options
 	 * @returns {ViewListSelectEntry}
 	 */
-	ViewListSelect.prototype.getViewInstance = function(model)
+	ViewListSelect.prototype.getViewInstance = function(model, options)
 	{
 		var view = ViewList.prototype.getViewInstance.apply(this, arguments);
 
@@ -284,7 +285,7 @@ define(
 
 		if (this.selectable === true)
 		{
-			this.$el.addClass('selectable');
+			this.getElementContainerEntry().addClass('selectable');
 		}
 
 		if (this.autoSelect === true && this.selected === undefined && this.collection.length > 0)

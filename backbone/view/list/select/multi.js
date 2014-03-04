@@ -41,6 +41,11 @@ define(
 
 		ViewList.apply(this, arguments);
 
+		// in start mode, backbone made strange things with prototype :( and so we have the initial event binding and fetching here
+		this.selected.on('add', this.onSelectedAdd, this);
+		this.selected.on('remove', this.onSelectedRemove, this);
+		this.selected.on('reset', this.onSelectedReset, this);
+
 		return this;
 	};
 
@@ -96,10 +101,14 @@ define(
 					collection = new collection();
 				}
 
-				// add events
-				collection.on('add', this.onSelectedAdd, this);
-				collection.on('remove', this.onSelectedRemove, this);
-				collection.on('reset', this.onSelectedReset, this);
+				// in start mode, backbone made strange things with prototype :(
+				if (this.cid !== undefined)
+				{
+					// add events
+					collection.on('add', this.onSelectedAdd, this);
+					collection.on('remove', this.onSelectedRemove, this);
+					collection.on('reset', this.onSelectedReset, this);
+				}
 
 				// set
 				this._selected = collection;
@@ -119,9 +128,10 @@ define(
 	 * returns the view instance
 	 *
 	 * @param {Model} model
+	 * @param {Object} options
 	 * @returns {ViewListSelectEntry}
 	 */
-	ViewListSelectMulti.prototype.getViewInstance = function(model)
+	ViewListSelectMulti.prototype.getViewInstance = function(model, options)
 	{
 		var view = ViewList.prototype.getViewInstance.apply(this, arguments);
 
@@ -336,7 +346,7 @@ define(
 
 		if (this.selectable === true)
 		{
-			this.$el.addClass('selectable');
+			this.getElementContainerEntry().addClass('selectable');
 		}
 
 		this.onSelectedChange();

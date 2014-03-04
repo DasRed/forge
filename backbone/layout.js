@@ -48,7 +48,7 @@ define(
 		 */
 		autoRender:
 		{
-			value: false,
+			value: true,
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -71,6 +71,14 @@ define(
 		 * list of config to deal with views
 		 *
 		 * @var {Object}
+		 * 		{
+		 * 			view: {View} undefined
+		 *			container: {String}|{HTLMElement}|{jQuery}|{Undefined} undefined
+		 *			el: {String}|{HTLMElement}|{jQuery}|{Undefined} undefined
+		 *			autoCreate: {Boolean} true
+		 *			autoRender: {Boolean} true
+		 *			options: {Object}|{Function} {}
+		 * 		}
 		 */
 		configs:
 		{
@@ -116,6 +124,18 @@ define(
 	Layout.prototype.getView = function(key)
 	{
 		return this.views[key]
+	};
+
+	/**
+	 * on create view
+	 *
+	 * @param {View} view
+	 * @param {Object} config
+	 * @param {String} key
+	 */
+	Layout.prototype.onCreateView = function(view, config, key)
+	{
+		return this;
 	};
 
 	/**
@@ -279,6 +299,7 @@ define(
 			// trigger events
 			this.trigger('createView:' + key, this, view, config, key);
 			this.trigger('createView', this, view, config, key);
+			this.onCreateView(view, config, key);
 		}
 
 		// remember the view

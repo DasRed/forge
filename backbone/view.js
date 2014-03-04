@@ -37,6 +37,11 @@ define(
 	 * @eventMethodObject onModelPropertyChange({String} propertyName, {Mixed} newValue)
 	 * @eventMethodObject onModelPropertyChange[:PROPERTYNAME]({Mixed} newValue)
 	 *
+	 * @event {void} htmlPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue)
+	 * @event {void} htmlPropertyChange[:PROPERTYNAME]({View} view, {Model} model, {String} propertyName, {Mixed} newValue)
+	 * @eventMethodObject onHTMLPropertyChange({String} propertyName, {Mixed} newValue)
+	 * @eventMethodObject onHTMLPropertyChange[:PROPERTYNAME]({Mixed} newValue)
+	 *
 	 * @param {Object} options
 	 * @returns {View}
 	 */
@@ -49,19 +54,6 @@ define(
 		}
 
 		options = options || {};
-
-		// remapping from el to container for el #content
-		if (options.container === undefined)
-		{
-			switch (true)
-			{
-				case options.el == '#content':
-				case options.el == jQuery('#content'):
-				case options.el == jQuery('#content')[0]:
-					options.container = options.el;
-					delete options.el;
-			}
-		}
 
 		// defaults modelBindings object
 		if (this.modelBindings === null)
@@ -353,7 +345,7 @@ define(
 				if (model instanceof Model)
 				{
 					// create a observer?
-					this._modelObserverHandler = this.onModelPropertyChange.bind(this);
+					this._modelObserverHandler = this.onModelPropertyChangeHandler.bind(this);
 					model.observer.on('set', this._modelObserverHandler);
 				}
 
@@ -389,6 +381,11 @@ define(
 			writable: true
 		},
 
+		/**
+		 * returns the selector for data model elements for this view
+		 *
+		 * @returns {String}
+		 */
 		selectorDataModel:
 		{
 			enumerable: true,
@@ -493,14 +490,30 @@ define(
 	 */
 	View.prototype.createSelectorForPropertyChange = function(propertyName, selector)
 	{
+		var fnPrefix = (function(selectorDataModel, value, selector)
+		{
+			return (value !== '' ? ',' : '') + selector.trimRight() + ' ' + selectorDataModel;
+		}).bind(this, this.selectorDataModel.slice(0, -1) + '="' + propertyName + '"]');
+
 		return lodash.reduce(selector.split(','), function(result, selector)
 		{
-			var selectorDataModel = this.selectorDataModel.slice(0, -1) + '="' + propertyName + '"]';
+			result.html.selector += fnPrefix(result.html.selector, selector) + ':not(:input)';
+			result.val.selector += fnPrefix(result.val.selector, selector) + ':input'
+									+ ':not([type=radio])'
+									+ ':not([type=checkbox])'
+									+ ':not([type=file])'
+									+ ':not([type=date])'
+									+ ':not([type=time])'
+									+ ':not([type=datetime-local])'
+									+ ':not([type=datetime])'
+			;
 
-			result.html.selector += (result.html.selector !== '' ? ',' : '') + selector.trimRight() + ' ' + selectorDataModel + ':not(:input)';
-			result.val.selector += (result.val.selector !== '' ? ',' : '') + selector.trimRight() + ' ' + selectorDataModel + ':input:not(:radio):not(:checkbox)';
-			result.radio.selector += (result.radio.selector !== '' ? ',' : '') + selector.trimRight() + ' ' + selectorDataModel + ':radio';
-			result.checkbox.selector += (result.checkbox.selector !== '' ? ',' : '') + selector.trimRight() + ' ' + selectorDataModel + ':checkbox';
+			result.dateTime.selector += fnPrefix(result.dateTime.selector, selector) + ':input[type=date]';
+			result.dateTime.selector += fnPrefix(result.dateTime.selector, selector) + ':input[type=time]';
+			result.dateTime.selector += fnPrefix(result.dateTime.selector, selector) + ':input[type=datetime-local]';
+
+			result.radio.selector += fnPrefix(result.radio.selector, selector) + '[type=radio]';
+			result.checkbox.selector += fnPrefix(result.checkbox.selector, selector) + '[type=checkbox]';
 
 			return result;
 		},
@@ -535,7 +548,21 @@ define(
 				callback: function(view, elements, newValue)
 				{
 					elements.prop('checked', newValue);
-					//elements.val([newValue]);
+				}
+			},
+			dateTime:
+			{
+				selector: '',
+				callback: function(view, elements, newValue)
+				{
+					if (newValue instanceof Date)
+					{
+						elements.prop('valueAsDate', newValue);
+					}
+					else
+					{
+						elements.val(newValue);
+					}
 				}
 			}
 		}, this);
@@ -762,12 +789,24 @@ define(
 	};
 
 	/**
+	 * on html property change
+	 *
+	 * @param {String} propertyName
+	 * @param {Mixed} newValue
+	 * @returns {View}
+	 */
+	View.prototype.onHTMLPropertyChange = function(propertyName, newValue)
+	{
+		return this;
+	};
+
+	/**
 	 * if a HTMLElement change his value for a model property
 	 *
 	 * @param {jQuery.Event}
 	 * @returns {View}
 	 */
-	View.prototype.onHTMLElementPropertyChange = function(event)
+	View.prototype.onHTMLElementPropertyChangeHandler = function(event)
 	{
 		// find element and property
 		var element = jQuery(event.target);
@@ -833,9 +872,41 @@ define(
 		this.model[methodToSet](propertyName, newValue,
 		{
 			// TODO modelPropertyChange events and Functions onComplete
-			complete: this.hideSaving.bind(this)
+			complete: (function()
+			{
+				var propertyNameUcFirst = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
+
+				// trigger event for property
+				this.trigger('htmlPropertyChange:' + propertyNameUcFirst, this, this.model, propertyName, newValue);
+
+				// method for property
+				if (this['onHTMLPropertyChange' + propertyNameUcFirst] instanceof Function)
+				{
+					this['onHTMLPropertyChange' + propertyNameUcFirst](newValue);
+				}
+
+				// trigger event
+				this.trigger('htmlPropertyChange', this, this.model, propertyName, newValue);
+
+				// method for property
+				this.onHTMLPropertyChange(propertyName, newValue);
+
+				this.hideSaving();
+			}).bind(this)
 		});
 
+		return this;
+	};
+
+	/**
+	 * on model property change
+	 *
+	 * @param {String} propertyName
+	 * @param {Mixed} newValue
+	 * @returns {View}
+	 */
+	View.prototype.onModelPropertyChange = function(propertyName, newValue)
+	{
 		return this;
 	};
 
@@ -848,7 +919,7 @@ define(
 	 * @param {Midex} newValue
 	 * @returns {View}
 	 */
-	View.prototype.onModelPropertyChange = function(event, modelAttributes, propertyName, newValue)
+	View.prototype.onModelPropertyChangeHandler = function(event, modelAttributes, propertyName, newValue)
 	{
 		var bindingOptions = this.modelBindings[propertyName];
 
@@ -868,11 +939,12 @@ define(
 		// set in the html
 		this.updateModelPropertyInHtml(propertyName, newValue);
 
+		var propertyNameUcFirst = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
+
 		// trigger event for property
 		this.trigger('modelPropertyChange:' + propertyNameUcFirst, this, this.model, propertyName, newValue);
 
 		// method for property
-		var propertyNameUcFirst = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
 		if (this['onModelPropertyChange' + propertyNameUcFirst] instanceof Function)
 		{
 			this['onModelPropertyChange' + propertyNameUcFirst](newValue);
@@ -882,10 +954,7 @@ define(
 		this.trigger('modelPropertyChange', this, this.model, propertyName, newValue);
 
 		// method for property
-		if (this['onModelPropertyChange'] instanceof Function)
-		{
-			this['onModelPropertyChange'](propertyName, newValue);
-		}
+		this.onModelPropertyChange(propertyName, newValue);
 
 		return this;
 	};
@@ -905,7 +974,16 @@ define(
 
 		this.trigger('remove', this);
 
-		Backbone.View.prototype.remove.apply(this, arguments);
+		if (this.$el.attr('id') === 'content')
+		{
+			this.$el.html('');
+		}
+		else
+		{
+			this.$el.remove();
+		}
+
+		this.stopListening();
 
 		return this;
 	};
@@ -997,7 +1075,7 @@ define(
 		// create observing of inputs for observed modelBindings
 		if (this.autoModelUpdate === true)
 		{
-			this.$el.find(this.selectorDataModel + ':input').on('change.model', this.onHTMLElementPropertyChange.bind(this));
+			this.$el.find(this.selectorDataModel + ':input').on('change.model', this.onHTMLElementPropertyChangeHandler.bind(this));
 		}
 
 		// fill in the model data into template
@@ -1014,8 +1092,11 @@ define(
 	 */
 	View.prototype.showSaving = function(element)
 	{
+		this.hideSaving();
+
 		element = jQuery(element);
-		this._elementCurrentSaving = {
+		this._elementCurrentSaving =
+		{
 			element: element.addClass('data-model-saving'),
 			saving: jQuery(this.templateSaving).insertAfter(element)
 		};

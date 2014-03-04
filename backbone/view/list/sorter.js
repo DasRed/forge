@@ -4,12 +4,14 @@ define(
 [
 	'lodash',
 	'jQuery',
+	'forge/collator',
 	'forge/backbone/collection',
 	'forge/backbone/view',
 	'text!forge/backbone/view/list/template/sorter.html'
 ], function(
 	lodash,
 	jQuery,
+	collator,
 	Collection,
 	View,
 	templateViewListSorter
@@ -76,24 +78,7 @@ define(
 		 */
 		comparator: function(modelA, modelB)
 		{
-			var result = 0;
-			var property = this.current;
-
-			if (modelA.attributes[property] < modelB.attributes[property])
-			{
-				result = -1;
-			}
-			else if (modelA.attributes[property] > modelB.attributes[property])
-			{
-				result = 1;
-			}
-
-			if (this.direction === 'desc')
-			{
-				result *= -1;
-			}
-
-			return result;
+			return collator.compareModels(this.current, modelA, modelB, this.direction);
 		},
 
 		/**
@@ -142,6 +127,7 @@ define(
 		/**
 		 * on click to toggle the direction
 		 *
+		 * @param {jQuery.Event} event
 		 * @returns {ViewListSorter}
 		 */
 		onClickDirection: function(event)

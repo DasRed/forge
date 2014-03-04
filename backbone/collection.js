@@ -2,11 +2,15 @@
 
 define(
 [
+	'lodash',
 	'backbone',
+	'forge/collator',
 	'forge/backbone/compatibility',
 	'forge/backbone/model'
 ], function(
+	lodash,
 	Backbone,
+	collator,
 	compatibility,
 	Model
 )
@@ -14,7 +18,8 @@ define(
 	/**
 	 * Collection for Models
 	 *
-	 *
+	 * @event {void} fetching({Collection} collection)
+	 * @event {void} fetched({Collection} collection)
 	 * @param {Array} models
 	 * @param {Object} options
 	 * @returns {Collection}
@@ -54,7 +59,6 @@ define(
 		}
 	});
 
-
 	/**
 	 * create with default wait
 	 *
@@ -81,6 +85,86 @@ define(
 		}
 
 		Backbone.Collection.prototype.create.call(this, model, options);
+
+		return this;
+	};
+
+	/**
+	 * @param {Object} options
+	 * @returns {Collection}
+	 */
+	Collection.prototype.fetch = function(options)
+	{
+		var self = this;
+		options = options || {};
+
+		var completeCallback = options.complete;
+		options.complete = (function()
+		{
+			var result = undefined;
+			if (completeCallback instanceof Function)
+			{
+				result = completeCallback.apply(this, arguments);
+			}
+
+			this.trigger('fetched', this);
+
+			return result;
+		}).bind(this);
+
+		this.trigger('fetching', this);
+
+		Backbone.Collection.prototype.fetch.call(this, options);
+
+		return this;
+	};
+
+
+	/**
+	 * Force the collection to re-sort itself. You don't need to call this under
+	 * normal circumstances, as the set will maintain sort order as each item
+	 * is added.
+	 *
+	 * overwritten to implement natural sort
+	 * @param {Object} options
+	 * @returns {Collection}
+	 */
+	Collection.prototype.sort = function(options)
+	{
+		if (!this.comparator)
+		{
+			throw new Error('Cannot sort a set without a comparator');
+		}
+
+		options = options || {};
+
+		// Run sort based on type of `comparator`.
+		if (this.comparator instanceof Function)
+		{
+			// sort with one parameter
+			if (this.comparator.length === 1)
+			{
+				this.models = lodash.sortBy(this.models, this.comparator, this);
+			}
+			// sort with 2 parameters callback function
+			else
+			{
+				this.models.sort((this.comparator).bind(this));
+			}
+		}
+		// sort by string (propertyName)
+		else
+		{
+			this.models.sort((function(modelA, modelB)
+			{
+				return collator.compareModels(this.comparator, modelA, modelB);
+			}).bind(this));
+		}
+
+		if (!options.silent)
+		{
+			this.trigger('sort', this, options);
+		}
 
 		return this;
 	};

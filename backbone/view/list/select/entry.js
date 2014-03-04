@@ -2,9 +2,11 @@
 
 define(
 [
+	'jQuery',
 	'forge/backbone/compatibility',
 	'forge/backbone/view/list/entry'
 ], function(
+	jQuery,
 	compatibility,
 	ViewListEntry
 )
@@ -64,17 +66,6 @@ define(
 			enumerable: true,
 			configureable: true,
 			writable: true
-		},
-
-		/**
-		 * @var {String}
-		 */
-		tagName:
-		{
-			value: 'li',
-			enumerable: true,
-			configureable: true,
-			writable: true
 		}
 	});
 
@@ -110,6 +101,11 @@ define(
 	 */
 	ViewListSelectEntry.prototype.onEventToSelect = function(event)
 	{
+		if (jQuery(event.target).is(':input') === true)
+		{
+			return this;
+		}
+
 		event.stop();
 
 		this.trigger('select', this);

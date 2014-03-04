@@ -24,7 +24,34 @@ define(
 
 
 	// prototypew
-	ViewListEntry.prototype = Object.create(View.prototype);
+	ViewListEntry.prototype = Object.create(View.prototype,
+	{
+		/**
+		 * the list of the entry
+		 *
+		 * @var {ViewList}
+		 */
+		list:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * tag name of list entry
+		 *
+		 * @var {String}
+		 */
+		tagName:
+		{
+			value: 'li',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		}
+	});
 
 	/**
 	 * render
