@@ -92,12 +92,26 @@ define(
 			}
 		}, this);
 
-		// convert additional templates to template function
+		// convert additional templates to template function and structur
 		for (var key in this.templates)
 		{
-			if (typeof this.templates[key] === 'string')
+			if (typeof this.templates[key] === 'string' || this.templates[key] instanceof Function)
 			{
-				this.templates[key] = lodash.template(this.templates[key]);
+				this.templates[key] =
+				{
+					template: this.templates[key]
+				};
+			}
+
+			this.templates[key] = lodash.defaults(this.templates[key],
+			{
+				template: undefined,
+				selector: undefined
+			});
+
+			if (typeof this.templates[key].template === 'string')
+			{
+				this.templates[key].template = lodash.template(this.templates[key].template);
 			}
 		}
 
@@ -415,7 +429,8 @@ define(
 		 *
 		 * the result is always a template function
 		 *
-		 * @var {String}|{Function}
+		 * @structure {key: { template: {String}|{Function}, selector: {String}|{jQuery}|{HTMLElement} }
+		 * @var {Object}|{String}|{Function}
 		 */
 		template:
 		{
@@ -659,11 +674,23 @@ define(
 	 * this function is needed so that other can overload and "translate"
 	 *
 	 * @param {String} html
+	 * @param {String}|{jQuery}|{HTMLElement} selector
 	 * @returns {View}
 	 */
-	View.prototype.htmlAppend = function(html)
+	View.prototype.htmlAppend = function(html, selector)
 	{
-		this.$el.append(html);
+		var element = undefined;
+		if (selector !== null && selector !== undefined)
+		{
+			element = jQuery(selector);
+		}
+
+		if (element === null || element === undefined || element.length === 0)
+		{
+			element = this.$el;
+		}
+
+		element.append(html);
 
 		return this;
 	};
@@ -847,6 +874,16 @@ define(
 		else if (element.is(':radio') === true)
 		{
 			newValue = this.$el.find('[name=' + element.attr('name') + ']:checked').val();
+		}
+		// input is number element
+		else if (element.is('[type=number]') === true)
+		{
+			newValue = element.prop('valueAsNumber');
+		}
+		// input is date element
+		else if (element.is(['type=date']) === true || element.is(['type=time']) === true || element.is(['type=datetime-local']) === true || element.is(['type=datetime']) === true)
+		{
+			newValue = element.prop('valueAsDate');
 		}
 		// other inputs
 		else
@@ -1058,9 +1095,9 @@ define(
 		{
 			lodash.each(this.templates, function(template)
 			{
-				if (template instanceof Function)
+				if (template.template instanceof Function)
 				{
-					this.htmlAppend(template(dataComplete));
+					this.htmlAppend(template.template(dataComplete), template.selector);
 				}
 			}, this);
 		}
