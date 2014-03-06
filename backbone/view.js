@@ -735,7 +735,7 @@ define(
 					};
 				}
 				// no data
-				else if (bindingOptions === undefined)
+				else if (bindingOptions === undefined || bindingOptions === null)
 				{
 					bindingOptions =
 					{
@@ -881,7 +881,7 @@ define(
 			newValue = element.prop('valueAsNumber');
 		}
 		// input is date element
-		else if (element.is(['type=date']) === true || element.is(['type=time']) === true || element.is(['type=datetime-local']) === true || element.is(['type=datetime']) === true)
+		else if (element.is('[type=date]') === true || element.is('[type=time]') === true || element.is('[type=datetime-local]') === true || element.is('[type=datetime]') === true)
 		{
 			newValue = element.prop('valueAsDate');
 		}

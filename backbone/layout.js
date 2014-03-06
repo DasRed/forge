@@ -311,8 +311,6 @@ define(
 			view.render();
 		}
 
-		console.debug(view.cid + ' rendered');
-
 		return this;
 	};
 

@@ -179,6 +179,13 @@ define(
 			position--;
 		}
 
+		// nothing found
+		if ((this[actionMethod] instanceof Function) === false && position == 0)
+		{
+			actionMethod = undefined;
+			position = -1;
+		}
+
 		// append the values of routeparts to parameters which not in actionMethod
 		parameters = routeParts.slice(position + 1).concat(parameters);
 

@@ -73,10 +73,13 @@ define(
 		}, this);
 
 		// set sort by html
-		var propertyNameToSort = this.$element.find('[data-model-sorted]').data('model-sort');
+		var elementToSort = this.$element.find('[data-model-sorted]');
+		var direction = elementToSort.data('model-sorted') || 'asc';
+		var propertyNameToSort = elementToSort.data('model-sort');
 		if (propertyNameToSort !== undefined)
 		{
 			this.current = propertyNameToSort;
+			this.direction = direction == 'desc' ? 'desc' : 'asc';
 			this.collection.sort();
 		}
 

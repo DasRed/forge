@@ -391,8 +391,6 @@ define(
 			throw new Error('The view instance from an entry of a list must be instance of ViewListEntry.');
 		}
 
-		console.debug('view for model (id: "' + (model ? model.id : model) + '") created.');
-
 		return instance;
 	};
 
@@ -424,8 +422,6 @@ define(
 	{
 		this.renderEntry(model, collection.indexOf(model));
 
-		console.debug('model (id: "' + (model ? model.id : model) + '") was added in collection.');
-
 		return this;
 	};
 
@@ -440,8 +436,6 @@ define(
 	ViewList.prototype.onCollectionRemove = function(model, collection, options)
 	{
 		this.removeEntry(model);
-
-		console.debug('model (id: "' + (model ? model.id : model) + '") was removed in collection.');
 
 		return this;
 	};
@@ -465,8 +459,6 @@ define(
 		// render each entry
 		this.collection.each(this.renderEntry, this);
 
-		console.debug('collection was reseted.');
-
 		return this;
 	};
 
@@ -479,8 +471,6 @@ define(
 	 */
 	ViewList.prototype.onCollectionSort = function(collection, options)
 	{
-		console.debug('collection was sorted.');
-
 		this.collection.each(this.appendEntryToIndex, this);
 
 		return this;
@@ -504,8 +494,6 @@ define(
 		this.viewEntries = {};
 
 		View.prototype.remove.apply(this, arguments);
-
-		console.debug('list removed.');
 
 		return this;
 	};
@@ -544,8 +532,6 @@ define(
 		}
 		// render each entry
 		this.collection.each(this.renderEntry, this);
-
-		console.debug('list rendered.');
 
 		return this;
 	};
