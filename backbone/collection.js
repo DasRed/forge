@@ -15,6 +15,12 @@ define(
 	Model
 )
 {
+	var excludeProperties =
+	{
+		model: true,
+		comparator: true
+	};
+
 	/**
 	 * Collection for Models
 	 *
@@ -26,6 +32,19 @@ define(
 	 */
 	var Collection = function(models, options)
 	{
+		// copy options
+		lodash.each(options, function(value, key)
+		{
+			if (excludeProperties[key] === true)
+			{
+				return;
+			}
+			if (this[key] !== undefined)
+			{
+				this[key] = value;
+			}
+		}, this);
+
 		Backbone.Collection.apply(this, arguments);
 
 		return this;

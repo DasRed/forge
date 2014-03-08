@@ -654,7 +654,7 @@ define(
 
 		return this;
 	};
-
+	
 	/**
 	 * replace current html with  html to element of view
 	 * this function is needed so that other can overload and "translate"
@@ -1141,6 +1141,28 @@ define(
 		return this;
 	};
 
+	/**
+	 * show saving on model property value manuel
+	 *
+	 * @param {String} propertyName
+	 * @returns {View}
+	 */
+	View.prototype.showSavingModelProperty = function(propertyName)
+	{
+		var bindingOptions = this.modelBindings[propertyName];
+
+		// nothing to do
+		if (bindingOptions === undefined)
+		{
+			return this;
+		}
+
+		return this.showSaving(lodash.reduce(bindingOptions.selectors, function(acc, options)
+		{
+			return acc + (acc !== '' ? ', ' : '') + options.selector;
+		}, ''));
+	};
+	
 	/**
 	 * @param {Object} other
 	 * @param {String} event

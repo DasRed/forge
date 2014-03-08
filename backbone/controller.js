@@ -143,8 +143,8 @@ define(
 		// convert to correct type
 		parameters = lodash.map(parameters, function(parameter)
 		{
-			var asNumber = Number(parameters);
-			if (isNaN(asNumber) === false)
+			var asNumber = Number(parameter);
+			if (parameter !== null && isNaN(asNumber) === false)
 			{
 				return asNumber;
 			}
