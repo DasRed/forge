@@ -101,16 +101,18 @@ define(
 	 */
 	ViewListSelectEntry.prototype.onEventToSelect = function(event)
 	{
-		if (jQuery(event.target).is(':input') === true)
+		var element = jQuery(event.target);
+
+		switch (true)
 		{
-			return this;
+			case element.is(':input'):
+			case element.is('a'):
+				return this;
 		}
 
 		event.stop();
 
-		this.trigger('select', this);
-
-		return this;
+		return this.triggerSelect();
 	};
 
 	/**
@@ -126,6 +128,18 @@ define(
 		element.on(this.eventToSelect, this.onEventToSelect.bind(this));
 
 		this.$el.data('modelCid', this.model.cid);
+
+		return this;
+	};
+
+	/**
+	 * on Event select
+	 *
+	 * @returns {ViewListSelectEntry}
+	 */
+	ViewListSelectEntry.prototype.triggerSelect = function()
+	{
+		this.trigger('select', this);
 
 		return this;
 	};

@@ -1178,6 +1178,7 @@ define(
 			this._modelObserverHandler = undefined;
 		}
 
+		this.undelegateEvents();
 		Backbone.View.prototype.stopListening.apply(this, arguments);
 
 		return this;
