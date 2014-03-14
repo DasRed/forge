@@ -5,12 +5,14 @@ define(
 	'lodash',
 	'backbone',
 	'forge/collator',
+	'forge/url/parameter',
 	'forge/backbone/compatibility',
 	'forge/backbone/model'
 ], function(
 	lodash,
 	Backbone,
 	collator,
+	UrlParameter,
 	compatibility,
 	Model
 )
@@ -64,6 +66,38 @@ define(
 			enumerable: true,
 			configurable: true,
 			writable: true
+		},
+
+		/**
+		 * url
+		 * @var {String}
+		 */
+		url:
+		{
+			enumerable: true,
+			configurable: true,
+			get: function()
+			{
+				// no url defined...
+				if (this._url === undefined)
+				{
+					return undefined
+				}
+
+				// create the parser
+				if (this._urlParameter === undefined)
+				{
+					this._urlParameter = new UrlParameter();
+					this._urlParameter.url = this._url;
+				}
+
+				// parsing
+				return this._urlParameter.parse(this);
+			},
+			set: function(url)
+			{
+				this._url = url;
+			}
 		},
 
 		/**
