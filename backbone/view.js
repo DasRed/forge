@@ -654,7 +654,7 @@ define(
 
 		return this;
 	};
-	
+
 	/**
 	 * replace current html with  html to element of view
 	 * this function is needed so that other can overload and "translate"
@@ -1162,7 +1162,7 @@ define(
 			return acc + (acc !== '' ? ', ' : '') + options.selector;
 		}, ''));
 	};
-	
+
 	/**
 	 * @param {Object} other
 	 * @param {String} event

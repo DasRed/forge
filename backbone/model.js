@@ -30,6 +30,17 @@ define(
 			options.parse = true;
 		}
 
+		// create defaults property keys from attribute Types
+		this.defaults = lodash.reduce(this.attributeTypes, function(acc, attributeType, propertyName)
+		{
+			if (attributeType !== Model.ATTRIBUTE_TYPE_COLLECTION && acc[propertyName] === undefined)
+			{
+				acc[propertyName] = undefined;
+			}
+
+			return acc;
+		}, this.defaults || {});
+
 		Backbone.Model.call(this, attributes, options);
 
 		return this;

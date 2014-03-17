@@ -7,5 +7,6 @@ define(
 	ViewListFilter
 )
 {
-	return ViewListFilter;
+	var ViewTableFilter = ViewListFilter;
+	return ViewTableFilter;
 });

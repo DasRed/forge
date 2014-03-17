@@ -29,12 +29,22 @@ define(
 	 */
 	var ViewTableSorter = function(options)
 	{
+		if (ViewList === undefined)
+		{
+			ViewList = require('forge/backbone/view/list');
+		}
+
+		if (ViewTable === undefined)
+		{
+			ViewTable = require('forge/backbone/view/table');
+		}
+
 		View.apply(this, arguments);
 
 		// validate
 		if ((this.view instanceof ViewTable) === false && (this.view instanceof ViewList) === false)
 		{
-			throw new Error('For a table sorter must be the view property a instance of ViewList or ViewTable!');
+			throw new Error('For a table sorter must be the view property a instance of ViewTable!');
 		}
 
 		// validate
@@ -86,8 +96,10 @@ define(
 		// show sorting
 		this.showSortedProperty(true);
 
+		// events
 		this.collection.on('add', this.showSortedProperty.bind(this, true), this);
 		this.collection.on('reset', this.showSortedProperty.bind(this, true), this);
+		this.view.on('renderEntry', this.updateSortedColumn, this);
 
 		return this;
 	};
@@ -216,6 +228,17 @@ define(
 		},
 
 		/**
+		 * @var {Number}
+		 */
+		sortedColumnIndex:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * view to sort
 		 *
 		 * @var {ViewTable}
@@ -246,7 +269,7 @@ define(
 	 *
 	 * @param {String} propertyName
 	 * @param {jQuery.Event} event
-	 * @returns {ViewListSorter}
+	 * @returns {ViewTableSorter}
 	 */
 	ViewTableSorter.prototype.onClick = function(propertyName, event)
 	{
@@ -274,7 +297,7 @@ define(
 	/**
 	 * remove
 	 *
-	 * @returns {ViewListSorter}
+	 * @returns {ViewTableSorter}
 	 */
 	ViewTableSorter.prototype.remove = function()
 	{
@@ -287,7 +310,7 @@ define(
 	/**
 	 * render
 	 *
-	 * @returns {ViewListSorter}
+	 * @returns {ViewTableSorter}
 	 */
 	ViewTableSorter.prototype.render = function()
 	{
@@ -315,24 +338,49 @@ define(
 		this.$element.find(this.selectorDataModel.slice(0, -1) + '=' + this.current + ']').addClass('sorted ' + this.direction);
 
 		// find column to highlight in body
-		var sortedColumnIndex = undefined;
+		this.sortedColumnIndex = null;
 		lodash.find(this.$element.find('th'), function(element, index)
 		{
 			if (jQuery(element).hasClass('sorted') === true)
 			{
-				sortedColumnIndex = index;
+				this.sortedColumnIndex = index;
 				return true;
 			}
-		});
+		}, this);
 
-		this.view.$el.find(this.selectorBody + ' tr td.sorted').removeClass('sorted');
-		if (sortedColumnIndex !== null)
-		{
-			this.view.$el.find(this.selectorBody + ' tr td:nth-child(' + (sortedColumnIndex + 1) + ')').addClass('sorted');
-		}
+		this.updateSortedColumn();
 
 		return this;
 	};
 
-	return 	compatibility(ViewTableSorter);
+	/**
+	 * updates sorted column index
+	 *
+	 * @param {ViewTable} viewTable,
+	 * @param {ViewListEntry} viewListEntry
+	 * @param {Model} model
+	 * @returns {ViewTableSorter}
+	 */
+	ViewTableSorter.prototype.updateSortedColumn = function(viewTable, viewListEntry, model)
+	{
+		var viewToHandle = this.view;
+		var selectorPrefix = this.selectorBody + ' tr ';
+
+		// only on one entry
+		if (viewListEntry !== undefined)
+		{
+			viewToHandle = viewListEntry;
+			selectorPrefix = '';
+		}
+
+		viewToHandle.$el.find(selectorPrefix + 'td.sorted').removeClass('sorted');
+		if (this.sortedColumnIndex !== null)
+		{
+			viewToHandle.$el.find(selectorPrefix + 'td:nth-child(' + (this.sortedColumnIndex + 1) + ')').addClass('sorted');
+		}
+
+		return this;
+	}
+
+	return compatibility(ViewTableSorter);
 });

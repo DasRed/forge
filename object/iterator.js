@@ -51,7 +51,7 @@ define(
 			enumerable: true,
 			get: function()
 			{
-				this.keys().length;
+				return this.keys().length;
 			}
 		}
 	});
@@ -71,6 +71,20 @@ define(
 		}
 
 		this.data[key] = entry;
+
+		return this;
+	};
+
+	/**
+	 * entfernt alles
+	 *
+	 * @returns {Iterator}
+	 */
+	Iterator.prototype.clear = function()
+	{
+		delete this.data;
+
+		this.data = {};
 
 		return this;
 	};
@@ -102,6 +116,17 @@ define(
 		lodash.each(this.data, callback);
 
 		return this;
+	};
+
+	/**
+	 * exists
+	 *
+	 * @param {String} key
+	 * @returns {Object}
+	 */
+	Iterator.prototype.exists = function(key)
+	{
+		return this.data[key] !== undefined;
 	};
 
 	/**
@@ -153,19 +178,5 @@ define(
 		return this;
 	};
 
-	/**
-	 * entfernt alles
-	 *
-	 * @returns {Iterator}
-	 */
-	Iterator.prototype.clear = function()
-	{
-		delete this.data;
-
-		this.data = {};
-
-		return this;
-	};
-	
 	return Iterator;
 });

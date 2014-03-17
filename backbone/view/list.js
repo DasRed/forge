@@ -2,26 +2,35 @@
 
 define(
 [
+	'require',
 	'lodash',
 	'jQuery',
+	'forge/queue/timeout',
 	'forge/backbone/compatibility',
 	'forge/backbone/collection',
 	'forge/backbone/model',
 	'forge/backbone/view',
-	'forge/backbone/view/list/entry'
+	'forge/backbone/view/list/entry',
+	'forge/backbone/view/list/filter',
+	'forge/backbone/view/list/sorter'
 ], function(
+	require,
 	lodash,
 	jQuery,
+	QueueTimeout,
 	compatibility,
 	Collection,
 	Model,
 	View,
-	ViewListEntry
+	ViewListEntry,
+	ViewListFilter,
+	ViewListSorter
 )
 {
 	/**
 	 * list of view
 	 *
+	 * @event {void} renderEntry({ViewList} viewList, {ViewListEntry} viewListEntry, {Model} model)
 	 * @param {Object} options
 	 * @returns {ViewList}
 	 */
@@ -152,6 +161,38 @@ define(
 		},
 
 		/**
+		 * object of filter options. if filterOptions is null, no filter will be rendered
+		 *
+		 * @see ViewListFilter
+		 * @var {Object}
+		 */
+		filterOptions:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * queue for rendering
+		 *
+		 * @returns {QueueTimeout}
+		 */
+		renderQueue:
+		{
+			get: function()
+			{
+				if (this._renderQueue === undefined)
+				{
+					this._renderQueue = new QueueTimeout();
+				}
+
+				return this._renderQueue;
+			}
+		},
+
+		/**
 		 * css selector for the container which gets all entries append if this is null or undefined
 		 * this.$el will be taken
 		 *
@@ -186,6 +227,20 @@ define(
 		showLoading:
 		{
 			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * object of sorter options. if sorterOptions is null, no filter will be rendered
+		 *
+		 * @see ViewListSorter
+		 * @var {Object}
+		 */
+		sorterOptions:
+		{
+			value: null,
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -256,6 +311,32 @@ define(
 			enumerable: true,
 			configurable: true,
 			writable: true
+		},
+
+		/**
+		 * a view for filtering
+		 *
+		 * @var {ViewListFilter}
+		 */
+		viewFilter:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * a view for sorting
+		 *
+		 * @var {ViewListSorter}
+		 */
+		viewSorter:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
 		}
 	});
 
@@ -284,6 +365,38 @@ define(
 		}
 
 		return this;
+	};
+
+	/**
+	 * creates the filter view
+	 *
+	 * @param {Object} options
+	 * @returns {ViewListFilter}
+	 */
+	ViewList.prototype.createViewFilter = function(options)
+	{
+		if (ViewListFilter === undefined)
+		{
+			ViewListFilter = require('forge/backbone/view/list/filter');
+		}
+
+		return new ViewListFilter(options);
+	};
+
+	/**
+	 * creates the sorter view
+	 *
+	 * @param {Object} options
+	 * @returns {ViewListSorter}
+	 */
+	ViewList.prototype.createViewSorter = function(options)
+	{
+		if (ViewListSorter === undefined)
+		{
+			ViewListSorter = require('forge/backbone/view/list/sorter');
+		}
+
+		return new ViewListSorter(options);
 	};
 
 	/**
@@ -391,6 +504,8 @@ define(
 			throw new Error('The view instance from an entry of a list must be instance of ViewListEntry.');
 		}
 
+		this.trigger('renderEntry', this, instance, model);
+
 		return instance;
 	};
 
@@ -457,7 +572,7 @@ define(
 		this.viewEntries = {};
 
 		// render each entry
-		this.collection.each(this.renderEntry, this);
+		this.renderEntries();
 
 		return this;
 	};
@@ -471,7 +586,17 @@ define(
 	 */
 	ViewList.prototype.onCollectionSort = function(collection, options)
 	{
-		this.collection.each(this.appendEntryToIndex, this);
+		this.collection.each(function(model, index)
+		{
+			var id = model.cid + '-sort';
+			if (this.renderQueue.exists(id) === false)
+			{
+				this.renderQueue.add(id, (function(model, index)
+				{
+					this.appendEntryToIndex(model, index);
+				}).bind(this, model, index));
+			}
+		}, this);
 
 		return this;
 	};
@@ -492,6 +617,10 @@ define(
 			view.remove();
 		});
 		this.viewEntries = {};
+
+		// remove sub views
+		this.removeFilter();
+		this.removeSorter();
 
 		View.prototype.remove.apply(this, arguments);
 
@@ -518,6 +647,38 @@ define(
 	};
 
 	/**
+	 * remove a filter view
+	 *
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.removeFilter = function()
+	{
+		if (this.viewFilter !== null && this.viewFilter !== undefined)
+		{
+			this.viewFilter.remove();
+			this.viewFilter = null;
+		}
+
+		return this;
+	};
+
+	/**
+	 * remove a sorter view
+	 *
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.removeSorter = function()
+	{
+		if (this.viewSorter !== null && this.viewSorter !== undefined)
+		{
+			this.viewSorter.remove();
+			this.viewSorter = null;
+		}
+
+		return this;
+	};
+
+	/**
 	 * render
 	 *
 	 * @returns {ViewLists}
@@ -530,10 +691,28 @@ define(
 		{
 			this.hideLoadingScreen().showLoadingScreen();
 		}
+
 		// render each entry
-		this.collection.each(this.renderEntry, this);
+		this.renderEntries();
+
+		// render the filter
+		this.renderFilter();
+
+		// render the sorter
+		this.renderSorter();
 
 		return this;
+	};
+
+	/**
+	 * render all entries
+	 *
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.renderEntries = function()
+	{
+		// render each entry
+		this.collection.each(this.renderEntry, this);
 	};
 
 	/**
@@ -548,16 +727,122 @@ define(
 		var id = model.cid;
 
 		// nothing to do
-		if (this.viewEntries[id] !== undefined)
+		if (this.viewEntries[id] !== undefined || this.renderQueue.exists(id) === true)
 		{
 			return this;
 		}
 
-		// create the view and remember. note: auto render is on
-		this.viewEntries[id] = this.getViewInstance(model);
+		this.renderQueue.add(id, (function(model, index)
+		{
+			// create the view and remember. note: auto render is on
+			this.viewEntries[id] = this.getViewInstance(model);
 
-		// append to index
-		this.appendEntryToIndex(model, index);
+			// append to index
+			this.appendEntryToIndex(model, index);
+		}).bind(this, model, index))
+
+		return this;
+	};
+
+	/**
+	 * renders a filter view for list with given options
+	 * if not options defined no filter will be rendered
+	 *
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.renderFilter = function()
+	{
+		if (this.filterOptions === null || this.filterOptions === undefined)
+		{
+			return this;
+		}
+
+		if (this.filterOptions.container === undefined && this.filterOptions.el === undefined && this.filterOptions.layoutContainer === undefined)
+		{
+			throw new Error('For a filter for a list must be defined the filterOptions "container", "el" or "layoutContainer".');
+		}
+
+		if (ViewListFilter === undefined)
+		{
+			ViewListFilter = require('forge/backbone/view/list/filter');
+		}
+
+		// options
+		var options = lodash.extend(
+		{
+			autoRender: true,
+			view: this
+		}, this.filterOptions || {});
+
+		// set container
+		if (typeof options.container === 'string')
+		{
+			options.container = this.$el.find(options.container);
+		}
+		// set element
+		if (typeof options.el === 'string')
+		{
+			options.el = this.$el.find(options.el);
+		}
+
+		//select by layout
+		if (typeof options.layoutContainer === 'string' && this.layout !== undefined)
+		{
+			options.container = this.layout.$el.find(options.layoutContainer);
+			delete options.layoutContainer;
+		}
+
+		// create the view
+		this.viewFilter = this.createViewFilter(options);
+
+		return this;
+	};
+
+	/**
+	 * renders a sorter view for list with given options
+	 * if not options defined no sorter will be rendered
+	 *
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.renderSorter = function()
+	{
+		if (this.sorterOptions === null || this.sorterOptions === undefined)
+		{
+			return this;
+		}
+
+		if (this.sorterOptions.container === undefined && this.sorterOptions.el === undefined && this.sorterOptions.layoutContainer === undefined)
+		{
+			throw new Error('For a sorter for a list must be defined the sorterOptions "container", "el" or "layoutContainer".');
+		}
+
+		// options
+		var options = lodash.extend(
+		{
+			autoRender: true,
+			view: this
+		}, this.sorterOptions || {});
+
+		// set container
+		if (typeof options.container === 'string')
+		{
+			options.container = this.$el.find(options.container);
+		}
+		// set element
+		if (typeof options.el === 'string')
+		{
+			options.el = this.$el.find(options.el);
+		}
+
+		//select by layout
+		if (typeof options.layoutContainer === 'string' && this.layout !== undefined)
+		{
+			options.container = this.layout.$el.find(options.layoutContainer);
+			delete options.layoutContainer;
+		}
+
+		// create the view
+		this.viewSorter = this.createViewSorter(options);
 
 		return this;
 	};
