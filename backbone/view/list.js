@@ -27,6 +27,9 @@ define(
 	ViewListSorter
 )
 {
+	// Cached regex to split keys for `delegate`.
+	var delegateEventSplitter = /^(\S+)\s*(.*)$/;
+
 	/**
 	 * list of view
 	 *
@@ -52,6 +55,10 @@ define(
 			delete options.viewEntry;
 		}
 
+		// init
+		this.viewEntries = {};
+		View.apply(this, arguments);
+
 		// validate
 		if (this.collection === null || this.collection === undefined)
 		{
@@ -62,10 +69,6 @@ define(
 		{
 			throw new Error('View for an entry can not be undefined for a view list');
 		}
-
-		this.viewEntries = {};
-
-		View.apply(this, arguments);
 
 		// in start mode, backbone made strange things with prototype :( and so we have the initial event binding and fetching here
 		this.collection.on('add', this.onCollectionAdd, this);
@@ -152,7 +155,7 @@ define(
 					// fetch the data
 					if (this.autoFetch === true)
 					{
-						this.collection.fetch();
+						collection.fetch();
 					}
 				}
 
@@ -201,6 +204,32 @@ define(
 		selectorContainer:
 		{
 			value: '> ul',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * selector for button reload for event
+		 *
+		 * @var {String}
+		 */
+		selectorButtonAllEvent:
+		{
+			value: '.all',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * selector for button reload for event
+		 *
+		 * @var {String}
+		 */
+		selectorButtonReloadEvent:
+		{
+			value: '.reload',
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -339,6 +368,45 @@ define(
 			writable: true
 		}
 	});
+
+	/**
+	 * appends more delegated events without removing previous added events
+	 *
+	 * @param {Object} options
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.appendDelegateEvents = function(events)
+	{
+		for (var key in events)
+		{
+			var method = events[key];
+			if ((method instanceof Function) === false)
+			{
+				method = this[events[key]];
+			}
+			if ((method instanceof Function) === false)
+			{
+				continue;
+			}
+
+			var match = key.match(delegateEventSplitter);
+			var eventName = match[1];
+			var selector = match[2];
+
+			method = method.bind(this);
+			eventName += '.delegateEvents' + this.cid;
+			if (selector === '')
+			{
+				this.$el.on(eventName, method);
+			}
+			else
+			{
+				this.$el.on(eventName, selector, method);
+			}
+		}
+
+		return this;
+	};
 
 	/**
 	 * reorder an entry to an index
@@ -526,6 +594,35 @@ define(
 	};
 
 	/**
+	 * @param {jQuery.Event} event
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.onClickAll = function(event)
+	{
+		event.stop();
+
+		this.collection.limit = null;
+
+		return this;
+	};
+
+	/**
+	 * @param {jQuery.Event} event
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.onClickReload = function(event)
+	{
+		event.stop();
+
+		this.collection.fetch(
+		{
+			reset: true
+		});
+
+		return this;
+	};
+
+	/**
 	 * a entry was added to the collection
 	 *
 	 * @param {Model} model
@@ -687,6 +784,15 @@ define(
 	{
 		View.prototype.render.apply(this, arguments);
 
+		// bind button events
+		var events = {};
+		events['click ' + this.selectorButtonAllEvent] = 'onClickAll';
+		events['tap ' + this.selectorButtonAllEvent] = 'onClickAll';
+		events['click ' + this.selectorButtonReloadEvent] = 'onClickReload';
+		events['tap ' + this.selectorButtonReloadEvent] = 'onClickReload';
+		this.appendDelegateEvents(events);
+
+		// show loading
 		if (this.showLoadingElement !== undefined)
 		{
 			this.hideLoadingScreen().showLoadingScreen();

@@ -86,10 +86,24 @@ define(
 
 		/**
 		 * default element for the default view
+		 * @var {String}
 		 */
 		layoutContainer:
 		{
 			value: '#content',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * default element for the default view
+		 *
+		 * @var {String}
+		 */
+		layoutElement:
+		{
+			value: null,
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -221,11 +235,15 @@ define(
 		{
 			// create the view
 			var layout = this.layout;
-			this.layoutInstance = new layout(lodash.extend(
+
+			var options = lodash.extend(
 			{
 				autoRender: false,
-				container: this.layoutContainer
-			}, additionalOptions || {}));
+				container: this.layoutContainer,
+				el: this.layoutElement
+			}, additionalOptions || {});
+
+			this.layoutInstance = new layout(options);
 
 			this.layoutInstance.render();
 		}
