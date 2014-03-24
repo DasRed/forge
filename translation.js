@@ -37,7 +37,7 @@ define(
 		 */
 		language:
 		{
-			value: 'de_DE',
+			value: 'en_GB',
 			enumerable: false,
 			configurable: false,
 			writable: true

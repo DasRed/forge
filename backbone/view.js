@@ -536,23 +536,30 @@ define(
 			html:
 			{
 				selector: '',
-				callback: function(view, elements, newValue)
+				callback: function(view, elements, newValue, newValueFormatted)
 				{
-					elements.html(newValue);
+					elements.html(newValueFormatted);
 				}
 			},
 			val:
 			{
 				selector: '',
-				callback: function(view, elements, newValue)
+				callback: function(view, elements, newValue, newValueFormatted)
 				{
-					elements.val(newValue);
+					if (elements.is('[type=number]') === true)
+					{
+						elements.val(newValue);
+					}
+					else
+					{
+						elements.val(newValueFormatted);
+					}
 				}
 			},
 			radio:
 			{
 				selector: '',
-				callback: function(view, elements, newValue)
+				callback: function(view, elements, newValue, newValueFormatted)
 				{
 					elements.val([newValue]);
 				}
@@ -560,7 +567,7 @@ define(
 			checkbox:
 			{
 				selector: '',
-				callback: function(view, elements, newValue)
+				callback: function(view, elements, newValue, newValueFormatted)
 				{
 					elements.prop('checked', newValue);
 				}
@@ -568,15 +575,20 @@ define(
 			dateTime:
 			{
 				selector: '',
-				callback: function(view, elements, newValue)
+				callback: function(view, elements, newValue, newValueFormatted)
 				{
-					if (newValue instanceof Date)
+					switch (true)
 					{
-						elements.prop('valueAsDate', newValue);
-					}
-					else
-					{
-						elements.val(newValue);
+						case (newValue instanceof Date && elements.is('[type=date]') === true):
+						case (newValue instanceof Date && elements.is('[type=time]') === true):
+						case (newValue instanceof Date && elements.is('[type=datetime-local]') === true):
+						case (newValue instanceof Date && elements.is('[type=datetime]') === true):
+							elements.prop('valueAsDate', newValue)
+							break;
+
+						default:
+							elements.val(newValueFormatted);
+							break;
 					}
 				}
 			}
@@ -617,6 +629,144 @@ define(
 		}
 
 		return valueFormatted;
+	};
+
+	/**
+	 * formatter for date
+	 *
+	 * @param {Date} value
+	 * @param {Object} modelAttributes
+	 * @param {String} propertyName
+	 * @returns {String}
+	 */
+	View.prototype.formatterDate = function(value, modelAttributes, propertyName)
+	{
+		if (value instanceof Date)
+		{
+			return value.toLocaleDateString();
+		}
+
+		return value;
+	};
+
+	/**
+	 * formatter for date time
+	 *
+	 * @param {Date} value
+	 * @param {Object} modelAttributes
+	 * @param {String} propertyName
+	 * @returns {String}
+	 */
+	View.prototype.formatterDateTime = function(value, modelAttributes, propertyName)
+	{
+		if (value instanceof Date)
+		{
+			return value.toLocaleString();
+		}
+
+		return value;
+	};
+
+	/**
+	 * formatter for numbers
+	 *
+	 * @param {Date} value
+	 * @param {Object} modelAttributes
+	 * @param {String} propertyName
+	 * @returns {String}
+	 */
+	View.prototype.formatterNumber = function(value, modelAttributes, propertyName)
+	{
+		if (typeof value === 'number')
+		{
+			return value.toLocaleString();
+		}
+
+		return value;
+	};
+
+	/**
+	 * formatter for time
+	 *
+	 * @param {Date} value
+	 * @param {Object} modelAttributes
+	 * @param {String} propertyName
+	 * @returns {String}
+	 */
+	View.prototype.formatterTime = function(value, modelAttributes, propertyName)
+	{
+		if (value instanceof Date)
+		{
+			return value.toLocaleTimeString();
+		}
+
+		return value;
+	};
+
+	/**
+	 * returns a get formatter
+	 *
+	 * @param {String} propertyName
+	 * @param {String}|{Function}
+	 * @returns {Function}
+	 */
+	View.prototype.getFormatterFunctionGet = function(propertyName, getOption)
+	{
+		var formatter = getOption;
+
+		// formatter getter is a string, use function from this
+		if (typeof formatter === 'string')
+		{
+			formatter = this[formatter];
+		}
+
+		// formatter getter is a string, use function from this
+		if ((formatter instanceof Function) === false)
+		{
+			switch (this.model.attributeTypes[propertyName])
+			{
+				case Model.ATTRIBUTE_TYPE_NUMBER:
+					formatter = this.formatterNumber;
+					break;
+
+				case Model.ATTRIBUTE_TYPE_DATE:
+					formatter = this.formatterDate;
+					break;
+			}
+		}
+
+		// formatter getter not a function
+		if ((formatter instanceof Function) === false)
+		{
+			formatter = lodash.noop;
+		}
+
+		return formatter;
+	};
+
+	/**
+	 * returns a set formatter
+	 *
+	 * @param {String}|{Function}
+	 * @returns {Function}
+	 */
+	View.prototype.getFormatterFunctionSet = function(propertyName, setOption)
+	{
+		var formatter = setOption;
+
+		// formatter setter is a string, use function from this
+		if (typeof formatter === 'string')
+		{
+			formatter = this[formatter];
+		}
+
+		// formatter getter not a function
+		if ((formatter instanceof Function) === false)
+		{
+			formatter = lodash.noop;
+		}
+
+		return formatter;
 	};
 
 	/**
@@ -761,14 +911,13 @@ define(
 				{
 					bindingOptions.formatter = this.formatter[propertyName];
 				}
-
 				// formatter
 				if (bindingOptions.formatter === undefined)
 				{
 					bindingOptions.formatter = {};
 				}
 				// convert formatter settings to getter only
-				if (bindingOptions.formatter instanceof Function)
+				if (typeof bindingOptions.formatter !== 'object')
 				{
 					bindingOptions.formatter =
 					{
@@ -776,29 +925,9 @@ define(
 					};
 				}
 
-				// formatter getter
-				// formatter getter is a string, use function from this
-				if (typeof bindingOptions.formatter.get === 'string')
-				{
-					bindingOptions.formatter.get = this[bindingOptions.formatter.get];
-				}
-				// formatter getter not a function
-				if ((bindingOptions.formatter.get instanceof Function) === false)
-				{
-					bindingOptions.formatter.get = lodash.noop;
-				}
-
-				// formatter setter
-				// formatter setter is a string, use function from this
-				if (typeof bindingOptions.formatter.set === 'string')
-				{
-					bindingOptions.formatter.set = this[bindingOptions.formatter.set];
-				}
-				// formatter getter not a function
-				if ((bindingOptions.formatter.set instanceof Function) === false)
-				{
-					bindingOptions.formatter.set = lodash.noop;
-				}
+				// formatter
+				bindingOptions.formatter.get = this.getFormatterFunctionGet(propertyName, bindingOptions.formatter.get);
+				bindingOptions.formatter.set = this.getFormatterFunctionSet(propertyName, bindingOptions.formatter.set);
 
 				// in the options is an selector define. find HTMLElement and update the html with the new value
 				if (bindingOptions.selector !== undefined)
@@ -1222,7 +1351,7 @@ define(
 		}
 
 		// format the value
-		value = this.formatModelProperty(propertyName, value);
+		var valueFormatted = this.formatModelProperty(propertyName, value);
 
 		// set on every selector the value
 		lodash.each(bindingOptions.selectors, function(options)
@@ -1235,7 +1364,7 @@ define(
 			}
 
 			// direct callback
-			options.callback.call(this, this, elements, value);
+			options.callback.call(this, this, elements, value, valueFormatted);
 		}, this);
 
 		return this;

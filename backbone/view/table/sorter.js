@@ -62,7 +62,7 @@ define(
 		// default first attributes from model
 		if (this.current === null)
 		{
-			this.current = lodash.keys(this.collection.prototype.model.defaults)[0];
+			this.current = lodash.keys(this.collection.model.prototype.defaults)[0];
 		}
 
 		// set comparator
