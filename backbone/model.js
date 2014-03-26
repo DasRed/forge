@@ -63,7 +63,7 @@ define(
 		 */
 		attributeTypes:
 		{
-			value: {},
+			value: null,
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -148,7 +148,7 @@ define(
 				}
 
 				// parsing
-				return this._urlParameter.parse(this);
+				return this._urlParameter.parse(this, this.attributes);
 			},
 			set: function(url)
 			{
@@ -181,7 +181,7 @@ define(
 				}
 
 				// parsing
-				return this._urlRootParameter.parse(this);
+				return this._urlRootParameter.parse(this, this.attributes);
 			},
 			set: function(url)
 			{

@@ -90,10 +90,27 @@ define(
 	 * parse the url with given object
 	 *
 	 * @param {Object} values
+	 * @param {Object} ...
 	 * @returns {String}
 	 */
-	UrlParameter.prototype.parse = function(values)
+	UrlParameter.prototype.parse = function()
 	{
+		var args = arguments;
+
+		// collect values from object
+		var values = lodash.reduce(this.parameters, function(acc, parameterOptions)
+		{
+			return lodash.reduce(args, function(acc, argument)
+			{
+				if (argument[parameterOptions.name] !== undefined)
+				{
+					acc[parameterOptions.name] = argument[parameterOptions.name];
+				}
+
+				return acc;
+			}, acc);
+		}, {});
+
 		return lodash.reduce(this.parameters, function(url, parameterOptions)
 		{
 			// get the value

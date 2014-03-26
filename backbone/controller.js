@@ -51,6 +51,19 @@ define(
 	Controller.prototype = Object.create(Backbone.Events,
 	{
 		/**
+		 * removes the layout before the action is called
+		 *
+		 * @var {Boolean}
+		 */
+		autoLayoutRemove:
+		{
+			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * @var {String}
 		 */
 		cid:
@@ -60,6 +73,7 @@ define(
 			configurable: true,
 			writable: true
 		},
+
 		/**
 		 * @var {String}
 		 */
@@ -187,9 +201,11 @@ define(
 		// find calling method
 		var actionMethod = null;
 		var position = parts.length;
+		var listOfTestedMethods = [];
 		while ((this[actionMethod] instanceof Function) === false && position > 0)
 		{
 			actionMethod = parts.slice(0, position).join('') + 'Action';
+			listOfTestedMethods.push(actionMethod);
 			position--;
 		}
 
@@ -207,7 +223,7 @@ define(
 		if ((this.defaultAction !== undefined || this.defaultAction !== null) && (actionMethod === undefined || (this[actionMethod] instanceof Function) === false))
 		{
 			actionMethod = this.defaultAction + 'Action';
-			console.info('route "' + route.name + '" (url://' + route.route + ') as no action method. Using default action method "' + actionMethod + '".');
+			console.info('route "' + route.name + '" (url://' + route.route + ') as no action method ("' + listOfTestedMethods.join('", "') + '"). Using default action method "' + actionMethod + '".');
 		}
 
 		if ((this[actionMethod] instanceof Function) === false)
@@ -216,6 +232,12 @@ define(
 		}
 
 		console.debug('dispatching the route "' + route.name + '" (url://' + route.route + ') to method "' + actionMethod + '".');
+
+		// auto layout remove?
+		if (this.autoLayoutRemove === true)
+		{
+			this.removeLayout();
+		}
 
 		// call action
 		this[actionMethod].apply(this, parameters);

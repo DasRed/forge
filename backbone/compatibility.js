@@ -1,12 +1,21 @@
 'use strict';
+
 define(
 [
-	'backbone'
-], function(Backbone)
+	'forge/backbone/extend'
+], function(
+	extend
+)
 {
+	/**
+	 * makes the object to backbone compatible
+	 *
+	 * @param {Object} ObjectConstructor
+	 * @returns {Object}
+	 */
 	return function(ObjectConstructor)
 	{
-		ObjectConstructor.extend = Backbone.View.extend;
+		ObjectConstructor.extend = extend;
 		ObjectConstructor.prototype.constructor = ObjectConstructor;
 
 		return ObjectConstructor;

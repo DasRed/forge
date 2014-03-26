@@ -77,7 +77,8 @@ define(
 		 *			el: {String}|{HTLMElement}|{jQuery}|{Undefined} undefined
 		 *			autoCreate: {Boolean} true
 		 *			autoRender: {Boolean} true
-		 *			options: {Object}|{Function} {}
+		 *			options: {Object}|{Function} {},
+		 *			validateRender: {Function}
 		 * 		}
 		 */
 		configs:
@@ -202,7 +203,8 @@ define(
 				el: undefined,
 				autoCreate: true,
 				autoRender: true,
-				options: {}
+				options: {},
+				validateRender: lodash.noop
 			});
 
 			// only on autoCreate
@@ -245,6 +247,11 @@ define(
 		if (config.view === undefined)
 		{
 			throw new Error('A layout config view is undefined. A view must be defined.');
+		}
+
+		if (config.validateRender instanceof Function && config.validateRender.call(this, this) === false)
+		{
+			return this;
 		}
 
 		// create instance of view if is it needed

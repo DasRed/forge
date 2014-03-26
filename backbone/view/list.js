@@ -70,20 +70,6 @@ define(
 			throw new Error('View for an entry can not be undefined for a view list');
 		}
 
-		// in start mode, backbone made strange things with prototype :( and so we have the initial event binding and fetching here
-		this.collection.on('add', this.onCollectionAdd, this);
-		this.collection.on('remove', this.onCollectionRemove, this);
-		this.collection.on('reset', this.onCollectionReset, this);
-		this.collection.on('sort', this.onCollectionSort, this);
-		this.collection.on('fetching', this.showLoadingScreen, this);
-		this.collection.on('fetched', this.hideLoadingScreen, this);
-
-		if (this.autoFetch === true && this.collection.length === 0)
-		{
-			// fetch the data
-			this.collection.fetch();
-		}
-
 		return this;
 	};
 
@@ -141,22 +127,18 @@ define(
 					collection = new collection();
 				}
 
-				// in start mode, backbone made strange things with prototype :(
-				if (this.cid !== undefined)
-				{
-					// add events
-					collection.on('add', this.onCollectionAdd, this);
-					collection.on('remove', this.onCollectionRemove, this);
-					collection.on('reset', this.onCollectionReset, this);
-					collection.on('sort', this.onCollectionSort, this);
-					collection.on('fetching', this.showLoadingScreen, this);
-					collection.on('fetched', this.hideLoadingScreen, this);
+				// add events
+				collection.on('add', this.onCollectionAdd, this);
+				collection.on('remove', this.onCollectionRemove, this);
+				collection.on('reset', this.onCollectionReset, this);
+				collection.on('sort', this.onCollectionSort, this);
+				collection.on('fetching', this.showLoadingScreen, this);
+				collection.on('fetched', this.hideLoadingScreen, this);
 
-					// fetch the data
-					if (this.autoFetch === true)
-					{
-						collection.fetch();
-					}
+				// fetch the data
+				if (this.autoFetch === true && collection.length == 0)
+				{
+					collection.fetch();
 				}
 
 				this._collection = collection;
@@ -497,6 +479,11 @@ define(
 	ViewList.prototype.getElementContainerLoading = function(throwError)
 	{
 		var elementParent = null;
+		if (this.$el === null)
+		{
+			return undefined;
+		}
+
 		if (this.selectorLoading !== null && this.selectorLoading !== undefined)
 		{
 			elementParent = this.$el.find(this.selectorLoading);
@@ -588,7 +575,11 @@ define(
 			delete this.showLoadingElement;
 		}
 
-		this.getElementContainerLoading().removeClass('fetching');
+		var element = this.getElementContainerLoading();
+		if (element !== undefined)
+		{
+			element.removeClass('fetching');
+		}
 
 		return this;
 	};
@@ -961,7 +952,12 @@ define(
 		this.hideLoadingScreen();
 
 		this.showLoadingElement = jQuery(this.templateLoading);
-		this.getElementContainerLoading().addClass('fetching').append(this.showLoadingElement);
+
+		var element = this.getElementContainerLoading();
+		if (element !== undefined)
+		{
+			element.addClass('fetching').append(this.showLoadingElement);
+		}
 
 		return this;
 	};
