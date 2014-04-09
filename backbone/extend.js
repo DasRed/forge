@@ -76,32 +76,77 @@ define(
 		 */
 		protoProps.constructor = function()
 		{
+			// define proto props constuctor informations
+			var __protoPropsConstructorInformationsCreated = (this.__protoPropsConstructorInformations === undefined);
+			if (__protoPropsConstructorInformationsCreated === true)
+			{
+				this.__protoPropsConstructorInformations =
+				{
+					level: 0,
+					preDefinedValues: {}
+				};
+			}
+			this.__protoPropsConstructorInformations.level++;
+
 			// copy options
 			lodash.each(preDefinedValues, function(options, key)
 			{
-				if (options.mode === 'setter')
+				// property was setted before by a child instance option
+				if (this.__protoPropsConstructorInformations.preDefinedValues[key] !== undefined)
 				{
-					this[key] = options.value;
 					return;
 				}
 
+				var valueIsPlainObject = lodash.isPlainObject(options.value);
+
+				// using setter so make it short because calling a getter can make problems
+				if (options.mode === 'setter')
+				{
+					this[key] = options.value;
+					this.__protoPropsConstructorInformations.preDefinedValues[key] = true;
+					return;
+				}
+
+				// property is undefined. set it
 				if (this[key] === undefined)
 				{
 					this[key] = options.value;
+					this.__protoPropsConstructorInformations.preDefinedValues[key] = true;
 				}
 
-				else if (lodash.isPlainObject(this[key]) === true && lodash.isPlainObject(options.value) === true)
+				// property is an object an options value is also an object... merge both together
+				else if (lodash.isPlainObject(this[key]) === true && valueIsPlainObject === true)
 				{
-					lodash.merge(this[key], options.value);
+					this[key] = lodash.merge({}, options.value, this[key]);
+					// do not remember key in used keys, because objects will be merge from child to parent
 				}
 
+				// property is something ... create object by clone
+				else if (valueIsPlainObject === true)
+				{
+					this[key] = lodash.merge({}, options.value);
+					// do not remember key in used keys, because objects will be merge from child to parent
+				}
+
+				// simple set
 				else
 				{
 					this[key] = options.value;
+					this.__protoPropsConstructorInformations.preDefinedValues[key] = true;
 				}
 			}, this);
 
-			return parent.apply(this, arguments);
+			// call partent constructor
+			var result = parent.apply(this, arguments);
+
+			// remove temp vars
+			if (__protoPropsConstructorInformationsCreated === true)
+			{
+				delete this.__protoPropsConstructorInformations;
+			}
+
+			// done
+			return result;
 		};
 
 		return Backbone.View.extend.call(parent, protoProps, staticProps);
