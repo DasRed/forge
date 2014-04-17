@@ -213,6 +213,19 @@ define(
 		},
 
 		/**
+		 * selector for elements
+		 *
+		 * @var {String}
+		 */
+		selectorFooter:
+		{
+			value: 'tfoot',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * returns the selector for data model elements for this view
 		 *
 		 * @returns {String}
@@ -364,6 +377,8 @@ define(
 	ViewTableSorter.prototype.updateSortedColumn = function(viewTable, viewListEntry, model)
 	{
 		var viewToHandle = this.view;
+
+		// body
 		var selectorPrefix = this.selectorBody + ' tr ';
 
 		// only on one entry
@@ -377,6 +392,22 @@ define(
 		if (this.sortedColumnIndex !== null)
 		{
 			viewToHandle.$el.find(selectorPrefix + 'td:nth-child(' + (this.sortedColumnIndex + 1) + ')').addClass('sorted');
+		}
+
+		// footer
+		var selectorPrefix = this.selectorFooter + ' tr ';
+
+		// only on one entry
+		if (viewListEntry !== undefined)
+		{
+			viewToHandle = viewListEntry;
+			selectorPrefix = '';
+		}
+
+		viewToHandle.$el.find(selectorPrefix + 'th.sorted').removeClass('sorted');
+		if (this.sortedColumnIndex !== null)
+		{
+			viewToHandle.$el.find(selectorPrefix + 'th:nth-child(' + (this.sortedColumnIndex + 1) + ')').addClass('sorted');
 		}
 
 		return this;

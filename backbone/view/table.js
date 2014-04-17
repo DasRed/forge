@@ -56,6 +56,20 @@ define(
 		},
 
 		/**
+		 * object of sorter options. if sorterOptions is null, no filter will be rendered
+		 *
+		 * @see ViewListSorter
+		 * @var {Object}
+		 */
+		sorterOptions:
+		{
+			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * tag name of list
 		 *
 		 * @var {String}

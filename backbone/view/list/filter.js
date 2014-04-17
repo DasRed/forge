@@ -130,7 +130,7 @@ define(
 		/**
 		 * properties for sorting
 		 *
-		 * @var {Object}
+		 * @var {Object}|{Array}
 		 */
 		properties:
 		{
@@ -186,6 +186,28 @@ define(
 				this.containerList.find('[data-model-cid="' + model.cid + '"]').addClass('filtered');
 			}
 		}, this);
+
+		return this;
+	};
+
+	/**
+	 *
+	 * @returns {ViewListFilter}
+	 */
+	ViewListFilter.prototype.initialize = function()
+	{
+		View.prototype.initialize.apply(this, arguments);
+
+		// convert properties array to object
+		if (lodash.isArray(this.properties) === true)
+		{
+			this.properties = lodash.reduce(this.properties, function(acc, propertyName)
+			{
+				acc[propertyName] = true;
+
+				return acc;
+			}, {});
+		}
 
 		return this;
 	};

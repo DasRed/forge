@@ -89,13 +89,34 @@ define(
 	/**
 	 * parse the url with given object
 	 *
-	 * @param {Object} values
-	 * @param {Object} ...
+	 * @param {Object}|{Array} values
+	 * @param {Object}|{Array} ...
 	 * @returns {String}
 	 */
 	UrlParameter.prototype.parse = function()
 	{
 		var args = arguments;
+
+		// convert argument array to object
+		lodash.each(args, function(argument, index)
+		{
+			if (argument instanceof Array)
+			{
+				args[index] = lodash.reduce(argument, function(acc, value, index)
+				{
+					// out of range... unknown parameter
+					if (this.parameters.length - 1 < index)
+					{
+						return acc;
+					}
+
+					// key value list
+					acc[this.parameters[index].name] = value;
+
+					return acc;
+				}, {}, this);
+			}
+		}, this);
 
 		// collect values from object
 		var values = lodash.reduce(this.parameters, function(acc, parameterOptions)

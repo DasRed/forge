@@ -406,6 +406,79 @@ define(
 	};
 
 	/**
+	 * to CSV
+	 *
+	 * @param {Array} properties can be NULL || UNDEFINED to use all fields
+	 * @param {String} delimiter default ';'
+	 * @param {String} enclosure default '"'
+	 * @returns {String}
+	 */
+	Model.prototype.toCSV = function(properties, delimiter, enclosure)
+	{
+		properties = properties || lodash.keys(this.attributes);
+		delimiter = delimiter || ';';
+		enclosure = enclosure || '"';
+
+		var enclosureRegExp = new RegExp(enclosure, 'gi');
+		var enclosureReplace = enclosure + enclosure;
+
+		return lodash.reduce(properties, function(acc, propertyName)
+		{
+			var value = this.attributes[propertyName];
+
+			// convert
+			switch (this.attributeTypes[propertyName])
+			{
+				case Model.ATTRIBUTE_TYPE_COLLECTION:
+					console.warn('Model property ("' + propertyName + '") of type collection are not supported for CSV export.');
+					value = '';
+					break;
+
+				case Model.ATTRIBUTE_TYPE_NUMBER:
+					if (lodash.isNumber(value) === true)
+					{
+						value = value.toLocaleString();
+					}
+					break;
+
+				case Model.ATTRIBUTE_TYPE_BOOLEAN:
+					value = value === true ? '1' : '0';
+					break;
+
+				case Model.ATTRIBUTE_TYPE_DATE:
+					if (value instanceof Date)
+					{
+						value = value.toLocaleString();
+					}
+					break;
+
+				case Model.ATTRIBUTE_TYPE_STRING:
+				default:
+					break;
+			}
+
+			// fix value
+			if (value === undefined || value === null)
+			{
+				value = '';
+			}
+
+			// quote
+			value = String(value);
+			var valueQuoted = value.replace(enclosureRegExp, enclosureReplace);
+			if (valueQuoted !== value)
+			{
+				valueQuoted = enclosure + valueQuoted + enclosure;
+			}
+
+			// add value
+			acc.push(valueQuoted);
+
+			return acc;
+		}, [], this).join(delimiter);
+	};
+
+	/**
 	 * to JSON
 	 *
 	 * @param {Object} options

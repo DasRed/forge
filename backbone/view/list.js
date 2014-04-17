@@ -41,6 +41,13 @@ define(
 	{
 		options = options || {};
 
+		// take collectionParameters from options
+		if (options.collectionParameters !== undefined)
+		{
+			this.collectionParameters = lodash.extend({}, this.collectionParameters || {}, options.collectionParameters || {});
+			delete options.collectionParameters;
+		}
+
 		// take collection from options
 		if (options.collection !== undefined)
 		{
@@ -124,7 +131,7 @@ define(
 				// get the instance
 				if ((collection instanceof Collection) === false)
 				{
-					collection = new collection();
+					collection = new collection(undefined, this.collectionParameters);
 				}
 
 				// add events
@@ -146,12 +153,79 @@ define(
 		},
 
 		/**
+		 * collection CSV Download Options File Prefix
+		 *
+		 * @var {String}
+		 */
+		collectionCsvFilePrefix:
+		{
+			value: 'data-',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * collection CSV Download Options
+		 *
+		 * @var {Object}
+		 */
+		collectionCsvProperties:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * automatic fetching of collection
+		 *
+		 * @var {Boolean}
+		 */
+		collectionParameters:
+		{
+			value: undefined,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * string of filter container for filterOptions
+		 *
+		 * @see ViewListFilter
+		 * @var {String}
+		 */
+		filterContainer:
+		{
+			value: '.filterContainer',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * object of filter options. if filterOptions is null, no filter will be rendered
 		 *
 		 * @see ViewListFilter
 		 * @var {Object}
 		 */
 		filterOptions:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * object of filter options properties for filterOptions
+		 *
+		 * @see ViewListFilter
+		 * @var {Object}|{Array}
+		 */
+		filterProperties:
 		{
 			value: null,
 			enumerable: true,
@@ -199,6 +273,19 @@ define(
 		selectorButtonAllEvent:
 		{
 			value: '.all',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * selector for button download csv for event
+		 *
+		 * @var {String}
+		 */
+		selectorButtonDownloadCsvEvent:
+		{
+			value: '.downloadCsv',
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -601,6 +688,25 @@ define(
 	 * @param {jQuery.Event} event
 	 * @returns {ViewList}
 	 */
+	ViewList.prototype.onClickDownloadCsv = function(event)
+	{
+		event.stop();
+
+		var element = document.createElement('a');
+		element.href = 'data:attachment/csv,' + encodeURIComponent(this.collection.toCSV(this.collectionCsvProperties));
+		element.target = '_blank';
+		element.download = this.collectionCsvFilePrefix + (new Date()).toLocaleString() + '.csv';
+		document.body.appendChild(element);
+		element.click();
+		jQuery(element).remove();
+
+		return this;
+	};
+
+	/**
+	 * @param {jQuery.Event} event
+	 * @returns {ViewList}
+	 */
 	ViewList.prototype.onClickReload = function(event)
 	{
 		event.stop();
@@ -781,6 +887,9 @@ define(
 		events['tap ' + this.selectorButtonAllEvent] = 'onClickAll';
 		events['click ' + this.selectorButtonReloadEvent] = 'onClickReload';
 		events['tap ' + this.selectorButtonReloadEvent] = 'onClickReload';
+		events['click ' + this.selectorButtonDownloadCsvEvent] = 'onClickDownloadCsv';
+		events['tap ' + this.selectorButtonDownloadCsvEvent] = 'onClickDownloadCsv';
+
 		this.appendDelegateEvents(events);
 
 		// show loading
@@ -849,12 +958,33 @@ define(
 	 */
 	ViewList.prototype.renderFilter = function()
 	{
-		if (this.filterOptions === null || this.filterOptions === undefined)
+		var filterOptions = lodash.extend({}, this.filterOptions || {});
+
+		// shorthand for filter container
+		if (this.filterContainer !== null || this.filterContainer === undefined)
+		{
+			filterOptions.container = this.filterContainer || filterOptions.container;
+		}
+
+		// shorthand for filter properties
+		if (this.filterProperties !== null || this.filterProperties === undefined)
+		{
+			if (lodash.isArray(this.filterProperties) === true)
+			{
+				filterOptions.properties = lodash.extend([], this.filterProperties || [], filterOptions.properties);
+			}
+			else
+			{
+				filterOptions.properties = lodash.extend({}, this.filterProperties || {}, filterOptions.properties);
+			}
+		}
+
+		if (filterOptions.properties === null || filterOptions.properties === undefined)
 		{
 			return this;
 		}
 
-		if (this.filterOptions.container === undefined && this.filterOptions.el === undefined && this.filterOptions.layoutContainer === undefined)
+		if (filterOptions.container === undefined && filterOptions.el === undefined && filterOptions.layoutContainer === undefined)
 		{
 			throw new Error('For a filter for a list must be defined the filterOptions "container", "el" or "layoutContainer".');
 		}
@@ -869,7 +999,7 @@ define(
 		{
 			autoRender: true,
 			view: this
-		}, this.filterOptions || {});
+		}, filterOptions || {});
 
 		// set container
 		if (typeof options.container === 'string')

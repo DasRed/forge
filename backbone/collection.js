@@ -172,7 +172,6 @@ define(
 		return this;
 	};
 
-
 	/**
 	 * Force the collection to re-sort itself. You don't need to call this under
 	 * normal circumstances, as the set will maintain sort order as each item
@@ -220,6 +219,50 @@ define(
 		}
 
 		return this;
+	};
+
+	/**
+	 * @param {Object}|{Array} properties can be NULL || UNDEFINED to use all fields. If it is an object then the value is the column name and the key the property field
+	 * @param {String} delimiter default ';'
+	 * @param {String} enclosure default '"'
+	 * @returns {String}
+	 */
+	Collection.prototype.toCSV = function(properties, delimiter, enclosure)
+	{
+		var rows = [];
+
+		delimiter = delimiter || ';';
+		enclosure = enclosure || '"';
+
+		var enclosureRegExp = new RegExp(enclosure, 'gi');
+		var enclosureReplace = enclosure + enclosure;
+
+		if (lodash.isPlainObject(properties) === true)
+		{
+			rows.push(lodash.reduce(properties, function(acc, columnName, propertyName)
+			{
+				// quote
+				columnName = String(columnName);
+				var columnNameQuoted = columnName.replace(enclosureRegExp, enclosureReplace);
+				if (columnNameQuoted !== columnName)
+				{
+					columnNameQuoted = enclosure + columnNameQuoted + enclosure;
+				}
+
+				acc.push(columnNameQuoted);
+
+				return acc;
+			}, []).join(delimiter));
+
+			properties = lodash.keys(properties);
+		}
+
+		return this.reduce(function(acc, model)
+		{
+			acc.push(model.toCSV(properties, delimiter, enclosure));
+
+			return acc;
+		}, rows).join('\n');
 	};
 
 	return compatibility(Collection);
