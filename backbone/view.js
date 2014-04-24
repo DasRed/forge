@@ -1198,7 +1198,7 @@ define(
 		}
 
 		// get model data if there is a model
-		var dataModel = this.getFormattedModelProperties();
+		var dataModelFormatted = this.getFormattedModelProperties();
 
 		// get template Data
 		var dataTemplate = this.templateData;
@@ -1210,11 +1210,12 @@ define(
 		// create data for template
 		var dataComplete = lodash.extend(
 		{
-			model: dataModel,
+			modelFormatted: dataModelFormatted,
+			model: this.model !== null && this.model !== undefined ? this.model.attributes : {},
 			template: dataTemplate,
 			data: data,
 			view: this
-		}, dataTemplate, dataModel, data);
+		}, dataTemplate, dataModelFormatted, data);
 
 		// set the html
 		this.html(this.template(dataComplete));
