@@ -15,6 +15,14 @@ define(
 	compatibility
 )
 {
+	var excludeProperties =
+	{
+		collection: true,
+		parse: true,
+		unset: true,
+		silent: true
+	};
+
 	/**
 	 * Model
 	 *
@@ -29,6 +37,20 @@ define(
 		{
 			options.parse = true;
 		}
+
+		// copy options
+		lodash.each(options, function(value, key)
+		{
+			if (excludeProperties[key] === true)
+			{
+				return;
+			}
+			if (this[key] !== undefined)
+			{
+				this[key] = value;
+			}
+		}, this);
+
 
 		// create defaults property keys from attribute Types
 		this.defaults = lodash.reduce(this.attributeTypes, function(acc, attributeType, propertyName)
