@@ -806,7 +806,7 @@ define(
 	};
 
 	/**
-	 * replace current html with  html to element of view
+	 * replace current html with html to element of view
 	 * this function is needed so that other can overload and "translate"
 	 *
 	 * @param {String} html

@@ -105,7 +105,7 @@ define(
 		/**
 		 * list of all created views
 		 *
-		 *  @var {Object}
+		 * @var {Object}
 		 */
 		views:
 		{

@@ -60,6 +60,11 @@ define(
 				acc[propertyName] = undefined;
 			}
 
+			else if (attributeType !== Model.ATTRIBUTE_TYPE_MODEL && acc[propertyName] === undefined)
+			{
+				acc[propertyName] = undefined;
+			}
+
 			return acc;
 		}, this.defaults || {});
 
@@ -73,6 +78,7 @@ define(
 	Model.ATTRIBUTE_TYPE_BOOLEAN = 'boolean';
 	Model.ATTRIBUTE_TYPE_DATE = 'date';
 	Model.ATTRIBUTE_TYPE_COLLECTION = 'collection';
+	Model.ATTRIBUTE_TYPE_MODEL = 'model';
 
 	// prototype
 	Model.prototype = Object.create(Backbone.Model.prototype,
@@ -288,6 +294,16 @@ define(
 					delete attributes[propertyName];
 					break;
 
+				// write to a model property direct on the model
+				case Model.ATTRIBUTE_TYPE_MODEL:
+					if (this[propertyName] === undefined || this[propertyName] === null || (this[propertyName].set instanceof Function) === false)
+					{
+						throw new Error('The model property "' + propertyName + '" must be an instance of Model to use the attribute type "model" on the attribute "' + propertyName + '".');
+					}
+					this[propertyName].set(value);
+					delete attributes[propertyName];
+					break;
+
 				// convert to number
 				case Model.ATTRIBUTE_TYPE_NUMBER:
 					if (typeof value !== 'number')
@@ -456,6 +472,11 @@ define(
 					value = '';
 					break;
 
+				case Model.ATTRIBUTE_TYPE_MODEL:
+					console.warn('Model property ("' + propertyName + '") of type model are not supported for CSV export.');
+					value = '';
+					break;
+
 				case Model.ATTRIBUTE_TYPE_NUMBER:
 					if (lodash.isNumber(value) === true)
 					{
@@ -521,6 +542,15 @@ define(
 					if (this[propertyName] === undefined || this[propertyName] === null || (this[propertyName].toJSON instanceof Function) === false)
 					{
 						throw new Error('The model property "' + propertyName + '" must be an instance of Collection to use the attribute type "collection" on the attribute "' + propertyName + '".');
+					}
+					attributes[propertyName] = this[propertyName].toJSON(options);
+					break;
+
+				// write to a model property direct on the model
+				case Model.ATTRIBUTE_TYPE_MODEL:
+					if (this[propertyName] === undefined || this[propertyName] === null || (this[propertyName].toJSON instanceof Function) === false)
+					{
+						throw new Error('The model property "' + propertyName + '" must be an instance of Model to use the attribute type "model" on the attribute "' + propertyName + '".');
 					}
 					attributes[propertyName] = this[propertyName].toJSON(options);
 					break;

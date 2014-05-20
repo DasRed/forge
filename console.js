@@ -91,7 +91,7 @@ require(
 	 * @param {Mixed} ...
 	 * ...
 	 */
-	var wrapper =  function(warnLevel, proceed, color, profiler)
+	var wrapper = function(warnLevel, proceed, color, profiler)
 	{
 		var warnLevelMin = (config.level ? config.level : console.LEVEL_WARN);
 		if (warnLevel > warnLevelMin)

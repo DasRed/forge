@@ -266,7 +266,7 @@ define(
 				{
 					result = self.descriptor.get.apply(this, arguments);
 				}
-				// no getter was defined, get value from  observer
+				// no getter was defined, get value from observer
 				else
 				{
 					result = self.value;
