@@ -14,7 +14,7 @@ define(
 	 *
 	 * @param {Object} codes
 	 * @param {Object} options
-	 * @return {BBCode}
+	 * @returns {BBCode}
 	 */
 	var BBCode = function(codes, options)
 	{

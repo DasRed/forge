@@ -14,7 +14,7 @@ define(
 	 *
 	 * @param {Object} translations
 	 * @param {Object} options
-	 * @return {Translation}
+	 * @returns {Translation}
 	 */
 	var Translation = function(translations, options)
 	{

@@ -235,7 +235,7 @@ define(
 	/**
 	 * creates and returns a getter
 	 *
-	 * @return {Function}
+	 * @returns {Function}
 	 */
 	ObserverObjectProperty.prototype.getGetter = function()
 	{
@@ -284,7 +284,7 @@ define(
 	/**
 	 * creates and returns a function for function property
 	 *
-	 * @return {Function}
+	 * @returns {Function}
 	 */
 	ObserverObjectProperty.prototype.getFunction = function()
 	{
@@ -315,7 +315,7 @@ define(
 	/**
 	 * creates and returns a setter
 	 *
-	 * @return {Function}
+	 * @returns {Function}
 	 */
 	ObserverObjectProperty.prototype.getSetter = function()
 	{

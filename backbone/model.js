@@ -379,6 +379,32 @@ define(
 	};
 
 	/**
+	 * save with default wait
+	 *
+	 * @param {Object}|{String} key
+	 * @param {Mixed} val
+	 * @param {Object} options
+	 * @returns {Model}
+	 */
+	Model.prototype.save = function(key, val, options)
+	{
+		if (key == null || typeof key === 'object')
+		{
+			val = val || {};
+			val.wait = val.wait !== undefined ? val.wait : this.waitDefault;
+		}
+		else
+		{
+			options = options || {};
+			options.wait = options.wait !== undefined ? options.wait : this.waitDefault;
+		}
+
+		Backbone.Model.prototype.save.call(this, key, val, options);
+
+		return this;
+	};
+
+	/**
 	 * set function
 	 *
 	 * @param {Object}|{String} key
@@ -413,32 +439,6 @@ define(
 		{
 			complete.call(this, this, undefined, options);
 		}
-
-		return this;
-	};
-
-	/**
-	 * save with default wait
-	 *
-	 * @param {Object}|{String} key
-	 * @param {Mixed} val
-	 * @param {Object} options
-	 * @returns {Model}
-	 */
-	Model.prototype.save = function(key, val, options)
-	{
-		if (key == null || typeof key === 'object')
-		{
-			val = val || {};
-			val.wait = val.wait !== undefined ? val.wait : this.waitDefault;
-		}
-		else
-		{
-			options = options || {};
-			options.wait = options.wait !== undefined ? options.wait : this.waitDefault;
-		}
-
-		Backbone.Model.prototype.save.call(this, key, val, options);
 
 		return this;
 	};

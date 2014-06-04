@@ -180,7 +180,7 @@ define(
 	};
 
 	/**
-	 * @return {Layout}
+	 * @returns {Layout}
 	 */
 	Layout.prototype.render = function()
 	{
