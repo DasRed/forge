@@ -5,9 +5,9 @@ define(
 	'require',
 	'lodash',
 	'jQuery',
-	'forge/collator',
 	'forge/backbone/compatibility',
 	'forge/backbone/collection',
+	'forge/backbone/collection/sorter',
 	'forge/backbone/view',
 	'forge/backbone/view/list',
 	'text!forge/backbone/view/list/template/sorter.html'
@@ -15,9 +15,9 @@ define(
 	require,
 	lodash,
 	jQuery,
-	collator,
 	compatibility,
 	Collection,
+	CollectionSorter,
 	View,
 	ViewList,
 	templateViewListSorter
@@ -60,24 +60,23 @@ define(
 			throw new Error('No collection is defined to sort or collection must be instance of Collection.');
 		}
 
-		// set current sort property
-		if (this.current === null && typeof this.collection.comparator === 'string')
-		{
-			this.current = this.collection.comparator
-		}
-		if (this.current === null)
-		{
-			this.current = lodash.keys(this.properties)[0];
-		}
-
-		// set comparator
-		this.collection.comparator = this.comparator.bind(this);
-
 		// translate properties text
 		this.properties = lodash.mapValues(this.properties, function(propertyText)
 		{
 			return this.translate(propertyText);
 		}, this);
+
+		// direction
+		if (options.direction !== undefined)
+		{
+			this.setDirection(options.direction);
+		}
+
+		// property
+		if (options.property !== undefined)
+		{
+			this.setProperty(options.property);
+		}
 
 		return this;
 	};
@@ -98,32 +97,6 @@ define(
 			{
 				return this.view.collection;
 			}
-		},
-
-		/**
-		 * current sort property
-		 *
-		 * @var {String}
-		 */
-		current:
-		{
-			value: null,
-			enumerable: true,
-			configurable: true,
-			writable: true
-		},
-
-		/**
-		 * current direction
-		 *
-		 * @var {String}
-		 */
-		direction:
-		{
-			value: 'asc',
-			enumerable: true,
-			configurable: true,
-			writable: true
 		},
 
 		/**
@@ -183,18 +156,6 @@ define(
 	});
 
 	/**
-	 * comparator function
-	 *
-	 * @param {Model} modelA
-	 * @param {Model} modelB
-	 * @returns {Number}
-	 */
-	ViewListSorter.prototype.comparator = function(modelA, modelB)
-	{
-		return collator.compareModels(this.current, modelA, modelB, this.direction);
-	};
-
-	/**
 	 * on click to toggle the direction
 	 *
 	 * @param {jQuery.Event} event
@@ -204,16 +165,13 @@ define(
 	{
 		event.stop();
 
-		this.direction = this.direction === 'asc' ? 'desc' : 'asc';
-		this.$el.find('.direction').removeClass('asc desc').addClass(this.direction);
-
-		this.collection.sort();
+		this.setDirection(this.collection.sorter.direction === CollectionSorter.DIRECTION_ASC ? CollectionSorter.DIRECTION_DESC : CollectionSorter.DIRECTION_ASC);
 
 		return this;
 	};
 
 	/**
-	 * on click to change current property
+	 * on click to change sort property
 	 *
 	 * @returns {ViewListSorter}
 	 */
@@ -221,13 +179,7 @@ define(
 	{
 		event.stop();
 
-		this.isOpen = false;
-		this.$el.find('.selection').removeClass('show');
-
-		this.current = jQuery(event.target).data('property');
-		this.$el.find('.fieldName').html(this.properties[this.current]);
-
-		this.collection.sort();
+		this.setProperty(jQuery(event.target).data('property'));
 
 		return this;
 	};
@@ -266,7 +218,7 @@ define(
 
 		View.prototype.render.call(this,
 		{
-			currentText: this.properties[this.current]
+			currentText: this.properties[this.collection.sorter.property]
 		});
 
 		// on entry... no field selection
@@ -293,6 +245,35 @@ define(
 				}
 			});
 		}
+		return this;
+	};
+
+	/**
+	 * @param {String} direction
+	 * @returns {ViewListSorter}
+	 */
+	ViewListSorter.prototype.setDirection = function(direction)
+	{
+		this.$el.find('.direction').removeClass(CollectionSorter.DIRECTION_ASC + ' ' + CollectionSorter.DIRECTION_DESC).addClass(direction);
+
+		this.collection.sorter.direction = direction;
+
+		return this;
+	};
+
+	/**
+	 * @param {String} property
+	 * @returns {ViewListSorter}
+	 */
+	ViewListSorter.prototype.setProperty = function(property)
+	{
+		this.isOpen = false;
+
+		this.$el.find('.selection').removeClass('show');
+		this.$el.find('.fieldName').html(this.properties[property]);
+
+		this.collection.sorter.property = property;
+
 		return this;
 	};
 

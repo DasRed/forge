@@ -7,14 +7,16 @@ define(
 	'forge/collator',
 	'forge/url/parameter',
 	'forge/backbone/compatibility',
-	'forge/backbone/model'
+	'forge/backbone/model',
+	'forge/backbone/collection/sorter'
 ], function(
 	lodash,
 	Backbone,
 	collator,
 	UrlParameter,
 	compatibility,
-	Model
+	Model,
+	CollectionSorter
 )
 {
 	var excludeProperties =
@@ -34,6 +36,8 @@ define(
 	 */
 	var Collection = function(models, options)
 	{
+		this.cid = lodash.uniqueId('collection');
+
 		// copy options
 		lodash.each(options, function(value, key)
 		{
@@ -47,6 +51,44 @@ define(
 			}
 		}, this);
 
+		// define a sorter
+		if (this.comparator !== undefined && this.comparator !== null)
+		{
+			var direction = this.directionInitial;
+			if (direction === null)
+			{
+				// find correct default sort by attribute type
+				switch (this.model.getPrototypeValue('attributeTypes')[this.comparator])
+				{
+					case Model.ATTRIBUTE_TYPE_DATE:
+						direction = CollectionSorter.DIRECTION_DESC;
+						break;
+
+					case Model.ATTRIBUTE_TYPE_COLLECTION:
+						throw new Error('Sorting for an attribute of type collection is not allowed.');
+						break;
+
+					case Model.ATTRIBUTE_TYPE_MODEL:
+						throw new Error('Sorting for an attribute of type model is not allowed.');
+						break;
+
+					case Model.ATTRIBUTE_TYPE_NUMBER:
+					case Model.ATTRIBUTE_TYPE_STRING:
+					case Model.ATTRIBUTE_TYPE_BOOLEAN:
+					default:
+						direction = CollectionSorter.DIRECTION_ASC;
+						break;
+				}
+			}
+
+			// create the default sorter
+			this.sorter = new CollectionSorter(
+			{
+				collection: this,
+				direction: direction
+			});
+		}
+
 		Backbone.Collection.apply(this, arguments);
 
 		return this;
@@ -56,6 +98,28 @@ define(
 	Collection.prototype = Object.create(Backbone.Collection.prototype,
 	{
 		/**
+		 * @var {String}
+		 */
+		cid:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * @var {String}
+		 */
+		directionInitial:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * default model for data
 		 *
 		 * @var {Model}
@@ -63,6 +127,17 @@ define(
 		model:
 		{
 			value: Model,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * @var {CollectionSorter}
+		 */
+		sorter:
+		{
+			value: null,
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -183,9 +258,14 @@ define(
 	 */
 	Collection.prototype.sort = function(options)
 	{
-		if (!this.comparator)
+		if (this.models === undefined)
 		{
-			throw new Error('Cannot sort a set without a comparator');
+			return this;
+		}
+
+		if (this.comparator === undefined)
+		{
+			throw new Error('Cannot sort a collection without a comparator definition');
 		}
 
 		options = options || {};

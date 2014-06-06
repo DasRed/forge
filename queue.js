@@ -49,6 +49,8 @@ define(
 	/**
 	 * runs the next entry
 	 *
+	 * @param {String} key
+	 * @param {Function} entry
 	 * @returns {Queue}
 	 */
 	Queue.prototype.add = function(key, entry)

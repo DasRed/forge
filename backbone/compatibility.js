@@ -13,11 +13,34 @@ define(
 	 * @param {Object} ObjectConstructor
 	 * @returns {Object}
 	 */
-	return function(ObjectConstructor)
+	var compatibility = function(ObjectConstructor)
 	{
 		ObjectConstructor.extend = extend;
 		ObjectConstructor.prototype.constructor = ObjectConstructor;
 
+
+		/**
+		 * @param {String} propertyName
+		 * @returns {Mixed}
+		 */
+		ObjectConstructor.getPrototypeValue = function(propertyName)
+		{
+			if (ObjectConstructor.prototype[propertyName] !== undefined && ObjectConstructor.prototype[propertyName] !== null)
+			{
+				return ObjectConstructor.prototype[propertyName];
+			}
+
+			if (this.preDefinedValues !== undefined && this.preDefinedValues[propertyName] !== undefined && this.preDefinedValues[propertyName] !== null)
+			{
+				return this.preDefinedValues[propertyName].value;
+			}
+			
+			return undefined;
+		};
+
+
 		return ObjectConstructor;
 	};
+
+	return compatibility;
 });

@@ -24,6 +24,17 @@ define(
 		/**
 		 * @var {Date}
 		 */
+		dateLastRun:
+		{
+			value: null,
+			enumerable: false,
+			configurable: false,
+			writable: true
+		},
+
+		/**
+		 * @var {Date}
+		 */
 		dateStart:
 		{
 			value: null,
@@ -99,7 +110,44 @@ define(
 	 */
 	QueueTimeout.prototype.pause = function()
 	{
-		this.timer = setTimeout(this.runner.bind(this), this.delay);
+		this.timer = setTimeout((function()
+		{
+			this.stop();
+			this.runner();
+		}).bind(this), this.delay);
+
+		return this;
+	};
+
+	/**
+	 * runs the queue
+	 *
+	 * @returns {Queue}
+	 */
+	QueueTimeout.prototype.run = function()
+	{
+		if (this.dateStart !== null)
+		{
+			// stop and restart
+			if (new Date() - this.dateLastRun > this.delay)
+			{
+				this.stop();
+			}
+			// test for delaying
+			else if (new Date() - this.dateStart > this.timeout)
+			{
+				console.debug('Delaying the next ' + this.length + ' entries.');
+				return this.pause();
+			}
+		}
+
+		// nothing to do
+		if (this.length === 0 || this.isRunning === true)
+		{
+			return this;
+		}
+
+		this.runner();
 
 		return this;
 	};
@@ -111,21 +159,34 @@ define(
 	 */
 	QueueTimeout.prototype.runner = function()
 	{
-		this.start();
+		var lengthBefore = this.length;
+
+		// only start if not started
+		if (this.dateStart === null)
+		{
+			this.start();
+		}
 
 		// runs
 		while (this.length > 0)
 		{
 			this.runNext();
-			if (new Date() - this.dateStart > this.timeout)
+			this.dateLastRun = new Date();
+
+			if (this.dateLastRun - this.dateStart > this.timeout)
 			{
-				console.debug('Delaying the next ' + this.length + ' entries.');
-				return this.pause();
+				if (this.length > 0)
+				{
+					console.debug('Handled ' + (lengthBefore - this.length) + ' entries. Delaying the next ' + this.length + ' entries.');
+					return this.pause();
+				}
+				else
+				{
+					console.debug('Handled ' + (lengthBefore - this.length) + ' entries.');
+					return this
+				}
 			}
 		}
-
-		// all done... stop
-		this.stop();
 
 		return this;
 	};

@@ -4,18 +4,18 @@ define(
 [
 	'lodash',
 	'jQuery',
-	'forge/collator',
 	'forge/backbone/compatibility',
 	'forge/backbone/collection',
+	'forge/backbone/collection/sorter',
 	'forge/backbone/view',
 	'forge/backbone/view/list',
 	'forge/backbone/view/table'
 ], function(
 	lodash,
 	jQuery,
-	collator,
 	compatibility,
 	Collection,
+	CollectionSorter,
 	View,
 	ViewList,
 	ViewTable
@@ -53,21 +53,6 @@ define(
 			throw new Error('No collection is defined to sort or collection must be instance of Collection.');
 		}
 
-		// set current sort property
-		if (this.current === null && typeof this.collection.comparator === 'string')
-		{
-			this.current = this.collection.comparator
-		}
-
-		// default first attributes from model
-		if (this.current === null)
-		{
-			this.current = lodash.keys(this.collection.model.prototype.defaults)[0];
-		}
-
-		// set comparator
-		this.collection.comparator = this.comparator.bind(this);
-
 		// set element container that is it sortable
 		this.$element.addClass('sortable');
 
@@ -84,13 +69,11 @@ define(
 
 		// set sort by html
 		var elementToSort = this.$element.find('[data-model-sorted]');
-		var direction = elementToSort.data('model-sorted') || 'asc';
 		var propertyNameToSort = elementToSort.data('model-sort');
 		if (propertyNameToSort !== undefined)
 		{
-			this.current = propertyNameToSort;
-			this.direction = direction == 'desc' ? 'desc' : 'asc';
-			this.collection.sort();
+			this.collection.sorter.property = propertyNameToSort;
+			this.collection.sorter.direction = elementToSort.data('model-sorted') || CollectionSorter.DIRECTION_ASC;
 		}
 
 		// show sorting
@@ -133,32 +116,6 @@ define(
 			{
 				return this.view.collection;
 			}
-		},
-
-		/**
-		 * current sort property
-		 *
-		 * @var {String}
-		 */
-		current:
-		{
-			value: null,
-			enumerable: true,
-			configurable: true,
-			writable: true
-		},
-
-		/**
-		 * current direction
-		 *
-		 * @var {String}
-		 */
-		direction:
-		{
-			value: 'asc',
-			enumerable: true,
-			configurable: true,
-			writable: true
 		},
 
 		/**
@@ -266,18 +223,6 @@ define(
 	});
 
 	/**
-	 * comparator function
-	 *
-	 * @param {Model} modelA
-	 * @param {Model} modelB
-	 * @returns {Number}
-	 */
-	ViewTableSorter.prototype.comparator = function(modelA, modelB)
-	{
-		return collator.compareModels(this.current, modelA, modelB, this.direction);
-	};
-
-	/**
 	 * on click to sort or to toggle the direction
 	 *
 	 * @param {String} propertyName
@@ -291,18 +236,18 @@ define(
 		var columnChanged = false;
 
 		// toggle direction
-		if (this.current === propertyName)
+		if (this.collection.sorter.property === propertyName)
 		{
-			this.direction = this.direction === 'asc' ? 'desc' : 'asc';
+			this.collection.sorter.direction = this.collection.sorter.direction === CollectionSorter.DIRECTION_ASC ? CollectionSorter.DIRECTION_DESC : CollectionSorter.DIRECTION_ASC;
 		}
 		// set new sort column
 		else
 		{
-			this.current = propertyName;
+			this.collection.sorter.property = propertyName;
 			columnChanged = true;
 		}
 
-		this.showSortedProperty(columnChanged).collection.sort();
+		this.showSortedProperty(columnChanged);
 
 		return this;
 	};
@@ -342,13 +287,13 @@ define(
 		// column not changed only change direction
 		if (columnChanged === false)
 		{
-			this.$element.find('.sorted' + this.selectorDataModel).removeClass('asc desc').addClass(this.direction);
+			this.$element.find('.sorted' + this.selectorDataModel).removeClass(CollectionSorter.DIRECTION_ASC + ' ' + CollectionSorter.DIRECTION_DESC).addClass(this.collection.sorter.direction);
 			return this;
 		}
 
 		// everything is changing
-		this.$element.find(this.selectorDataModel).removeClass('sorted asc desc');
-		this.$element.find(this.selectorDataModel.slice(0, -1) + '=' + this.current + ']').addClass('sorted ' + this.direction);
+		this.$element.find(this.selectorDataModel).removeClass('sorted ' + CollectionSorter.DIRECTION_ASC + ' ' + CollectionSorter.DIRECTION_DESC);
+		this.$element.find(this.selectorDataModel.slice(0, -1) + '=' + this.collection.sorter.property + ']').addClass('sorted ' + this.collection.sorter.direction);
 
 		// find column to highlight in body
 		this.sortedColumnIndex = null;

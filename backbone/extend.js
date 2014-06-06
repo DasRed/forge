@@ -38,7 +38,7 @@ define(
 	 * @param {Object} staticProps
 	 * @returns {Object}
 	 */
-	return function(protoProps, staticProps)
+	var extend = function(protoProps, staticProps)
 	{
 		var parent = this;
 		var preDefinedValues = {};
@@ -149,6 +149,11 @@ define(
 			return result;
 		};
 
+		// store preDefined Values to find
+		protoProps.constructor.preDefinedValues = preDefinedValues;
+
 		return Backbone.View.extend.call(parent, protoProps, staticProps);
 	};
+
+	return extend;
 });

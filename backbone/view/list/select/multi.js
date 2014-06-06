@@ -178,15 +178,27 @@ define(
 			return this;
 		}
 
-		var view = this.getViewEntryByModel(model);
-		if (this.selected.get(model.id) !== undefined)
+		var id = model.cid;
+		var idMark = id + 'markViewModel';
+
+		// nothing to do
+		if (this.renderQueue.exists(idMark) === true)
 		{
-			view.markAsSelected();
+			return this;
 		}
-		else
+
+		this.renderQueue.add(idMark, (function()
 		{
-			view.markAsUnselected();
-		}
+			var view = this.getViewEntryByModel(model);
+			if (this.selected.get(model.id) !== undefined)
+			{
+				view.markAsSelected();
+			}
+			else
+			{
+				view.markAsUnselected();
+			}
+		}).bind(this));
 
 		return this;
 	};
