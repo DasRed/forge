@@ -691,14 +691,17 @@ define(
 	ViewList.prototype.onClickDownloadCsv = function(event)
 	{
 		event.stop();
-
+		
 		var element = document.createElement('a');
-		element.href = 'data:attachment/csv,' + encodeURIComponent(this.collection.toCSV(this.collectionCsvProperties));
-		element.target = '_blank';
-		element.download = this.collectionCsvFilePrefix + (new Date()).toLocaleString() + '.csv';
-		document.body.appendChild(element);
+		element.href = URL.createObjectURL(new Blob(
+		[
+			this.collection.toCSV(this.collectionCsvProperties)
+		],
+		{
+			text: 'application/csv'
+		}));
+		element.setAttribute('download', this.collectionCsvFilePrefix + (new Date()).toLocaleString() + '.csv');
 		element.click();
-		jQuery(element).remove();
 
 		return this;
 	};
