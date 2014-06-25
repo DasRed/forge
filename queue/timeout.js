@@ -96,7 +96,7 @@ define(
 		 */
 		timeout:
 		{
-			value: 200,
+			value: 500,
 			enumerable: false,
 			configurable: false,
 			writable: true

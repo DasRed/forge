@@ -46,6 +46,14 @@ define(
 		{
 			this.collectionParameters = lodash.extend({}, this.collectionParameters || {}, options.collectionParameters || {});
 			delete options.collectionParameters;
+
+			if (this.collection instanceof Collection)
+			{
+				lodash.each(this.collectionParameters, function(value, key)
+				{
+					this[key] = value;
+				}, this.collection);
+			}
 		}
 
 		// take collection from options

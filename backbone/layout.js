@@ -17,6 +17,7 @@ define(
 	 *
 	 * @event {void} createView({Layout} layout, {View} view, {Object} config, {String} key)
 	 * @event {void} createView[:key]({Layout} layout, {View} view, {Object} config, {String} key)
+	 * @event {void} onCreateView({View} view, {Object} config, {String} key)
 	 *
 	 * @param {Object} options
 	 * @returns {Layout}

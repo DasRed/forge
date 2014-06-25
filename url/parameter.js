@@ -136,7 +136,8 @@ define(
 		{
 			// get the value
 			var value = values[parameterOptions.name];
-
+			var valueEscaped = window.encodeURIComponent(value);
+			
 			// optional parameter
 			if (parameterOptions.optional === true)
 			{
@@ -149,7 +150,7 @@ define(
 
 				// with value
 				// replace parameter with value
-				return url.replace('(/:' + parameterOptions.name + ')', '/' + value);
+				return url.replace('(/:' + parameterOptions.name + ')', '/' + valueEscaped);
 			}
 
 			// required paramter but not setted
@@ -159,7 +160,7 @@ define(
 			}
 
 			// replacing value
-			return url.replace(':' + parameterOptions.name, value);
+			return url.replace(':' + parameterOptions.name, valueEscaped);
 		}, this.url || '', this);
 	};
 
