@@ -1083,9 +1083,10 @@ define(
 	 * @param {Object} modelAttributes
 	 * @param {String} propertyName
 	 * @param {Midex} newValue
+	 * @param {Midex} oldValue
 	 * @returns {View}
 	 */
-	View.prototype.onModelPropertyChangeHandler = function(event, modelAttributes, propertyName, newValue)
+	View.prototype.onModelPropertyChangeHandler = function(event, modelAttributes, propertyName, newValue, oldValue)
 	{
 		var bindingOptions = this.modelBindings[propertyName];
 
@@ -1095,6 +1096,12 @@ define(
 			return this;
 		}
 
+		// nothing changed, nothing to do
+		if (newValue === oldValue)
+		{
+			return this;
+		}
+		
 		// in the options is a callback function as Function. call the function
 		var callbackResult = bindingOptions.callback.call(this, newValue, modelAttributes, propertyName);
 		if (callbackResult !== undefined)

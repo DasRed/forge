@@ -19,9 +19,9 @@ define(
 	 * @event {mixed} get:before({jQuery.Event}, {ObjectOfObservedProperty}, {PropertyName} [, PARAMETERS]) fires before if some wants to get the value. if callback returns a value other then undefined, this value will be retruned from get
 	 * @event {void} get:after({jQuery.Event}, {ObjectOfObservedProperty}, {PropertyName}, value [, PARAMETERS]) fires after if some wants to get the value.
 	 *
-	 * @event {void} set({jQuery.Event}, {ObjectOfObservedProperty}, {PropertyName}, newValue) fires if some whants to set the value
-	 * @event {boolean} set:before({jQuery.Event}, {ObjectOfObservedProperty}, {PropertyName}, newValue) fires before if some wants to set the value. if callback returns FALSE the value will not be setted
-	 * @event {void} set:after({jQuery.Event}, {ObjectOfObservedProperty}, {PropertyName}, newValue) fires after if some wants to set the value.
+	 * @event {void} set({jQuery.Event}, {ObjectOfObservedProperty}, {PropertyName}, newValue, oldValue) fires if some whants to set the value
+	 * @event {boolean} set:before({jQuery.Event}, {ObjectOfObservedProperty}, {PropertyName}, newValue, oldValue) fires before if some wants to set the value. if callback returns FALSE the value will not be setted
+	 * @event {void} set:after({jQuery.Event}, {ObjectOfObservedProperty}, {PropertyName}, newValue, oldValue) fires after if some wants to set the value.
 	 *
 	 * @example
 	 * <code>
@@ -50,17 +50,17 @@ define(
 	 * 				{
 	 * 					console.log('property: get:after', event, object, propertyName, value);
 	 * 				},
-	 * 				'set': function(event, object, propertyName, newValue)
+	 * 				'set': function(event, object, propertyName, newValue, oldValue)
 	 * 				{
-	 * 					console.log('property: set', event, object, propertyName, newValue);
+	 * 					console.log('property: set', event, object, propertyName, newValue, oldValue);
 	 * 				},
-	 * 				'set:before': function(event, object, propertyName, newValue)
+	 * 				'set:before': function(event, object, propertyName, newValue, oldValue)
 	 * 				{
-	 * 					console.log('property: set:before', event, object, propertyName, newValue);
+	 * 					console.log('property: set:before', event, object, propertyName, newValue, oldValue);
 	 * 				},
-	 * 				'set:after': function(event, object, propertyName, newValue)
+	 * 				'set:after': function(event, object, propertyName, newValue, oldValue)
 	 * 				{
-	 * 					console.log('property: set:after', event, object, propertyName, newValue);
+	 * 					console.log('property: set:after', event, object, propertyName, newValue, oldValue);
 	 * 				}
 	 * 			}
 	 * 		});
@@ -330,7 +330,20 @@ define(
 		// create the setter
 		return function(newValue)
 		{
-			var eventResult = self.trigger('set:before', [newValue]);
+			var oldValue = undefined;
+			// property has a getter use it
+			if (self.hasGetter === true)
+			{
+				oldValue = self.descriptor.get.apply(this);
+			}
+			// no getter was defined, get value from observer
+			else
+			{
+				oldValue = self.value;
+			}
+
+			// trigger before
+			var eventResult = self.trigger('set:before', [newValue, oldValue]);
 
 			if (eventResult === false)
 			{
@@ -348,9 +361,9 @@ define(
 				self.value = newValue;
 			}
 
-			self.trigger('set', [newValue]);
+			self.trigger('set', [newValue, oldValue]);
 
-			self.trigger('set:after', [newValue]);
+			self.trigger('set:after', [newValue, oldValue]);
 		};
 	};
 
