@@ -22,6 +22,11 @@ define(
 	{
 		ViewList.apply(this, arguments);
 
+		if (options.selected !== undefined)
+		{
+			this.selected = options.selected;
+		}
+
 		return this;
 	};
 
@@ -291,6 +296,21 @@ define(
 		if (this.autoSelect === true && this.selected === undefined && this.collection.length > 0)
 		{
 			this.selected = this.collection.models[0];
+		}
+
+		this.renderMarkSelected();
+
+		return this;
+	};
+
+	/**
+	 * @returns {ViewListSelect}
+	 */
+	ViewListSelect.prototype.renderMarkSelected = function()
+	{
+		if (this.selected !== undefined)
+		{
+			this.getViewEntryByModel(this.selected).markAsSelected();
 		}
 
 		return this;

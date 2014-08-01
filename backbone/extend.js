@@ -46,7 +46,7 @@ define(
 		// add properties && functions to prototype
 		preDefinedValues = lodash.reduce(protoProps, function(preDefinedValues, value, key)
 		{
-			var descriptor = getPropertyDescriptor(parent.prototype, key);
+			var descriptor = getPropertyDescriptor(this.prototype, key);
 
 			// not defined... can be defined
 			if (descriptor === undefined)
@@ -59,17 +59,36 @@ define(
 			{
 				return preDefinedValues;
 			}
-
+			
 			// set a predefined property
-			preDefinedValues[key] = {
-				mode: (descriptor.set instanceof Function ? 'setter' : 'simple'),
-				value: value
-			};
-
+			var doNormalPredefine = true;
+			if ((descriptor.set instanceof Function) === false)
+			{
+				var parentPredefinedValueByKey = this.getPrototypeValue(key);
+				if (parentPredefinedValueByKey !== undefined && lodash.isPlainObject(parentPredefinedValueByKey) === true && lodash.isPlainObject(value) === true)
+				{
+					doNormalPredefine = false;
+					lodash.extend(parentPredefinedValueByKey, value);
+					preDefinedValues[key] = {
+						mode: 'simple',
+						value: parentPredefinedValueByKey
+					};
+				}
+			}
+			
+			// overwrite
+			if (doNormalPredefine === true)
+			{
+				preDefinedValues[key] = {
+					mode: (descriptor.set instanceof Function ? 'setter' : 'simple'),
+					value: value
+				};
+			}
+			
 			delete protoProps[key];
 
 			return preDefinedValues;
-		}, preDefinedValues, parent);
+		}, preDefinedValues, this);
 
 		/**
 		 * create own constructor

@@ -366,5 +366,13 @@ define(
 		return this;
 	};
 
+	/**
+	 * @returns {ViewListSelectMulti}
+	 */
+	ViewListSelectMulti.prototype.renderMarkSelected = function()
+	{
+		return this.onSelectedChange();
+	};
+
 	return compatibility(ViewListSelectMulti);
 });

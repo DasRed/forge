@@ -18,7 +18,6 @@ define(
 		ObjectConstructor.extend = extend;
 		ObjectConstructor.prototype.constructor = ObjectConstructor;
 
-
 		/**
 		 * @param {String} propertyName
 		 * @returns {Mixed}
