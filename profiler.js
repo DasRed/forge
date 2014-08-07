@@ -3,13 +3,15 @@
 require(
 [
 	'lodash',
-	'jQuery'
+	'jQuery',
+	'forge/config/application'
 ], function(
 	lodash,
-	jQuery
+	jQuery,
+	configApplication
 )
 {
-	var config = window.applicationConfig.profiling;
+	var config = configApplication.profiling;
 
 	/**
 	 * small profiler

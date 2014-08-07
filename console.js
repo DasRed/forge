@@ -3,13 +3,15 @@
 require(
 [
 	'lodash',
-	'jQuery'
+	'jQuery',
+	'forge/config/application'
 ], function(
 	lodash,
-	jQuery
+	jQuery,
+	configApplication
 )
 {
-	var config = window.applicationConfig.log;
+	var config = configApplication.log;
 
 	/**
 	 * window console does not exists in IE versions smaller then 10
@@ -77,7 +79,12 @@ require(
 		{
 			source = stack[3];
 		}
-		return source.replace(window.document.head.baseURI, '').replace(window.location.href, '').replace('.js', '').replace(/^(js-src|js)\//gi, '');
+		return source
+				.replace(window.location.origin, '')
+				.replace(window.document.head.baseURI, '')
+				.replace(window.location.href, '')
+				.replace('.js', '')
+				.replace(/^(\/){0,1}(js-src|js)\//gi, '');
 	};
 
 	/**
