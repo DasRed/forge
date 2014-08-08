@@ -44,7 +44,12 @@ define(
 					var element = jQuery(this.element);
 					if (element.length === 0)
 					{
-						throw new Error('Can not find the HTMLElement "' + this.element + '" for configuration.');
+						if (this.throwError === true)
+						{
+							throw new Error('Can not find the HTMLElement "' + this.element + '" for configuration.');
+						}
+
+						return {};
 					}
 
 					// try to parse the JSON from element
@@ -54,7 +59,12 @@ define(
 					}
 					catch (exception)
 					{
-						throw new Error('Can not parse the data from HTMLElement "' + this.element + '" for configuration.\n' + (exception.message || e));
+						if (this.throwError === true)
+						{
+							throw new Error('Can not parse the data from HTMLElement "' + this.element + '" for configuration.\n' + (exception.message || e));
+						}
+
+						return {};
 					}
 
 					this._config = config;
@@ -73,7 +83,18 @@ define(
 			enumerable: false,
 			configurable: false,
 			writable: true
-		}
+		},
+
+		/**
+		 * @var {Boolean}
+		 */
+		throwError:
+		{
+			value: true,
+			enumerable: false,
+			configurable: false,
+			writable: true
+		},
 	});
 
 	return Loader;
