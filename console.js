@@ -73,7 +73,13 @@ require(
 	 */
 	var getScriptName = function()
 	{
-		var stack = (new Error()).stack.match(/http\:\/\/(.*?)\.js/gi);
+		var errorHelper = new Error();
+		if (errorHelper.stack === undefined)
+		{
+			return 'unknown';
+		}
+
+		var stack = errorHelper.stack.match(/http\:\/\/(.*?)\.js/gi);
 		var source = stack[stack.length - 1];
 		if (stack.length >= 4)
 		{
