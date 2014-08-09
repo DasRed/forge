@@ -25,6 +25,7 @@ define(
 	{
 		config = lodash.merge(
 		{
+			language: 'en_GB',
 			log:
 			{
 				level: 4,

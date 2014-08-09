@@ -1,0 +1,20 @@
+{
+	"bootstrap":
+	[
+		"./lib/require.js",
+		"./bootstrap.js",
+		"./app/config.js"
+	],
+
+	"pathIncludes":
+	[
+		"./../"
+	],
+
+	"log":
+	{
+		"level": 4
+	},
+
+	"pageFile": "page.html"
+}
