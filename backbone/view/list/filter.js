@@ -9,7 +9,7 @@ define(
 	'forge/backbone/collection',
 	'forge/backbone/view',
 	'forge/backbone/view/list',
-	'text!forge/backbone/view/list/template/filter.html'
+	'tpl!forge/backbone/view/list/template/filter'
 ], function(
 	require,
 	lodash,
@@ -18,7 +18,7 @@ define(
 	Collection,
 	View,
 	ViewList,
-	templateViewListFilter
+	tplViewListFilter
 )
 {
 	/**
@@ -38,7 +38,7 @@ define(
 		this.filter = lodash.debounce(this.filter.bind(this), 100);
 
 		// templating
-		this.template = templateViewListFilter;
+		this.template = tplViewListFilter;
 
 		// parent
 		View.apply(this, arguments);

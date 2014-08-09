@@ -10,7 +10,7 @@ define(
 	'forge/backbone/collection/sorter',
 	'forge/backbone/view',
 	'forge/backbone/view/list',
-	'text!forge/backbone/view/list/template/sorter.html'
+	'tpl!forge/backbone/view/list/template/sorter'
 ], function(
 	require,
 	lodash,
@@ -20,7 +20,7 @@ define(
 	CollectionSorter,
 	View,
 	ViewList,
-	templateViewListSorter
+	tplViewListSorter
 )
 {
 	/**
@@ -37,7 +37,7 @@ define(
 		}
 
 		// templating
-		this.template = templateViewListSorter;
+		this.template = tplViewListSorter;
 
 		// parent
 		View.apply(this, arguments);
