@@ -22,7 +22,11 @@ define(
 	});
 
 	// Translation in templates
-	lodash.templateSettings.imports.translate = translation.translate.bind(translation);
+	lodash.templateSettings.imports.translate = function()
+	{
+		translation.translate.apply(translation, arguments);
+	};
+
 	lodash.templateSettings.imports.__ = lodash.templateSettings.imports.translate;
 
 	if (console.debug !== undefined)
