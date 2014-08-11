@@ -17,7 +17,7 @@ require.config(
 		forge: '../../',
 
 		tpl: '../../requirejs/plugins/tpl',
-		config: '../../requirejs/plugins/config',
+		cfg: '../../requirejs/plugins/cfg',
 
 		main: 'main'
 	},

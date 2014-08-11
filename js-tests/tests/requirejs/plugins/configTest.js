@@ -2,13 +2,13 @@
 
 require(
 [
-	'config!configTest1',
-	'config!configTest2',
-	'config!configTest3',
-	'config!configTest4',
-	'config!application',
+	'cfg!configTest1',
+	'cfg!configTest2',
+	'cfg!configTest3',
+	'cfg!configTest4',
+	'cfg!application',
 	'forge/config/application',
-	'config!translation',
+	'cfg!translation',
 	'forge/config/translation',
 ], function(
 	configTest1,
@@ -21,7 +21,7 @@ require(
 	translationByRequire
 )
 {
-	describe('requirejs/plugins/config', function()
+	describe('requirejs/plugins/cfg', function()
 	{
 		it('must return the object for configTest1', function()
 		{

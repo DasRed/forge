@@ -3,7 +3,7 @@
 define(
 [
 	'lodash',
-	'config!translation',
+	'cfg!translation',
 	'forge/requirejs/plugins/text/text'
 ], function(
 	lodash,
