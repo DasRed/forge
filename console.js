@@ -4,7 +4,7 @@ require(
 [
 	'lodash',
 	'jQuery',
-	'forge/config/application'
+	'cfg!application'
 ], function(
 	lodash,
 	jQuery,

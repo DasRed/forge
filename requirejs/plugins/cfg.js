@@ -34,22 +34,22 @@ define(
 			// Do something else that can be async.
 			else
 			{
-				var config = null;
+				var loadedConfig = null;
 
 				switch(name)
 				{
 					case 'application':
-						config = configApplication;
+						loadedConfig = configApplication;
 						break;
 
 					case 'translation':
-						config = translation;
+						loadedConfig = translation;
 						break;
 
 					default:
 						try
 						{
-							config = (new ConfigLoader('#' + name,
+							loadedConfig = (new ConfigLoader('#' + name,
 							{
 								throwError: false
 							})).config;
@@ -60,14 +60,14 @@ define(
 						}
 						finally
 						{
-							config = lodash.merge({}, config);
+							loadedConfig = lodash.merge({}, loadedConfig);
 						}
 
 						break;
 				}
 
 				console.debug('Config loaded from #' + name);
-				onload(config);
+				onload(loadedConfig);
 			}
 		}
 	};

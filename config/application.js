@@ -12,7 +12,7 @@ define(
 
 	try
 	{
-		config = (new ConfigLoader('#applicationConfig',
+		config = (new ConfigLoader('#application',
 		{
 			throwError: false
 		})).config;
