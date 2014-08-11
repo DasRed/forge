@@ -13,7 +13,10 @@ define(
 )
 {
 	// create the translation instance
-	var translation = new Translation((new ConfigLoader('#translation')).config,
+	var translation = new Translation((new ConfigLoader('#translation',
+	{
+		throwError: false
+	})).config,
 	{
 		language: configApplication.language
 	});
@@ -22,7 +25,10 @@ define(
 	lodash.templateSettings.imports.translate = translation.translate.bind(translation);
 	lodash.templateSettings.imports.__ = lodash.templateSettings.imports.translate;
 
-	console.debug('Translations started.');
+	if (console.debug !== undefined)
+	{
+		console.debug('Translations started.');
+	}
 
 	return translation;
 });

@@ -2,11 +2,9 @@
 
 define(
 [
-	'lodash',
-	'forge/object/base'
+	'lodash'
 ], function(
-	lodash,
-	Base
+	lodash
 )
 {
 	/**
@@ -20,7 +18,11 @@ define(
 	{
 		this.translations = {};
 
-		Base.call(this, options);
+		options = options || {};
+
+		this.language = options.language !== undefined ? options.language : this.language;
+		this.regexpParameters = options.regexpParameters !== undefined ? options.regexpParameters : this.regexpParameters;
+		this.regexpTranslations = options.regexpTranslations !== undefined ? options.regexpTranslations : this.regexpTranslations;
 
 		this.setTranslations(translations);
 
@@ -28,7 +30,7 @@ define(
 	};
 
 	// prototype
-	Translation.prototype = Object.create(Base.prototype,
+	Translation.prototype = Object.create(Object.prototype,
 	{
 		/**
 		 * current defined language
@@ -161,9 +163,9 @@ define(
 		}
 
 		// parameter replacemant
-		text = lodash.reduce(parameters, function(text, value, name)
+		text = lodash.reduce(parameters, function(acc, value, name)
 		{
-			return text.replace(new RegExp('\\[' + name + '\\]', 'gi'), value);
+			return acc.replace(new RegExp('\\[' + name + '\\]', 'gi'), value);
 		}, text);
 
 		return text;
@@ -192,7 +194,7 @@ define(
 		}).bind(this));
 
 		// parameters conversion
-		text = text.replace(this.regexpParameters, '${$1}')
+		text = text.replace(this.regexpParameters, '${$1}');
 
 		return text;
 	};

@@ -4,20 +4,13 @@ define(
 [
 	'lodash',
 	'cfg!translation',
-	'forge/requirejs/plugins/text/text'
+	'text'
 ], function(
 	lodash,
 	translation,
-	textFromForge
+	text
 )
 {
-	var text = textFromForge;
-
-	if (require.defined('text') === true)
-	{
-		text = require('text');
-	}
-
 	var htmlStripWhitespacesRegEx =
 	{
 		' ': /(\n)|(\r)/gi,
@@ -30,52 +23,93 @@ define(
 		/**
 		 * @param {String} name
 		 * @param {Function} parentRequire
-		 * @param {Function} onload
+		 * @param {Function} onLoad
 		 * @param {Object} config
 		 */
-		load: function(name, parentRequire, onload, config)
+		load: function(name, parentRequire, onLoad, config)
 		{
-			/**
-			 * Indicate that the optimizer should not wait for this resource any more and complete optimization.
-			 * This resource will be resolved dynamically during run time in the web browser.
-			 */
-			if (config.isBuild)
+			if (config.isBuild == true)
 			{
-				onload();
+				onLoad(null);
+				return;
 			}
-			// Do something else that can be async.
-			else
+
+			if (name.lastIndexOf('.') === -1)
 			{
-				if (name.lastIndexOf('.') === -1)
+				name += '.html';
+			}
+
+			text.load(name, parentRequire, function(content)
+			{
+				var contentReplaced = content;
+
+				// convert whitespaces between html tags to nothing and remove Tabs and Linebreaks
+				for (var replacement in htmlStripWhitespacesRegEx)
 				{
-					name += '.html';
+					contentReplaced = contentReplaced.replace(htmlStripWhitespacesRegEx[replacement], replacement);
 				}
 
-				//req has the same API as require().
-				text.load(name, parentRequire, function(content)
+				var contentTranslated = translation.translateInline(contentReplaced);
+
+				// convert template into lodash.template function
+				var template = lodash.template(contentTranslated);
+				template.content =
 				{
-					var contentReplaced = content;
-					// convert whitespaces between html tags to nothing and remove Tabs and Linebreaks
-					for (var replacement in htmlStripWhitespacesRegEx)
-					{
-						contentReplaced = contentReplaced.replace(htmlStripWhitespacesRegEx[replacement], replacement);
-					}
+					original: content,
+					replaced: contentReplaced,
+					translated: contentTranslated
+				};
 
-					var contentTranslated = translation.translateInline(contentReplaced);
+				// return it
+				onLoad(template);
+			}, config);
+		},
 
-					// convert template into lodash.template function
-					var template = lodash.template(contentTranslated);
-					template.content =
-					{
-						original: content,
-						replaced: contentReplaced,
-						translated: contentTranslated
-					};
-
-					// return it
-					onload(template);
-				}, config);
+		/**
+		 *
+		 * @param {String} pluginName
+		 * @param {String} moduleName
+		 * @param {Function} write
+		 */
+		write: function (pluginName, moduleName, write)
+		{
+			var moduleNameWithExtension = moduleName;
+			if (moduleNameWithExtension.lastIndexOf('.') === -1)
+			{
+				moduleNameWithExtension += '.html';
 			}
+
+			text.load(moduleNameWithExtension, require, function(content)
+			{
+				var contentReplaced = content;
+
+				// convert whitespaces between html tags to nothing and remove Tabs and Linebreaks
+				for (var replacement in htmlStripWhitespacesRegEx)
+				{
+					contentReplaced = contentReplaced.replace(htmlStripWhitespacesRegEx[replacement], replacement);
+				}
+
+				write((
+				[
+					'define("' + pluginName + '!' + moduleName + '", ["lodash", "cfg!translation"], function (lodash, translation) {',
+						'var contentReplaced = \'' + text.jsEscape(contentReplaced) + '\';',
+						'var contentTranslated = translation.translateInline(contentReplaced);',
+						'var template = lodash.template(contentTranslated);',
+
+						'template.content =',
+						'{',
+							'original: \'' + text.jsEscape(content) + '\',',
+							'replaced: contentReplaced,',
+							'translated: contentTranslated',
+						'};',
+
+						'return template;',
+					'});'
+				]).join('\n'));
+			},
+			{
+				isBuild: false
+			});
 		}
 	};
 

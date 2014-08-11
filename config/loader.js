@@ -1,31 +1,26 @@
 'use strict';
-define(
-[
-	'jQuery',
-	'forge/object/base'
-], function(
-	jQuery,
-	Base
-)
+define([], function()
 {
 	/**
 	 * loads config from script type application json
 	 *
-	 * @param {String}|{jQuery} element
+	 * @param {String} element
 	 * @param {Object} options
 	 * @returns {Loader}
 	 */
 	var Loader = function(element, options)
 	{
-		Base.call(this, options);
-
 		this.element = element;
+
+		options = options || {};
+
+		this.throwError = options.throwError !== undefined ? options.throwError : this.throwError;
 
 		return this;
 	};
 
 	// prototype
-	Loader.prototype = Object.create(Base.prototype,
+	Loader.prototype = Object.create(Object.prototype,
 	{
 		/**
 		 * the loaded config
@@ -40,9 +35,25 @@ define(
 			{
 				if (this._config === undefined)
 				{
+					var elementId = this.element;
+					if (elementId.substr(0, 1) === '#')
+					{
+						elementId = elementId.substr(1);
+					}
+
+					if (typeof document === 'undefined')
+					{
+						if (this.throwError === true)
+						{
+							throw new Error('Can not find the documnet node to find configuration element "' + this.element + '".');
+						}
+
+						return {};
+					}
+
 					// try to find the user config element
-					var element = jQuery(this.element);
-					if (element.length === 0)
+					var element = document.getElementById(elementId);
+					if (element === null)
 					{
 						if (this.throwError === true)
 						{
@@ -55,7 +66,7 @@ define(
 					// try to parse the JSON from element
 					try
 					{
-						var config = JSON.parse(element.html());
+						var config = JSON.parse(element.innerHTML);
 					}
 					catch (exception)
 					{
@@ -94,7 +105,7 @@ define(
 			enumerable: false,
 			configurable: false,
 			writable: true
-		},
+		}
 	});
 
 	return Loader;
