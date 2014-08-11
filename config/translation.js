@@ -13,7 +13,7 @@ define(
 )
 {
 	// create the translation instance
-	var translation = new Translation((new ConfigLoader('#translations')).config,
+	var translation = new Translation((new ConfigLoader('#translation')).config,
 	{
 		language: configApplication.language
 	});

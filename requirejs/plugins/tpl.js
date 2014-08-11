@@ -3,7 +3,7 @@
 define(
 [
 	'lodash',
-	'forge/config/translation',
+	'config!translation',
 	'forge/requirejs/plugins/text/text'
 ], function(
 	lodash,
@@ -65,7 +65,8 @@ define(
 
 					// convert template into lodash.template function
 					var template = lodash.template(contentTranslated);
-					template.content = {
+					template.content =
+					{
 						original: content,
 						replaced: contentReplaced,
 						translated: contentTranslated

@@ -16,8 +16,8 @@ require.config(
 		jQuery: '../lib/jquery',
 		forge: '../../',
 
-		text: '../../requirejs/plugins/text/text',
 		tpl: '../../requirejs/plugins/tpl',
+		config: '../../requirejs/plugins/config',
 
 		main: 'main'
 	},
