@@ -12,6 +12,7 @@ require.config(
 	],
 	paths:
 	{
+		backbone: '../lib/backbone',
 		lodash: '../lib/lodash',
 		jQuery: '../lib/jquery',
 		forge: '../../',
@@ -27,9 +28,11 @@ require.config(
 	{
 		'*':
 		{
-			jquery: 'jQuery'
+			jquery: 'jQuery',
+			underscore: 'lodash'
 		}
 	},
+
 	shim:
 	{
 		main:

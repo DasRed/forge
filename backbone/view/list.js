@@ -699,7 +699,7 @@ define(
 	ViewList.prototype.onClickDownloadCsv = function(event)
 	{
 		event.stop();
-		
+
 		var element = document.createElement('a');
 		element.href = URL.createObjectURL(new Blob(
 		[
@@ -956,7 +956,7 @@ define(
 
 			// append to index
 			this.appendEntryToIndex(model, index);
-		}).bind(this, model, index))
+		}).bind(this, model, index));
 
 		return this;
 	};

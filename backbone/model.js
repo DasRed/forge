@@ -30,7 +30,8 @@ define(
 	 * @param {Object} options
 	 * @returns {Model}
 	 */
-	var Model = function(attributes, options)
+	var Model = null;
+	Model = function(attributes, options)
 	{
 		options = options || {};
 		if (this.parseOnCreate === true && options.parse === undefined)
@@ -131,7 +132,7 @@ define(
 			{
 				if (this._observer === undefined)
 				{
-					this._observer = new ObserverObject(this.attributes)
+					this._observer = new ObserverObject(this.attributes);
 				}
 
 				return this._observer;
@@ -198,7 +199,7 @@ define(
 				// no url defined...
 				if (this._urlRoot === undefined)
 				{
-					return undefined
+					return undefined;
 				}
 
 				// create the parser
@@ -228,6 +229,27 @@ define(
 			writable: true
 		}
 	});
+
+	/**
+	 * clears this model from memory and all dependencies
+	 *
+	 * @returns {Model}
+	 */
+	Model.prototype.clearFromMemory = function()
+	{
+		this.off();
+
+		if (this._observer !== undefined)
+		{
+			this._observer.unobserve();
+		}
+
+		delete this._observer;
+		delete this._urlParameter;
+		delete this._urlRootParameter;
+
+		return this;
+	};
 
 	/**
 	 * correct clonig
@@ -349,10 +371,10 @@ define(
 				case Model.ATTRIBUTE_TYPE_DATE:
 					if ((value instanceof Date) === false)
 					{
-						value = new Date(value);
-						if (value.isValid() === false)
+						var valueConverted = new Date(value);
+						if (isNaN(valueConverted.getTime()) === true)
 						{
-							throw new Error('Model attribute "' + propertyName + '" is not an date.');
+							throw new Error('Model attribute "' + propertyName + '" with "' + String(value) + '" is not an date.');
 						}
 					}
 					break;

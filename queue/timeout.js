@@ -122,7 +122,7 @@ define(
 	/**
 	 * runs the queue
 	 *
-	 * @returns {Queue}
+	 * @returns {QueueTimeout}
 	 */
 	QueueTimeout.prototype.run = function()
 	{
@@ -183,7 +183,7 @@ define(
 				else
 				{
 					console.debug('Handled ' + (lengthBefore - this.length) + ' entries.');
-					return this
+					return this;
 				}
 			}
 		}
@@ -217,5 +217,5 @@ define(
 		return this;
 	};
 
-	return QueueTimeout
+	return QueueTimeout;
 });

@@ -156,7 +156,7 @@ define(
 				// no url defined...
 				if (this._url === undefined)
 				{
-					return undefined
+					return undefined;
 				}
 
 				// create the parser
@@ -223,7 +223,6 @@ define(
 	 */
 	Collection.prototype.fetch = function(options)
 	{
-		var self = this;
 		options = options || {};
 
 		var completeCallback = options.complete;
@@ -343,6 +342,23 @@ define(
 
 			return acc;
 		}, rows).join('\n');
+	};
+
+	/**
+	 * reset of collection with full model destroy
+	 *
+	 * @returns {Collection}
+	 */
+	Collection.prototype._reset = function()
+	{
+		lodash.each(this.models, function(model)
+		{
+			model.clearFromMemory();
+		});
+
+		Backbone.Collection.prototype._reset.apply(this, arguments);
+
+		return this;
 	};
 
 	return compatibility(Collection);

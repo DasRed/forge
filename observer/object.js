@@ -23,12 +23,12 @@ define(
 	 * @event {void} get:after({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, value) fires after if some wants to get the value.
 	 * @event {void} get:after[:PropertyName]({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, value) fires after if some wants to get the value.
 	 *
-	 * @event {void} set({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue) fires if some whants to set the value
-	 * @event {void} set[:PropertyName]({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue) fires if some whants to set the value
-	 * @event {boolean} set:before({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue) fires before if some wants to set the value. if callback returns FALSE the value will not be setted
-	 * @event {boolean} set:before[:PropertyName]({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue) fires before if some wants to set the value. if callback returns FALSE the value will not be setted
-	 * @event {void} set:after({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue) fires after if some wants to set the value.
-	 * @event {void} set:after[:PropertyName]({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue) fires after if some wants to set the value.
+	 * @event {void} set({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires if some whants to set the value
+	 * @event {void} set[:PropertyName]({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires if some whants to set the value
+	 * @event {boolean} set:before({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires before if some wants to set the value. if callback returns FALSE the value will not be setted
+	 * @event {boolean} set:before[:PropertyName]({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires before if some wants to set the value. if callback returns FALSE the value will not be setted
+	 * @event {void} set:after({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires after if some wants to set the value.
+	 * @event {void} set:after[:PropertyName]({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires after if some wants to set the value.
 	 *
 	 * @example
 	 * <code>
@@ -212,11 +212,10 @@ define(
 	 * @param {jQuery.Event} event
 	 * @param {Object} object
 	 * @param {String} propertyName
-	 * @param {Mixed} value
 	 * @param {Mixed} ...
 	 * @returns {Mixed}
 	 */
-	ObserverObject.prototype.onObserver = function(event, object, propertyName, value)
+	ObserverObject.prototype.onObserver = function(event, object, propertyName)
 	{
 		var result = undefined;
 		var parameters = Array.prototype.slice.call(arguments);
@@ -226,7 +225,7 @@ define(
 
 		// first fire the event for the property
 		result = this.trigger(event.type + ':' + propertyName, parameters);
-	
+
 		// before events can return values. all other values are ignored
 		// if a value was return. then return this value
 		if (event.type.substr(-7) !== ':before' || result === undefined)
@@ -234,7 +233,7 @@ define(
 			// now fire the generall event
 			result = this.trigger(event.type, parameters);
 		}
-		
+
 		return result;
 	};
 

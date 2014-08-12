@@ -33,6 +33,17 @@ define(
 		},
 
 		/**
+		 * enables or disables the queue
+		 */
+		enabled:
+		{
+			value: true,
+			enumerable: false,
+			configurable: false,
+			writable: true
+		},
+
+		/**
 		 * @var {Boolean}
 		 */
 		isRunning:
@@ -55,6 +66,12 @@ define(
 	 */
 	Queue.prototype.add = function(key, entry)
 	{
+		if (this.enabled === false)
+		{
+			entry.apply(this, [this]);
+			return this;
+		}
+
 		if ((entry instanceof Function) === false)
 		{
 			throw new Error('The entry for the queue must be a function.');
@@ -119,7 +136,7 @@ define(
 		var entry = this.get(key);
 		this.remove(key);
 
-		entry.apply(this, this);
+		entry.apply(this, [this]);
 
 		return this;
 	};

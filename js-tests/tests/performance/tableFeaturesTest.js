@@ -1,0 +1,386 @@
+'use strict';
+
+require(
+[
+	'lodash',
+	'forge/profiler',
+	'collection/performances',
+	'view/performance/list',
+	'view/performance/list/entry'
+], function(
+	lodash,
+	Profiler,
+	CollectionPerformance,
+	ViewPerformanceList,
+	ViewPerformanceListEntry
+)
+{
+	var times = {};
+
+	var testConfigs =
+	{
+		countOfRows: 100, // 100
+		countOfIteration: 10, // 10
+
+		tests:
+		{
+			'none features':
+			{
+				list:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false,
+					sorterOptions: null
+				},
+				entry:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false
+				}
+			},
+			'all features':
+			{
+				list:
+				{
+					autoModelBindings: true,
+					autoModelSave: true,
+					autoModelUpdate: true,
+					autoTemplatesAppend: true,
+					sorterOptions: true
+				},
+				entry:
+				{
+					autoModelBindings: true,
+					autoModelSave: true,
+					autoModelUpdate: true,
+					autoTemplatesAppend: true
+				}
+			},
+			'table/entry.autoModelBindings = true':
+			{
+				list:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false,
+					sorterOptions: null
+				},
+				entry:
+				{
+					autoModelBindings: true,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false
+				}
+			},
+			'table/entry.autoModelSave = true':
+			{
+				list:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false,
+					sorterOptions: null
+				},
+				entry:
+				{
+					autoModelBindings: false,
+					autoModelSave: true,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false
+				}
+			},
+			'table/entry.autoModelUpdate = true':
+			{
+				list:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false,
+					sorterOptions: null
+				},
+				entry:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: true,
+					autoTemplatesAppend: false
+				}
+			},
+			'table/entry.autoTemplatesAppend = true':
+			{
+				list:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false,
+					sorterOptions: null
+				},
+				entry:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: true
+				}
+			},
+			'table.autoModelBindings = true':
+			{
+				list:
+				{
+					autoModelBindings: true,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false,
+					sorterOptions: null
+				},
+				entry:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false
+				}
+			},
+			'table.autoModelSave = true':
+			{
+				list:
+				{
+					autoModelBindings: false,
+					autoModelSave: true,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false,
+					sorterOptions: null
+				},
+				entry:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false
+				}
+			},
+			'table.autoModelUpdate = true':
+			{
+				list:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: true,
+					autoTemplatesAppend: false,
+					sorterOptions: null
+				},
+				entry:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false
+				}
+			},
+			'table.autoTemplatesAppend = true':
+			{
+				list:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: true,
+					sorterOptions: null
+				},
+				entry:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false
+				}
+			},
+			'table.sorterOptions = true':
+			{
+				list:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false,
+					sorterOptions: true
+				},
+				entry:
+				{
+					autoModelBindings: false,
+					autoModelSave: false,
+					autoModelUpdate: false,
+					autoTemplatesAppend: false
+				}
+			}
+		}
+	};
+
+	Number.prototype._duration = function()
+	{
+		return this.toLocaleString('de-de',
+		{
+			minimumFractionDigits: 3
+		});
+	};
+
+	describe('tableFeatures forge/backbone/view/table', function()
+	{
+		var profiler = new Profiler(
+		{
+			timeout: false
+		});
+
+		lodash.each(testConfigs.tests, function(testConfig, key)
+		{
+			times[key] =
+			{
+				fetch: 0,
+				viewCreate: 0,
+				render: 0,
+				row: 0
+			};
+
+			lodash.each(new Array(testConfigs.countOfIteration), function(value, index)
+			{
+				var timeData = times[key];
+				it('performance test ' + key + ' (#' + (index + 1) + ')', function(done)
+				{
+					// settings properties on list
+					for (var propertyName in testConfig.list)
+					{
+						ViewPerformanceList.prototype[propertyName] = testConfig.list[propertyName];
+					}
+
+					// settings properties on list entry
+					for (var propertyName in testConfig.entry)
+					{
+						ViewPerformanceListEntry.prototype[propertyName] = testConfig.entry[propertyName];
+					}
+
+					console.log('tableFeatures forge/backbone/view/table performance test ' + key + ' (#' + (index + 1) + ')');
+
+					// create collection
+					var collection = new CollectionPerformance(null,
+					{
+						count: testConfigs.countOfRows
+					});
+
+					// bind events
+					collection.once('fetched', function()
+					{
+						timeData.fetch += profiler.getTime('fetch', true);
+
+						// create view
+						profiler.start('viewCreate');
+						var view = new ViewPerformanceList(
+						{
+							autoRender: false,
+							collection: collection,
+							container: '#content'
+						});
+						timeData.viewCreate += profiler.getTime('viewCreate', true);
+
+						// disable the render queue
+						view.renderQueue.enabled = false;
+
+						view.renderQueue.add = function(key, entry)
+						{
+							profiler.start('row');
+							entry.apply(this, [this]);
+							timeData.row += profiler.getTime('row', true);
+						};
+
+						// render
+						profiler.start('render');
+						view.render();
+						timeData.render += profiler.getTime('render', true);
+
+						view.remove();
+
+						collection._reset();
+
+						// all done
+						done();
+					});
+
+					// fetch the collection
+					profiler.start('fetch');
+					collection.fetch();
+				});
+			});
+		});
+
+		it('performance output', function()
+		{
+			var text = [];
+			var timeFirst = null;
+			lodash.each(times, function(timeData, testName)
+			{
+				if (timeFirst === null)
+				{
+					timeFirst = timeData;
+					text.push(lodash.reduce(lodash.keys(timeFirst), function(acc, profileName)
+					{
+						return acc.concat(
+						[
+							profileName + ' AVG',
+							profileName + ' AVG - First',
+							profileName,
+							profileName + ' - First',
+						]);
+					}, ['Test Name']).join(';'));
+				}
+
+				// log measures
+				console.log('------------------ tableFeatures forge/backbone/view/table performance test ' + testName);
+				console.log('Performance testing iterations: ' + testConfigs.countOfIteration);
+				console.log('Performance testing rows: ' + testConfigs.countOfRows);
+
+				text.push(lodash.reduce(timeData, function(acc, time, profileName)
+				{
+					var totalCurrent = time;
+					var avgCurrent = totalCurrent / testConfigs.countOfIteration;
+
+					var totalFirst = timeFirst[profileName];
+					var avgFirst = totalFirst / testConfigs.countOfIteration;
+
+					if (profileName === 'row')
+					{
+						totalCurrent /= testConfigs.countOfRows;
+						avgCurrent /= testConfigs.countOfRows;
+
+						totalFirst /= testConfigs.countOfRows;
+						avgFirst /= testConfigs.countOfRows;
+					}
+
+					console.log('[' + profileName + '           ]: ' + avgCurrent._duration() + ' (Total: ' + totalCurrent._duration() + ')');
+					console.log('[' + profileName + ' Diff First]: ' + (avgCurrent - avgFirst)._duration() + ' (Total: ' + (totalCurrent - totalFirst)._duration() + ')');
+
+					return acc.concat(
+					[
+						avgCurrent._duration(),
+						(avgCurrent - avgFirst)._duration(),
+						totalCurrent._duration(),
+						(totalCurrent - totalFirst)._duration()
+					]);
+				}, [testName]).join(';'));
+			});
+
+			console.log('------------------ tableFeatures forge/backbone/view/table performance test CSV');
+			console.log(text.join('\n'));
+			console.log('------------------');
+
+			// TODO expectations for some time values
+		});
+	});
+});

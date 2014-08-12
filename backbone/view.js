@@ -47,12 +47,6 @@ define(
 	 */
 	var View = function(options)
 	{
-		// read set model to view.. in start mode, backbone made strange things with prototype :( and so we have the initial event binding and fetching here
-		if (this.model instanceof Model)
-		{
-			this.model = this.model;
-		}
-
 		options = options || {};
 
 		// defaults modelBindings object
@@ -91,6 +85,12 @@ define(
 				this[key] = value;
 			}
 		}, this);
+
+		// read set model to view.. in start mode, backbone made strange things with prototype :( and so we have the initial event binding and fetching here
+		if (this.model instanceof Model)
+		{
+			this.model = this.model;
+		}
 
 		// convert additional templates to template function and structur
 		for (var key in this.templates)
@@ -314,17 +314,6 @@ define(
 		},
 
 		/**
-		 * @var {String}
-		 */
-		id:
-		{
-			value: null,
-			enumerable: true,
-			configurable: true,
-			writable: true
-		},
-
-		/**
 		 * @var {Layout}
 		 */
 		layout:
@@ -356,7 +345,8 @@ define(
 				}
 
 				// this is a model and not null or so... create the observer
-				if (model instanceof Model)
+				// but only if autoModelBindings === true OR modelBindings contains entries
+				if (model instanceof Model && (this.autoModelBindings === true || lodash.keys(this.modelBindings).length !== 0))
 				{
 					// create a observer?
 					this._modelObserverHandler = this.onModelPropertyChangeHandler.bind(this);
@@ -583,7 +573,7 @@ define(
 						case (newValue instanceof Date && elements.is('[type=time]') === true):
 						case (newValue instanceof Date && elements.is('[type=datetime-local]') === true):
 						case (newValue instanceof Date && elements.is('[type=datetime]') === true):
-							elements.prop('valueAsDate', newValue)
+							elements.prop('valueAsDate', newValue);
 							break;
 
 						default:
@@ -646,7 +636,7 @@ define(
 			return value.toLocaleDateString();
 		}
 
-		return value;
+		return String(value);
 	};
 
 	/**
@@ -664,7 +654,7 @@ define(
 			return value.toLocaleString();
 		}
 
-		return value;
+		return String(value);
 	};
 
 	/**
@@ -682,7 +672,7 @@ define(
 			return value.toLocaleString();
 		}
 
-		return value;
+		return String(value);
 	};
 
 	/**
@@ -700,7 +690,7 @@ define(
 			return value.toLocaleTimeString();
 		}
 
-		return value;
+		return String(value);
 	};
 
 	/**
@@ -1037,7 +1027,6 @@ define(
 		// set the new value to model and set or save
 		this.model[methodToSet](propertyName, newValue,
 		{
-			// TODO modelPropertyChange events and Functions onComplete
 			complete: (function()
 			{
 				var propertyNameUcFirst = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
@@ -1101,7 +1090,7 @@ define(
 		{
 			return this;
 		}
-		
+
 		// in the options is a callback function as Function. call the function
 		var callbackResult = bindingOptions.callback.call(this, newValue, modelAttributes, propertyName);
 		if (callbackResult !== undefined)
