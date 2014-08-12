@@ -141,9 +141,7 @@ define(
 	var ObserverObject = function(object, options)
 	{
 		this.observers = {};
-
-		options = options || {};
-		options.object = object;
+		this.object = object;
 
 		Base.call(this, options);
 
@@ -175,6 +173,50 @@ define(
 			enumerable: false,
 			configurable: false,
 			writable: true
+		},
+
+		/**
+		 * properties to observe
+		 *
+		 * @var {Object}
+		 */
+		properties:
+		{
+			enumerable: false,
+			configurable: false,
+			get: function()
+			{
+				// no property is defined. use all properties and observe
+				if (this._properties === undefined)
+				{
+					this._properties = {};
+					for (var propertyName in this.object)
+					{
+						this._properties[propertyName] = true;
+					}
+				}
+
+				return this._properties;
+			},
+			set: function(properties)
+			{
+				if (this._properties !== undefined)
+				{
+					this.unobserve();
+				}
+
+				this._properties = properties;
+
+				// convert to Object
+				if (properties instanceof Array)
+				{
+					this._properties = {};
+					for (var i = 0; i < properties.length; i++)
+					{
+						this._properties[properties[i]] = true;
+					}
+				}
+			}
 		}
 	});
 
@@ -185,11 +227,13 @@ define(
 	 */
 	ObserverObject.prototype.observe = function()
 	{
+		this.unobserve();
+
 		var fnOnObserver = this.onObserver.bind(this);
 
-		for (var key in this.object)
+		for (var propertyName in this.properties)
 		{
-			this.observers[key] = new ObserverObjectProperty(this.object, key,
+			this.observers[propertyName] = new ObserverObjectProperty(this.object, propertyName,
 			{
 				on:
 				{
@@ -244,10 +288,10 @@ define(
 	 */
 	ObserverObject.prototype.unobserve = function()
 	{
-		for (var key in this.observers)
+		for (var propertyName in this.observers)
 		{
-			this.observers[key].unobserve();
-			delete this.observers[key];
+			this.observers[propertyName].unobserve();
+			delete this.observers[propertyName];
 		}
 
 		return this;

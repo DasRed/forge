@@ -530,5 +530,124 @@ require(
 			expect(callbackPropertY).toHaveBeenCalledWith(1, 2, 'a');
 			expect(callbackPropertY.calls.count()).toBe(1);
 		});
+
+		it('should observe property "x" and not property function "y"', function()
+		{
+			var objectLocal  =
+			{
+				x: 10,
+				y: 'y:12a'
+			};
+
+			var observerLocal = new ObserverObject(objectLocal,
+			{
+				properties:
+				{
+					x: true
+				},
+				on:
+				{
+					'get:before:x': callbackGetBeforeX,
+					'get:before:y': callbackGetBeforeY,
+					'get:before': callbackGetBefore,
+					'get:x': callbackGetX,
+					'get:y': callbackGetY,
+					'get': callbackGet,
+					'get:after:x': callbackGetAfterX,
+					'get:after:y': callbackGetAfterY,
+					'get:after': callbackGetAfter,
+
+					'set:before:x': callbackSetBeforeX,
+					'set:before:y': callbackSetBeforeY,
+					'set:before': callbackSetBefore,
+					'set:x': callbackSetX,
+					'set:y': callbackSetY,
+					'set': callbackSet,
+					'set:after:x': callbackSetAfterX,
+					'set:after:y': callbackSetAfterY,
+					'set:after': callbackSetAfter
+				}
+			});
+
+			var resultX = objectLocal.x;
+			objectLocal.x = 12;
+
+			var resultY = objectLocal.y;
+			objectLocal.y = 'a:98z';
+
+			// GET Before
+			expect(callbackGetBeforeX).toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'x');
+			expect(callbackGetBeforeX.calls.count()).toBe(1);
+
+			expect(callbackGetBeforeY).not.toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'y');
+			expect(callbackGetBeforeY.calls.count()).toBe(0);
+
+			expect(callbackGetBefore).toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'x');
+			expect(callbackGetBefore).not.toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'y');
+			expect(callbackGetBefore.calls.count()).toBe(1);
+
+			// GET
+			expect(callbackGetX).toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'x', 10);
+			expect(callbackGetX.calls.count()).toBe(1);
+
+			expect(callbackGetY).not.toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'y', 'y:12a');
+			expect(callbackGetY.calls.count()).toBe(0);
+
+			expect(callbackGet).toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'x', 10);
+			expect(callbackGet).not.toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'y', 'y:12a');
+			expect(callbackGet.calls.count()).toBe(1);
+
+			// GET After
+			expect(callbackGetAfterX).toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'x', 10);
+			expect(callbackGetAfterX.calls.count()).toBe(1);
+
+			expect(callbackGetAfterY).not.toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'y', 'y:12a');
+			expect(callbackGetAfterY.calls.count()).toBe(0);
+
+			expect(callbackGetAfter).toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'x', 10);
+			expect(callbackGetAfter).not.toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'y', 'y:12a');
+			expect(callbackGetAfter.calls.count()).toBe(1);
+
+			// SET Before
+			expect(callbackSetBeforeX).toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'x', 12, 10);
+			expect(callbackSetBeforeX.calls.count()).toBe(1);
+
+			expect(callbackSetBeforeY).not.toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'y', 'a:98z', 'y:12a');
+			expect(callbackSetBeforeY.calls.count()).toBe(0);
+
+			expect(callbackSetBefore).toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'x', 12, 10);
+			expect(callbackSetBefore).not.toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'y', 'a:98z', 'y:12a');
+			expect(callbackSetBefore.calls.count()).toBe(1);
+
+			// SET
+			expect(callbackSetX).toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'x', 12, 10);
+			expect(callbackSetX.calls.count()).toBe(1);
+
+			expect(callbackSetY).not.toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'y', 'a:98z', 'y:12a');
+			expect(callbackSetY.calls.count()).toBe(0);
+
+			expect(callbackSet).toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'x', 12, 10);
+			expect(callbackSet).not.toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'y', 'a:98z', 'y:12a');
+			expect(callbackSet.calls.count()).toBe(1);
+
+			// SET After
+			expect(callbackSetAfterX).toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'x', 12, 10);
+			expect(callbackSetAfterX.calls.count()).toBe(1);
+
+			expect(callbackSetAfterY).not.toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'y', 'a:98z', 'y:12a');
+			expect(callbackSetAfterY.calls.count()).toBe(0);
+
+			expect(callbackSetAfter).toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'x', 12, 10);
+			expect(callbackSetAfter).not.toHaveBeenCalledWith(jasmine.any(Object), objectLocal, 'y', 'a:98z', 'y:12a');
+			expect(callbackSetAfter.calls.count()).toBe(1);
+
+			// values
+			expect(resultX).toBe(10);
+			expect(objectLocal.x).toBe(12);
+			expect(resultY).toBe('y:12a');
+			expect(objectLocal.y).toBe('a:98z');
+
+			observerLocal.unobserve();
+		});
 	});
 });
