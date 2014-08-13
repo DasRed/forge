@@ -15,13 +15,13 @@ define(
 	 * @param {Object} options
 	 * @returns {ObjectObserverProperty}
 	 *
-	 * @event {void} get({jQuery.Event}, {ObjectOfObservedProperty}, {PropertyName}, value [, PARAMETERS]) fires if some whants to get the value
-	 * @event {mixed} get:before({jQuery.Event}, {ObjectOfObservedProperty}, {PropertyName} [, PARAMETERS]) fires before if some wants to get the value. if callback returns a value other then undefined, this value will be retruned from get
-	 * @event {void} get:after({jQuery.Event}, {ObjectOfObservedProperty}, {PropertyName}, value [, PARAMETERS]) fires after if some wants to get the value.
+	 * @event {void} get({ObjectOfObservedProperty}, {PropertyName}, value [, PARAMETERS]) fires if some whants to get the value
+	 * @event {mixed} get:before({ObjectOfObservedProperty}, {PropertyName} [, PARAMETERS]) fires before if some wants to get the value. if callback returns a value other then undefined, this value will be retruned from get
+	 * @event {void} get:after({ObjectOfObservedProperty}, {PropertyName}, value [, PARAMETERS]) fires after if some wants to get the value.
 	 *
-	 * @event {void} set({jQuery.Event}, {ObjectOfObservedProperty}, {PropertyName}, newValue, oldValue) fires if some whants to set the value
-	 * @event {boolean} set:before({jQuery.Event}, {ObjectOfObservedProperty}, {PropertyName}, newValue, oldValue) fires before if some wants to set the value. if callback returns FALSE the value will not be setted
-	 * @event {void} set:after({jQuery.Event}, {ObjectOfObservedProperty}, {PropertyName}, newValue, oldValue) fires after if some wants to set the value.
+	 * @event {void} set({ObjectOfObservedProperty}, {PropertyName}, newValue, oldValue) fires if some whants to set the value
+	 * @event {boolean} set:before({ObjectOfObservedProperty}, {PropertyName}, newValue, oldValue) fires before if some wants to set the value. if callback returns FALSE the value will not be setted
+	 * @event {void} set:after({ObjectOfObservedProperty}, {PropertyName}, newValue, oldValue) fires after if some wants to set the value.
 	 *
 	 * @example
 	 * <code>
@@ -75,15 +75,15 @@ define(
 	 *
 	 * 		// outputs on console
 	 * 		//
-	 * 		// property: set:before jQuery.Event Object {x: (...), y: function} x 9
-	 * 		// property: set jQuery.Event Object {x: (...), y: function} x 9
-	 * 		// property: set:after jQuery.Event Object {x: (...), y: function} x 9
-	 * 		// property: set:before jQuery.Event Object {x: (...), y: function} x 10
-	 * 		// property: set jQuery.Event Object {x: (...), y: function} x 10
-	 * 		// property: set:after jQuery.Event Object {x: (...), y: function} x 10
-	 * 		// property: get:before jQuery.Event Object {x: (...), y: function} x
-	 * 		// property: get jQuery.Event Object {x: (...), y: function} x 10
-	 * 		// property: get:after jQuery.Event Object {x: (...), y: function} x 10
+	 * 		// property: set:before Object {x: (...), y: function} x 9
+	 * 		// property: set Object {x: (...), y: function} x 9
+	 * 		// property: set:after Object {x: (...), y: function} x 9
+	 * 		// property: set:before Object {x: (...), y: function} x 10
+	 * 		// property: set Object {x: (...), y: function} x 10
+	 * 		// property: set:after Object {x: (...), y: function} x 10
+	 * 		// property: get:before Object {x: (...), y: function} x
+	 * 		// property: get Object {x: (...), y: function} x 10
+	 * 		// property: get:after Object {x: (...), y: function} x 10
 	 * 		// nuff undefined undefined undefined
 	 * </code>
 	 */

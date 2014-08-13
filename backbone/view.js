@@ -335,20 +335,19 @@ define(
 			},
 			set: function(model)
 			{
+				// only if autoModelBindings === true OR modelBindings contains entries
+				var isInObservation = (this.autoModelBindings === true || lodash.keys(this.modelBindings).length !== 0);
+
 				// stop previous model observer
-				if (this._model instanceof Model && this._modelObserverHandler instanceof Function)
+				if (isInObservation === true && this._model instanceof Model)
 				{
-					this._model.observer.off('set', this._modelObserverHandler);
-					this._modelObserverHandler = undefined;
+					this._model.observer.off('set', this.onModelPropertyChangeHandler, this);
 				}
 
 				// this is a model and not null or so... create the observer
-				// but only if autoModelBindings === true OR modelBindings contains entries
-				if (model instanceof Model && (this.autoModelBindings === true || lodash.keys(this.modelBindings).length !== 0))
+				if (isInObservation === true && model instanceof Model)
 				{
-					// create a observer?
-					this._modelObserverHandler = this.onModelPropertyChangeHandler.bind(this);
-					model.observer.on('set', this._modelObserverHandler);
+					model.observer.on('set', this.onModelPropertyChangeHandler, this);
 				}
 
 				if (model === null)
@@ -1066,14 +1065,13 @@ define(
 	/**
 	 * handles the change of model attributes property change
 	 *
-	 * @param {jQuery.Event} event
 	 * @param {Object} modelAttributes
 	 * @param {String} propertyName
 	 * @param {Midex} newValue
 	 * @param {Midex} oldValue
 	 * @returns {View}
 	 */
-	View.prototype.onModelPropertyChangeHandler = function(event, modelAttributes, propertyName, newValue, oldValue)
+	View.prototype.onModelPropertyChangeHandler = function(modelAttributes, propertyName, newValue, oldValue)
 	{
 		var bindingOptions = this.modelBindings[propertyName];
 
@@ -1295,11 +1293,13 @@ define(
 	 */
 	View.prototype.stopListening = function(other, event, callback)
 	{
+		// only if autoModelBindings === true OR modelBindings contains entries
+		var isInObservation = (this.autoModelBindings === true || lodash.keys(this.modelBindings).length !== 0);
+
 		// stop previous model observer
-		if (this.model instanceof Model && this._modelObserverHandler instanceof Function)
+		if (isInObservation === true && this.model instanceof Model)
 		{
-			this.model.observer.off('set', this._modelObserverHandler);
-			this._modelObserverHandler = undefined;
+			this.model.observer.off('set', this.onModelPropertyChangeHandler, this);
 		}
 
 		this.undelegateEvents();

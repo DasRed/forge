@@ -14,19 +14,19 @@ define(
 	 * @param {Object} options
 	 * @returns {ObjectObserver}
 	 *
-	 * @event {void} get({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, value) fires if some whants to get the value
-	 * @event {void} get[:PropertyName]({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, value) fires if some whants to get the value
-	 * @event {mixed} get:before({jQuery.Event}, {ObjectOfObservation}, {PropertyName}) fires before if some wants to get the value. if callback returns a value other then undefined, this value will be retruned from get
-	 * @event {mixed} get:before[:PropertyName]({jQuery.Event}, {ObjectOfObservation}, {PropertyName}) fires before if some wants to get the value. if callback returns a value other then undefined, this value will be retruned from get
-	 * @event {void} get:after({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, value) fires after if some wants to get the value.
-	 * @event {void} get:after[:PropertyName]({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, value) fires after if some wants to get the value.
+	 * @event {void} get({ObjectOfObservation}, {PropertyName}, value) fires if some whants to get the value
+	 * @event {void} get[:PropertyName]({ObjectOfObservation}, {PropertyName}, value) fires if some whants to get the value
+	 * @event {mixed} get:before({ObjectOfObservation}, {PropertyName}) fires before if some wants to get the value. if callback returns a value other then undefined, this value will be retruned from get
+	 * @event {mixed} get:before[:PropertyName]({ObjectOfObservation}, {PropertyName}) fires before if some wants to get the value. if callback returns a value other then undefined, this value will be retruned from get
+	 * @event {void} get:after({ObjectOfObservation}, {PropertyName}, value) fires after if some wants to get the value.
+	 * @event {void} get:after[:PropertyName]({ObjectOfObservation}, {PropertyName}, value) fires after if some wants to get the value.
 	 *
-	 * @event {void} set({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires if some whants to set the value
-	 * @event {void} set[:PropertyName]({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires if some whants to set the value
-	 * @event {boolean} set:before({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires before if some wants to set the value. if callback returns FALSE the value will not be setted
-	 * @event {boolean} set:before[:PropertyName]({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires before if some wants to set the value. if callback returns FALSE the value will not be setted
-	 * @event {void} set:after({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires after if some wants to set the value.
-	 * @event {void} set:after[:PropertyName]({jQuery.Event}, {ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires after if some wants to set the value.
+	 * @event {void} set({ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires if some whants to set the value
+	 * @event {void} set[:PropertyName]({ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires if some whants to set the value
+	 * @event {boolean} set:before({ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires before if some wants to set the value. if callback returns FALSE the value will not be setted
+	 * @event {boolean} set:before[:PropertyName]({ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires before if some wants to set the value. if callback returns FALSE the value will not be setted
+	 * @event {void} set:after({ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires after if some wants to set the value.
+	 * @event {void} set:after[:PropertyName]({ObjectOfObservation}, {PropertyName}, newValue, oldValue) fires after if some wants to set the value.
 	 *
 	 * @example
 	 * <code>
@@ -115,35 +115,32 @@ define(
 	 *
 	 * 		// outputs on console
 	 * 		//
-	 * 		// object: set:before jQuery.Event Object {x: (...), y: function} x 10
-	 * 		// object: set:before jQuery.Event Object {x: (...), y: function} x 10
-	 * 		// object: set jQuery.Event Object {x: (...), y: function} x 10
-	 * 		// object: set jQuery.Event Object {x: (...), y: function} x 10
-	 * 		// object: set:after jQuery.Event Object {x: (...), y: function} x 10
-	 * 		// object: set:after jQuery.Event Object {x: (...), y: function} x 10
-	 * 		// object: get:before jQuery.Event Object {x: (...), y: function} x
-	 * 		// object: get:before jQuery.Event Object {x: (...), y: function} x undefined undefined undefined
-	 * 		// object: get jQuery.Event Object {x: (...), y: function} x 10
-	 * 		// object: get jQuery.Event Object {x: (...), y: function} x 10 undefined undefined undefined
-	 * 		// object: get:after jQuery.Event Object {x: (...), y: function} x 10
-	 * 		// object: get:after jQuery.Event Object {x: (...), y: function} x 10 undefined undefined undefined
-	 * 		// object: get:before jQuery.Event Object {x: (...), y: function} y a b c
-	 * 		// object: get:before jQuery.Event Object {x: (...), y: function} y a b c
+	 * 		// object: set:before Object {x: (...), y: function} x 10
+	 * 		// object: set:before Object {x: (...), y: function} x 10
+	 * 		// object: set Object {x: (...), y: function} x 10
+	 * 		// object: set Object {x: (...), y: function} x 10
+	 * 		// object: set:after Object {x: (...), y: function} x 10
+	 * 		// object: set:after Object {x: (...), y: function} x 10
+	 * 		// object: get:before Object {x: (...), y: function} x
+	 * 		// object: get:before Object {x: (...), y: function} x undefined undefined undefined
+	 * 		// object: get Object {x: (...), y: function} x 10
+	 * 		// object: get Object {x: (...), y: function} x 10 undefined undefined undefined
+	 * 		// object: get:after Object {x: (...), y: function} x 10
+	 * 		// object: get:after Object {x: (...), y: function} x 10 undefined undefined undefined
+	 * 		// object: get:before Object {x: (...), y: function} y a b c
+	 * 		// object: get:before Object {x: (...), y: function} y a b c
 	 * 		// nuff a b c
-	 * 		// object: get jQuery.Event Object {x: (...), y: function} y undefined a b c
-	 * 		// object: get jQuery.Event Object {x: (...), y: function} y undefined a b c
-	 * 		// object: get:after jQuery.Event Object {x: (...), y: function} y undefined a b c
-	 * 		// object: get:after jQuery.Event Object {x: (...), y: function} y undefined a b c
+	 * 		// object: get Object {x: (...), y: function} y undefined a b c
+	 * 		// object: get Object {x: (...), y: function} y undefined a b c
+	 * 		// object: get:after Object {x: (...), y: function} y undefined a b c
+	 * 		// object: get:after Object {x: (...), y: function} y undefined a b c
 	 * </code>
 	 */
 	var ObjectObserver = function(object, options)
 	{
-		this.observers = {};
 		this.object = object;
 
 		Base.call(this, options);
-
-		this.initialize();
 
 		if (this.autoObserver === true)
 		{
@@ -162,17 +159,6 @@ define(
 		autoObserver:
 		{
 			value: true,
-			enumerable: false,
-			configurable: false,
-			writable: true
-		},
-
-		/**
-		 * @var {Object}
-		 */
-		observers:
-		{
-			value: null,
 			enumerable: false,
 			configurable: false,
 			writable: true
@@ -215,15 +201,16 @@ define(
 	});
 
 	/**
-	 * creates property informations
+	 * creates observation for a property
 	 *
-	 * @param {String} propertyName
-	 * @returns {Object}
+	 * @param {Object} property
+	 * @returns {ObjectObserver}
 	 */
-	ObjectObserver.prototype.createPropertyInformation = function(propertyName)
+	ObjectObserver.prototype.createPropertyObservation = function(propertyName)
 	{
 		var property = {};
 
+		// ############## creates the informations
 		property.name = propertyName;
 
 		// descriptor informations of property
@@ -257,9 +244,38 @@ define(
 			property.value = this.object[property.name];
 		}
 
-		return property;
-	};
+		// store the information
+		this.properties[propertyName] = property;
 
+		// ############## creates the obsersvation
+
+		// it is a function. observe function
+		if (property.isFunction === true)
+		{
+			// define new property
+			Object.defineProperty(this.object, propertyName,
+			{
+				enumerable: property.isEnumerable,
+				configurable: true,
+				writable: true,
+				value: this.getFunction(property)
+			});
+		}
+		// property is a not function. just a simple value
+		else
+		{
+			// define new property
+			Object.defineProperty(this.object, propertyName,
+			{
+				enumerable: property.isEnumerable,
+				configurable: true,
+				get: property.isGetable === true ? this.getGetter(property) : undefined,
+				set: property.isSetable === true ? this.getSetter(property) : undefined
+			});
+		}
+
+		return this;
+	};
 
 	/**
 	 * creates and returns a getter for a property
@@ -274,12 +290,12 @@ define(
 		// create getter
 		return function()
 		{
-			var result = self.trigger('get:before:' + property.name, property);
+			var result = self.trigger('get:before:' + property.name, property.name);
 
 			// result from event "get:before::PROPERTY" overrules result from event "get:before"
 			if (result === undefined)
 			{
-				result = self.trigger('get:before', property);
+				result = self.trigger('get:before', property.name);
 			}
 
 			// a result was found, do not take it from original
@@ -297,11 +313,11 @@ define(
 				}
 			}
 
-			self.trigger('get:' + property.name, property, [result]);
-			self.trigger('get', property, [result]);
+			self.trigger('get:' + property.name, property.name, result);
+			self.trigger('get', property.name, result);
 
-			self.trigger('get:after:' + property.name, property, [result]);
-			self.trigger('get:after', property, [result]);
+			self.trigger('get:after:' + property.name, property.name, result);
+			self.trigger('get:after', property.name, result);
 
 			return result;
 		};
@@ -320,14 +336,20 @@ define(
 		// create getter
 		return function()
 		{
-			var parameters = Array.prototype.slice.call(arguments);
+			var parametersLength = arguments.length;
+			var parameters = new Array(parametersLength);
+			// this is faster then Array.prototype.slice.call
+			for (var i = 0; i < parametersLength; i++)
+			{
+				parameters[i] = arguments[i];
+			}
 
-			var result = self.trigger('get:before:' + property.name, property, parameters);
+			var result = self.triggerWithParameters('get:before:' + property.name, property.name, parameters);
 
 			// result from event "get:before::PROPERTY" overrules result from event "get:before"
 			if (result === undefined)
 			{
-				result = self.trigger('get:before', property, parameters);
+				result = self.triggerWithParameters('get:before', property.name, parameters);
 			}
 
 			// a result was found, do not take it from original
@@ -338,11 +360,11 @@ define(
 
 			parameters.unshift(result);
 
-			self.trigger('get:' + property.name, property, parameters);
-			self.trigger('get', property, parameters);
+			self.triggerWithParameters('get:' + property.name, property.name, parameters);
+			self.triggerWithParameters('get', property.name, parameters);
 
-			self.trigger('get:after:' + property.name, property, parameters);
-			self.trigger('get:after', property, parameters);
+			self.triggerWithParameters('get:after:' + property.name, property.name, parameters);
+			self.triggerWithParameters('get:after', property.name, parameters);
 
 			return result;
 		};
@@ -374,14 +396,14 @@ define(
 			}
 
 			// trigger before with Property
-			var eventResultProperty = self.trigger('set:before:' + property.name, property, [newValue, oldValue]);
+			var eventResultProperty = self.trigger('set:before:' + property.name, property.name, newValue, oldValue);
 			if (eventResultProperty === false)
 			{
 				return;
 			}
 
 			// trigger before
-			var eventResult = self.trigger('set:before', property, [newValue, oldValue]);
+			var eventResult = self.trigger('set:before', property.name, newValue, oldValue);
 			if (eventResult === false)
 			{
 				return;
@@ -398,50 +420,12 @@ define(
 				property.value = newValue;
 			}
 
-			self.trigger('set:' + property.name, property, [newValue, oldValue]);
-			self.trigger('set', property, [newValue, oldValue]);
+			self.trigger('set:' + property.name, property.name, newValue, oldValue);
+			self.trigger('set', property.name, newValue, oldValue);
 
-			self.trigger('set:after:' + property.name, property, [newValue, oldValue]);
-			self.trigger('set:after', property, [newValue, oldValue]);
+			self.trigger('set:after:' + property.name, property.name, newValue, oldValue);
+			self.trigger('set:after', property.name, newValue, oldValue);
 		};
-	};
-
-	/**
-	 * initialize
-	 *
-	 * @returns {ObjectObserver}
-	 */
-	ObjectObserver.prototype.initialize = function()
-	{
-		// convert to Object
-		if (this.properties instanceof Array)
-		{
-			var properties = this.properties;
-			this.properties = {};
-			for (var i = 0; i < properties.length; i++)
-			{
-				this.properties[properties[i]] = this.createPropertyInformation(properties[i]);
-			}
-		}
-		// properties are not an object, create full object observe
-		else if ((this.properties instanceof Object) === false)
-		{
-			this.properties = {};
-			for (var propertyName in this.object)
-			{
-				this.properties[propertyName] = this.createPropertyInformation(propertyName);
-			}
-		}
-		// it is an object, create only the informations
-		else
-		{
-			for (var propertyName in this.properties)
-			{
-				this.properties[propertyName] = this.createPropertyInformation(propertyName);
-			}
-		}
-
-		return this;
 	};
 
 	/**
@@ -453,33 +437,31 @@ define(
 	{
 		this.started = true;
 
-		for (var propertyName in this.properties)
+		// convert to Object
+		if (this.properties instanceof Array)
 		{
-			var property = this.properties[propertyName];
-
-			// it is a function. observe function
-			if (property.isFunction === true)
+			var properties = this.properties;
+			this.properties = {};
+			for (var i = 0, length = properties.length; i < length; i++)
 			{
-				// define new property
-				Object.defineProperty(this.object, propertyName,
-				{
-					enumerable: property.isEnumerable,
-					configurable: true,
-					writable: true,
-					value: this.getFunction(property)
-				});
+				this.createPropertyObservation(properties[i]);
 			}
-			// property is a not function. just a simple value
-			else
+		}
+		// properties are not an object, create full object observe
+		else if ((this.properties instanceof Object) === false)
+		{
+			this.properties = {};
+			for (var propertyName in this.object)
 			{
-				// define new property
-				Object.defineProperty(this.object, propertyName,
-				{
-					enumerable: property.isEnumerable,
-					configurable: true,
-					get: property.isGetable === true ? this.getGetter(property) : undefined,
-					set: property.isSetable === true ? this.getSetter(property) : undefined
-				});
+				this.createPropertyObservation(propertyName);
+			}
+		}
+		// it is an object, create only the informations
+		else
+		{
+			for (var propertyName in this.properties)
+			{
+				this.createPropertyObservation(propertyName);
 			}
 		}
 
@@ -489,13 +471,12 @@ define(
 	/**
 	 * trigger
 	 *
-	 * @see http://api.jquery.com/trigger/
 	 * @param {String} eventType
-	 * @param {Object} property
-	 * @param {Array} parameters
+	 * @param {String} propertyName
+	 * @param {Mixed} ... additional parameters
 	 * @returns {Mixed}
 	 */
-	ObjectObserver.prototype.trigger = function(eventType, property, parameters)
+	ObjectObserver.prototype.trigger = function(eventType, propertyName)
 	{
 		// on not started no event trigger
 		if (this.started === false)
@@ -503,21 +484,43 @@ define(
 			return;
 		}
 
-		// clone parameters to prevent injection of other values
-		if (parameters instanceof Array)
+		var parameters = Array.prototype.slice.call(arguments, 1);
+		parameters.unshift(this.object);
+		parameters.unshift(eventType);
+
+		return Base.prototype.trigger.apply(this, parameters);
+	};
+
+	/**
+	 * trigger
+	 *
+	 * @param {String} eventType
+	 * @param {String} propertyName
+	 * @param {Array} parameters
+	 * @returns {Mixed}
+	 */
+	ObjectObserver.prototype.triggerWithParameters = function(eventType, propertyName, parameters)
+	{
+		// on not started no event trigger
+		if (this.started === false)
 		{
-			parameters = Array.prototype.slice.call(parameters);
+			return;
 		}
-		// empty parameters
-		else
+
+		if (parameters === undefined)
 		{
 			parameters = [];
 		}
+		// clone parameters to prevent injection of other values
+		else
+		{
+			parameters = Array.prototype.slice.call(parameters);
+		}
 
-		parameters.unshift(property.name);
-		parameters.unshift(this.object);
+		parameters.unshift(propertyName);
+		parameters.unshift(eventType);
 
-		return Base.prototype.trigger.call(this, eventType, parameters);
+		return this.trigger.apply(this, parameters);
 	};
 
 	/**

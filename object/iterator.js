@@ -122,7 +122,7 @@ define(
 	 * exists
 	 *
 	 * @param {String} key
-	 * @returns {Object}
+	 * @returns {Boolean}
 	 */
 	Iterator.prototype.exists = function(key)
 	{

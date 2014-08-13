@@ -1,24 +1,56 @@
 'use strict';
 
-define(
-[
-	'jQuery'
-], function(
-	jQuery
-)
+define([], function()
 {
+
+	// Regular expression used to split event strings.
+	var eventSplitter = /\s+/;
+
+	/**
+	 * @param {Base} obj
+	 * @param {String} eventName
+	 * @param {Function} callback
+	 * @param {Object} context
+	 */
+	var removeEventsByEventName = function(obj, eventName, callback, context)
+	{
+		var events = undefined;
+		var event = undefined;
+		var j = undefined;
+		var k = undefined;
+
+		events = obj.events[eventName];
+		obj.events[eventName] = [];
+		if (callback || context)
+		{
+			for (j = 0, k = events.length; j < k; j++)
+			{
+				event = events[j];
+				if ((callback && callback !== event.callback && callback !== event.callback._callback) || (context && context !== event.context))
+				{
+					obj.events[eventName].push(event);
+				}
+			}
+		}
+
+		if (obj.events[eventName].length == 0)
+		{
+			delete obj.events[eventName];
+		}
+	};
+
 	/**
 	 * base
 	 *
 	 * @param {Object} options
 	 * 		every options will be copied to this instance
 	 * 		magic options
-	 * 			- on: bind every defined event to this instance. see this.on Method Object style of jQuery.on
+	 * 			- on: bind every defined event to this instance.
 	 * @returns {Base}
 	 */
 	var Base = function(options)
 	{
-		this.registeredEventCounters = {};
+		this.events = {};
 
 		options = options || {};
 
@@ -30,7 +62,14 @@ define(
 		}
 
 		// copy options
-		jQuery.extend(this, options);
+		for (var key in options)
+		{
+			if (key === 'events')
+			{
+				continue;
+			}
+			this[key] = options[key];
+		}
 
 		return this;
 	};
@@ -39,32 +78,13 @@ define(
 	Base.prototype = Object.create(Object.prototype,
 	{
 		/**
-		 * this object as jQuery Object
-		 *
-		 * @var {jQuery}
-		 */
-		jQueryObject:
-		{
-			configurable: true,
-			enumerable: true,
-			get: function()
-			{
-				if (this._jQueryObject === undefined)
-				{
-					this._jQueryObject = jQuery(this);
-				}
-				return this._jQueryObject;
-			}
-		},
-
-		/**
 		 * @var {Object}
 		 */
-		registeredEventCounters:
+		events:
 		{
 			value: null,
-			configurable: false,
 			enumerable: false,
+			configurable: false,
 			writable: true
 		}
 	});
@@ -83,77 +103,95 @@ define(
 	};
 
 	/**
-	 * defines, deletes and increment the registeredEventCounters
 	 *
-	 * @param {String}|{Array}|{Undefined} eventName
-	 * @param [Number} increment
+	 * @param {String} eventName
+	 * @param {Function} callback
+	 * @param {Object} context
 	 * @returns {Base}
 	 */
-	Base.prototype.incrementRegisteredEventCounter = function(eventName, increment)
+	Base.prototype.off = function(eventName, callback, context)
 	{
-		// clear all
-		if (eventName === undefined)
+		// remove all events
+		if (eventName === undefined && callback === undefined && context === undefined)
 		{
-			this.registeredEventCounters = {};
+			for (key in this.events)
+			{
+				delete this.events[key];
+			}
+		}
+
+		// removes all events by eventName
+		else if (eventName !== undefined && callback === undefined && context === undefined)
+		{
+			if (this.events[eventName] !== undefined)
+			{
+				delete this.events[eventName];
+			}
+		}
+
+		// loop over all events
+		else if (eventName === undefined)
+		{
+			for (var key in this.events)
+			{
+				removeEventsByEventName(this, key, callback, context);
+			}
+		}
+
+		// only one specific event with additional informations
+		else if (this.events[eventName] !== undefined)
+		{
+			removeEventsByEventName(this, eventName, callback, context);
+		}
+
+		return this;
+	};
+
+	/**
+	 * creates one or more events
+	 *
+	 * @param {String}|{Object} name
+	 * @param {Function} callback
+	 * @param {Object} context
+	 * @returns {Base}
+	 */
+	Base.prototype.on = function(eventName, callback, context)
+	{
+		// Handle event maps.
+		if (typeof eventName === 'object')
+		{
+			for (var key in eventName)
+			{
+				this.on(key, eventName[key]);
+			}
+
 			return this;
 		}
 
-		// many events
-		else if (typeof eventName === 'object')
+		// Handle space separated event names.
+		if (eventSplitter.test(eventName) === true)
 		{
-			for (var eventNameName in eventName)
+			var eventNames = eventName.split(eventSplitter);
+			for (var i = 0, l = eventNames.length; i < l; i++)
 			{
-				this.incrementRegisteredEventCounter(eventNameName, increment);
+				this.on(eventNames[i], callback, context);
 			}
 			return this;
 		}
 
-		// define
-		if (this.registeredEventCounters[eventName] === undefined)
+		// create new event entry
+		if (this.events[eventName] === undefined)
 		{
-			this.registeredEventCounters[eventName] = 0;
+			this.events[eventName] = [];
 		}
 
-		// increment by value
-		this.registeredEventCounters[eventName] += increment;
-
-		// if the counter is 0 or less zero delete the entry
-		if (this.registeredEventCounters[eventName] <= 0)
+		// append the event
+		this.events[eventName].push(
 		{
-			delete this.registeredEventCounters[eventName];
-		}
-
-		return this;
-	};
-
-	/**
-	 * off binding
-	 *
-	 * @see http://api.jquery.com/off/
-	 * @param {Mixed} see jQuery.on
-	 * @returns {Base}
-	 */
-	Base.prototype.off = function(events, selector, handler)
-	{
-		this.jQueryObject.off(events, selector, handler);
-
-		this.incrementRegisteredEventCounter(events, -1);
-
-		return this;
-	};
-
-	/**
-	 * on binding
-	 *
-	 * @see http://api.jquery.com/on/
-	 * @param {Mixed} see jQuery.on
-	 * @returns {Base}
-	 */
-	Base.prototype.on = function(events, selector, data, handler)
-	{
-		this.incrementRegisteredEventCounter(events, 1);
-
-		this.jQueryObject.on(events, selector, data, handler);
+			callback: callback,
+			context: context,
+			ctx: context || undefined
+		});
 
 		return this;
 	};
@@ -161,20 +199,62 @@ define(
 	/**
 	 * trigger
 	 *
-	 * @see http://api.jquery.com/trigger/
 	 * @param {String} eventName
-	 * @param {Array} extraParameters
+	 * @param {Mixed} ... additional n Parameters
 	 * @returns {Mixed}
 	 */
-	Base.prototype.trigger = function(eventName, extraParameters)
+	Base.prototype.trigger = function(eventName, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10)
 	{
-		// no event to trigger
-		if (this.registeredEventCounters[eventName] === undefined || this.registeredEventCounters[eventName] <= 0)
+		var events = this.events[eventName];
+		if (events === undefined)
 		{
 			return undefined;
 		}
 
-		return this.jQueryObject.triggerHandler(eventName, extraParameters);
+		var i = undefined;
+		var lengthEvents = events.length;
+		var result = undefined;
+		var event = undefined;
+		var eventResult = undefined;
+
+		var lengthParameters = arguments.length - 1;
+		var parameters = undefined;
+
+		if (lengthParameters > 10)
+		{
+			parameters = new Array(lengthParameters);
+			// this is faster then Array.prototype.slice.call
+			for (i = 0; i < lengthParameters; i++)
+			{
+				parameters[i] = arguments[i + 1];
+			}
+		}
+
+		i = -1;
+		while (++i < lengthEvents)
+		{
+			event = events[i];
+
+			if (lengthParameters === 0) { eventResult = event.callback.call(event.ctx); }
+			else if (lengthParameters === 1) { eventResult = event.callback.call(event.ctx, param1); }
+			else if (lengthParameters === 2) { eventResult = event.callback.call(event.ctx, param1, param2); }
+			else if (lengthParameters === 3) { eventResult = event.callback.call(event.ctx, param1, param2, param3); }
+			else if (lengthParameters === 4) { eventResult = event.callback.call(event.ctx, param1, param2, param3, param4); }
+			else if (lengthParameters === 5) { eventResult = event.callback.call(event.ctx, param1, param2, param3, param4, param5); }
+			else if (lengthParameters === 6) { eventResult = event.callback.call(event.ctx, param1, param2, param3, param4, param5, param6); }
+			else if (lengthParameters === 7) { eventResult = event.callback.call(event.ctx, param1, param2, param3, param4, param5, param6, param7); }
+			else if (lengthParameters === 8) { eventResult = event.callback.call(event.ctx, param1, param2, param3, param4, param5, param6, param7, param8); }
+			else if (lengthParameters === 9) { eventResult = event.callback.call(event.ctx, param1, param2, param3, param4, param5, param6, param7, param8, param9); }
+			else if (lengthParameters === 10) { eventResult = event.callback.call(event.ctx, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10); }
+			else { eventResult = event.callback.apply(event.ctx, parameters); }
+
+			if (eventResult !== undefined)
+			{
+				result = eventResult;
+			}
+		}
+
+		return result;
 	};
 
 	return Base;
