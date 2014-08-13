@@ -312,7 +312,7 @@ define(
 	 *
 	 * @param {Collection} collection
 	 * @param {Object} object
-	 * @returns {ViewList}
+	 * @returns {ViewListSelectMulti}
 	 */
 	ViewListSelectMulti.prototype.onSelectedReset = function(collection, options)
 	{
@@ -372,7 +372,9 @@ define(
 	 */
 	ViewListSelectMulti.prototype.renderMarkSelected = function()
 	{
-		return this.onSelectedChange();
+		this.onSelectedChange();
+
+		return this;
 	};
 
 	return compatibility(ViewListSelectMulti);

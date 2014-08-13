@@ -28,7 +28,7 @@ define(
 	};
 
 	// prototype
-	ViewTableSelectEntry.prototype = Object.create(ViewListSelectEntry.prototype)
+	ViewTableSelectEntry.prototype = Object.create(ViewListSelectEntry.prototype);
 
 	// mixin of ViewTableEntry
 	lodash.extend(ViewTableSelectEntry.prototype, ViewTableEntry.prototype);

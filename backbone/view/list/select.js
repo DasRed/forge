@@ -231,7 +231,7 @@ define(
 	 *
 	 * @param {Collection} collection
 	 * @param {Object} object
-	 * @returns {ViewList}
+	 * @returns {ViewListSelect}
 	 */
 	ViewListSelect.prototype.onCollectionReset = function(collection, options)
 	{

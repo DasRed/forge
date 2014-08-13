@@ -20,7 +20,6 @@ define(
 		return ViewListEntry.apply(this, arguments);
 	};
 
-
 	// prototype
 	ViewTableEntry.prototype = Object.create(ViewListEntry.prototype,
 	{

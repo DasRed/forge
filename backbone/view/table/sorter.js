@@ -356,7 +356,7 @@ define(
 		}
 
 		return this;
-	}
+	};
 
 	return compatibility(ViewTableSorter);
 });

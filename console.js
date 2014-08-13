@@ -42,7 +42,7 @@ require(
 	var hasColorSupport = (navigator.appName != 'Microsoft Internet Explorer' && navigator.appName != 'Opera');
 	var hasWhiteSpaceSupport = (navigator.appName != 'Microsoft Internet Explorer');
 
-	var warnText = {}
+	var warnText = {};
 	warnText[console.LEVEL_CRITICAL] = 'critical';
 	warnText[console.LEVEL_ALERT] = 'alert';
 	warnText[console.LEVEL_ERROR] = 'error';

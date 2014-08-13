@@ -125,7 +125,7 @@ define(
 	 */
 	Layout.prototype.getView = function(key)
 	{
-		return this.views[key]
+		return this.views[key];
 	};
 
 	/**
@@ -185,8 +185,6 @@ define(
 	 */
 	Layout.prototype.render = function()
 	{
-		var self = this;
-
 		View.prototype.render.apply(this, arguments);
 
 		lodash.each(this.configs, function(config, key)

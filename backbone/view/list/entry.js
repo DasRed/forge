@@ -22,8 +22,7 @@ define(
 		return this;
 	};
 
-
-	// prototypew
+	// prototype
 	ViewListEntry.prototype = Object.create(View.prototype,
 	{
 		/**
