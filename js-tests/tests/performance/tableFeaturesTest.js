@@ -19,8 +19,8 @@ require(
 
 	var testConfigs =
 	{
-		countOfRows: 100, // 100
-		countOfIteration: 10, // 10
+		countOfRows: 10, // 100
+		countOfIteration: 1, // 10
 
 		tests:
 		{
@@ -235,6 +235,12 @@ require(
 
 	describe('tableFeatures forge/backbone/view/table', function()
 	{
+		it('should be tested with 1 iteration and 10 rows to compare the average values', function()
+		{
+			expect(testConfigs.countOfIteration).toBe(1);
+			expect(testConfigs.countOfRows).toBe(10);
+		});
+
 		var profiler = new Profiler(
 		{
 			timeout: false
@@ -379,8 +385,42 @@ require(
 			console.log('------------------ tableFeatures forge/backbone/view/table performance test CSV');
 			console.log(text.join('\n'));
 			console.log('------------------');
-
-			// TODO expectations for some time values
 		});
+
+		if (testConfigs.countOfIteration === 1 || testConfigs.countOfRows === 10)
+		{
+			var validMaxAvgValues =
+			{
+				'none features':							{fetch: 12,		viewCreate: 2,		render: 17,		row: 3		},
+				'all features':								{fetch: 3,		viewCreate: 2,		render: 114,	row: 11		},
+				'table/entry.autoModelBindings = true':		{fetch: 6,		viewCreate: 2,		render: 105,	row: 11		},
+				'table/entry.autoModelSave = true':			{fetch: 3,		viewCreate: 2,		render: 8,		row: 3		},
+				'table/entry.autoModelUpdate = true':		{fetch: 5,		viewCreate: 2,		render: 9,		row: 3		},
+				'table/entry.autoTemplatesAppend = true':	{fetch: 3,		viewCreate: 2,		render: 15,		row: 3		},
+				'table.autoModelBindings = true':			{fetch: 5,		viewCreate: 2,		render: 8,		row: 3		},
+				'table.autoModelSave = true':				{fetch: 3,		viewCreate: 2,		render: 9,		row: 3		},
+				'table.autoModelUpdate = true':				{fetch: 5,		viewCreate: 2,		render: 8,		row: 3		},
+				'table.autoTemplatesAppend = true':			{fetch: 3,		viewCreate: 2,		render: 9,		row: 3		},
+				'table.sorterOptions = true':				{fetch: 5,		viewCreate: 2,		render: 8,		row: 3		}
+			};
+
+			for (var testName in validMaxAvgValues)
+			{
+				it('performance test ' + testName + ' should have retrieve good average values', function()
+				{
+
+					for (var profileName in validMaxAvgValues[testName])
+					{
+						var value = times[testName][profileName] / testConfigs.countOfIteration;
+						if (profileName === 'row')
+						{
+							value /= testConfigs.countOfRows;
+						}
+
+						expect(value).toBeLessOrEqualThen(validMaxAvgValues[testName][profileName]);
+					}
+				});
+			}
+		};
 	});
 });
