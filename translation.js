@@ -179,8 +179,10 @@ define(
 	 */
 	Translation.prototype.translateInline = function(text)
 	{
+		var self = this;
+
 		// replace the text
-		text = text.replace(this.regexpTranslations, (function(match, key)
+		text = text.replace(this.regexpTranslations, function(match, key)
 		{
 			switch (match.charAt(0))
 			{
@@ -190,8 +192,8 @@ define(
 					return match;
 			}
 
-			return this.translate(key, undefined, match);
-		}).bind(this));
+			return self.translate(key, undefined, match);
+		});
 
 		// parameters conversion
 		text = text.replace(this.regexpParameters, '${$1}');

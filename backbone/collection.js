@@ -225,19 +225,20 @@ define(
 	{
 		options = options || {};
 
+		var self = this;
 		var completeCallback = options.complete;
-		options.complete = (function()
+		options.complete = function()
 		{
 			var result = undefined;
 			if (completeCallback instanceof Function)
 			{
-				result = completeCallback.apply(this, arguments);
+				result = completeCallback.apply(self, arguments);
 			}
 
-			this.trigger('fetched', this);
+			self.trigger('fetched', self);
 
 			return result;
-		}).bind(this);
+		};
 
 		this.trigger('fetching', this);
 
@@ -280,16 +281,17 @@ define(
 			// sort with 2 parameters callback function
 			else
 			{
-				this.models.sort((this.comparator).bind(this));
+				this.models.sort(this.comparator.bind(this));
 			}
 		}
 		// sort by string (propertyName)
 		else
 		{
-			this.models.sort((function(modelA, modelB)
+			var self = this;
+			this.models.sort(function(modelA, modelB)
 			{
-				return collator.compareModels(this.comparator, modelA, modelB);
-			}).bind(this));
+				return collator.compareModels(self.comparator, modelA, modelB);
+			});
 		}
 
 		if (!options.silent)

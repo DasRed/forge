@@ -45,10 +45,12 @@ define(
 
 				this._collection = collection;
 				this._property = this._collection.comparator;
-				this._collection.comparator = (function(modelA, modelB)
+
+				var self = this;
+				this._collection.comparator = function(modelA, modelB)
 				{
-					return collator.compareModels(this.property, modelA, modelB, this.direction);
-				}).bind(this);
+					return collator.compareModels(self.property, modelA, modelB, self.direction);
+				};
 			}
 		},
 

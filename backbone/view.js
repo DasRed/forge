@@ -492,10 +492,11 @@ define(
 	 */
 	View.prototype.createSelectorForPropertyChange = function(propertyName, selector)
 	{
-		var fnPrefix = (function(selectorDataModel, value, selector)
+		var selectorDataModel = this.selectorDataModel.slice(0, -1) + '="' + propertyName + '"]';
+		var fnPrefix = function(value, selector)
 		{
 			return (value !== '' ? ',' : '') + selector.trimRight() + ' ' + selectorDataModel;
-		}).bind(this, this.selectorDataModel.slice(0, -1) + '="' + propertyName + '"]');
+		};
 
 		return lodash.reduce(selector.split(','), function(result, selector)
 		{
@@ -1021,30 +1022,31 @@ define(
 		// show saving
 		this.showSaving(element);
 
+		var self = this;
 		// set the new value to model and set or save
 		this.model[methodToSet](propertyName, newValue,
 		{
-			complete: (function()
+			complete: function()
 			{
 				var propertyNameUcFirst = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
 
 				// trigger event for property
-				this.trigger('htmlPropertyChange:' + propertyNameUcFirst, this, this.model, propertyName, newValue);
+				self.trigger('htmlPropertyChange:' + propertyNameUcFirst, self, self.model, propertyName, newValue);
 
 				// method for property
-				if (this['onHTMLPropertyChange' + propertyNameUcFirst] instanceof Function)
+				if (self['onHTMLPropertyChange' + propertyNameUcFirst] instanceof Function)
 				{
-					this['onHTMLPropertyChange' + propertyNameUcFirst](newValue);
+					self['onHTMLPropertyChange' + propertyNameUcFirst](newValue);
 				}
 
 				// trigger event
-				this.trigger('htmlPropertyChange', this, this.model, propertyName, newValue);
+				self.trigger('htmlPropertyChange', self, self.model, propertyName, newValue);
 
 				// method for property
-				this.onHTMLPropertyChange(propertyName, newValue);
+				self.onHTMLPropertyChange(propertyName, newValue);
 
-				this.hideSaving();
-			}).bind(this)
+				self.hideSaving();
+			}
 		});
 
 		return this;

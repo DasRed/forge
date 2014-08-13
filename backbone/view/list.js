@@ -796,10 +796,7 @@ define(
 			var id = model.cid + '-sort';
 			if (this.renderQueue.exists(id) === false)
 			{
-				this.renderQueue.add(id, (function(model, index)
-				{
-					this.appendEntryToIndex(model, index);
-				}).bind(this, model, index));
+				this.renderQueue.add(id, this.appendEntryToIndex.bind(this, model, index));
 			}
 		}, this);
 
@@ -949,14 +946,15 @@ define(
 			return this;
 		}
 
-		this.renderQueue.add(id, (function(model, index)
+		var self = this;
+		this.renderQueue.add(id, function()
 		{
 			// create the view and remember. note: auto render is on
-			this.viewEntries[id] = this.getViewInstance(model);
+			self.viewEntries[id] = self.getViewInstance(model);
 
 			// append to index
-			this.appendEntryToIndex(model, index);
-		}).bind(this, model, index));
+			self.appendEntryToIndex(model, index);
+		});
 
 		return this;
 	};

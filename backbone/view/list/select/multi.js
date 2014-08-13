@@ -187,10 +187,11 @@ define(
 			return this;
 		}
 
-		this.renderQueue.add(idMark, (function()
+		var self = this;
+		this.renderQueue.add(idMark, function()
 		{
-			var view = this.getViewEntryByModel(model);
-			if (this.selected.get(model.id) !== undefined)
+			var view = self.getViewEntryByModel(model);
+			if (self.selected.get(model.id) !== undefined)
 			{
 				view.markAsSelected();
 			}
@@ -198,7 +199,7 @@ define(
 			{
 				view.markAsUnselected();
 			}
-		}).bind(this));
+		});
 
 		return this;
 	};

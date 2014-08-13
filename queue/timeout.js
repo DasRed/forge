@@ -110,11 +110,12 @@ define(
 	 */
 	QueueTimeout.prototype.pause = function()
 	{
-		this.timer = setTimeout((function()
+		var self = this;
+		this.timer = setTimeout(function()
 		{
-			this.stop();
-			this.runner();
-		}).bind(this), this.delay);
+			self.stop();
+			self.runner();
+		}, this.delay);
 
 		return this;
 	};
