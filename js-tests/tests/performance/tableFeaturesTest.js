@@ -19,8 +19,8 @@ require(
 
 	var testConfigs =
 	{
-		countOfRows: 100, // 100
-		countOfIteration: 10, // 10
+		countOfRows: 1000, // 100
+		countOfIteration: 100, // 10
 
 		tests:
 		{

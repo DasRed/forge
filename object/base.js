@@ -18,6 +18,8 @@ define(
 	 */
 	var Base = function(options)
 	{
+		this.registeredEventCounters = {};
+
 		options = options || {};
 
 		// bind events
@@ -53,6 +55,17 @@ define(
 				}
 				return this._jQueryObject;
 			}
+		},
+
+		/**
+		 * @var {Object}
+		 */
+		registeredEventCounters:
+		{
+			value: null,
+			configurable: false,
+			enumerable: false,
+			writable: true
 		}
 	});
 
@@ -70,6 +83,50 @@ define(
 	};
 
 	/**
+	 * defines, deletes and increment the registeredEventCounters
+	 *
+	 * @param {String}|{Array}|{Undefined} eventName
+	 * @param [Number} increment
+	 * @returns {Base}
+	 */
+	Base.prototype.incrementRegisteredEventCounter = function(eventName, increment)
+	{
+		// clear all
+		if (eventName === undefined)
+		{
+			this.registeredEventCounters = {};
+			return this;
+		}
+
+		// many events
+		else if (typeof eventName === 'object')
+		{
+			for (var eventNameName in eventName)
+			{
+				this.incrementRegisteredEventCounter(eventNameName, increment);
+			}
+			return this;
+		}
+
+		// define
+		if (this.registeredEventCounters[eventName] === undefined)
+		{
+			this.registeredEventCounters[eventName] = 0;
+		}
+
+		// increment by value
+		this.registeredEventCounters[eventName] += increment;
+
+		// if the counter is 0 or less zero delete the entry
+		if (this.registeredEventCounters[eventName] <= 0)
+		{
+			delete this.registeredEventCounters[eventName];
+		}
+
+		return this;
+	};
+
+	/**
 	 * off binding
 	 *
 	 * @see http://api.jquery.com/off/
@@ -79,6 +136,8 @@ define(
 	Base.prototype.off = function(events, selector, handler)
 	{
 		this.jQueryObject.off(events, selector, handler);
+
+		this.incrementRegisteredEventCounter(events, -1);
 
 		return this;
 	};
@@ -92,6 +151,8 @@ define(
 	 */
 	Base.prototype.on = function(events, selector, data, handler)
 	{
+		this.incrementRegisteredEventCounter(events, 1);
+
 		this.jQueryObject.on(events, selector, data, handler);
 
 		return this;
@@ -101,13 +162,19 @@ define(
 	 * trigger
 	 *
 	 * @see http://api.jquery.com/trigger/
-	 * @param {String} eventType
+	 * @param {String} eventName
 	 * @param {Array} extraParameters
 	 * @returns {Mixed}
 	 */
-	Base.prototype.trigger = function(eventType, extraParameters)
+	Base.prototype.trigger = function(eventName, extraParameters)
 	{
-		return this.jQueryObject.triggerHandler(eventType, extraParameters);
+		// no event to trigger
+		if (this.registeredEventCounters[eventName] === undefined || this.registeredEventCounters[eventName] <= 0)
+		{
+			return undefined;
+		}
+
+		return this.jQueryObject.triggerHandler(eventName, extraParameters);
 	};
 
 	return Base;

@@ -4,13 +4,11 @@ define(
 [
 	'lodash',
 	'backbone',
-	'forge/observer/object',
 	'forge/backbone/compatibility',
 	'forge/backbone/model'
 ], function(
 	lodash,
 	Backbone,
-	ObserverObject,
 	compatibility,
 	Model
 )

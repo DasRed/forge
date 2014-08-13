@@ -4,13 +4,13 @@ define(
 [
 	'lodash',
 	'backbone',
-	'forge/observer/object',
+	'forge/object/observer',
 	'forge/url/parameter',
 	'forge/backbone/compatibility'
 ], function(
 	lodash,
 	Backbone,
-	ObserverObject,
+	ObjectObserver,
 	UrlParameter,
 	compatibility
 )
@@ -122,7 +122,7 @@ define(
 		},
 
 		/**
-		 * @var {ObserverObject}
+		 * @var {ObjectObserver}
 		 */
 		observer:
 		{
@@ -132,7 +132,7 @@ define(
 			{
 				if (this._observer === undefined)
 				{
-					this._observer = new ObserverObject(this.attributes);
+					this._observer = new ObjectObserver(this.attributes);
 				}
 
 				return this._observer;
