@@ -9,7 +9,7 @@ require(
 	tplRequirejsPluginsTplWithWhitespaceWithExtension
 )
 {
-	describe('requirejs/plugins/tpl', function()
+	describe('forge/requirejs/plugins/tpl', function()
 	{
 		it('must return a lodash Template function', function()
 		{

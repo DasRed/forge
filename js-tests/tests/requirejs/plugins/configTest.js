@@ -21,7 +21,7 @@ require(
 	translationByRequire
 )
 {
-	describe('requirejs/plugins/cfg', function()
+	describe('forge/requirejs/plugins/cfg', function()
 	{
 		it('must return the object for configTest1', function()
 		{

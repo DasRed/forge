@@ -233,7 +233,7 @@ require(
 		});
 	};
 
-	describe('tableFeatures forge/backbone/view/table', function()
+	describe('forge/backbone/view/table tableFeatures performance test', function()
 	{
 		it('should be tested with 1 iteration and 10 rows to compare the average values', function()
 		{
@@ -259,7 +259,7 @@ require(
 			lodash.each(new Array(testConfigs.countOfIteration), function(value, index)
 			{
 				var timeData = times[key];
-				it('performance test ' + key + ' (#' + (index + 1) + ')', function(done)
+				it(key + ' (#' + (index + 1) + ')', function(done)
 				{
 					// settings properties on list
 					for (var propertyName in testConfig.list)
@@ -326,7 +326,7 @@ require(
 			});
 		});
 
-		it('performance output', function()
+		it('output', function()
 		{
 			var text = [];
 			var timeFirst = null;
@@ -406,7 +406,7 @@ require(
 
 			for (var testName in validMaxAvgValues)
 			{
-				it('performance test ' + testName + ' should have retrieve good average values', function()
+				it(testName + ' should have retrieve good average values', function()
 				{
 
 					for (var profileName in validMaxAvgValues[testName])
