@@ -28,10 +28,11 @@ define(
 	 *
 	 * @param {Object} attributes
 	 * @param {Object} options
-	 * @returns {Model}
 	 */
-	var Model = function(attributes, options)
+	function Model(attributes, options)
 	{
+		this.attributes = this.attributes || {};
+
 		options = options || {};
 		if (this.parseOnCreate === true && options.parse === undefined)
 		{
@@ -59,9 +60,7 @@ define(
 		}
 
 		Backbone.Model.call(this, attributes, options);
-
-		return this;
-	};
+	}
 
 	Model.ATTRIBUTE_TYPE_NUMBER = 'number';
 	Model.ATTRIBUTE_TYPE_STRING = 'string';
@@ -119,6 +118,12 @@ define(
 			configurable: true,
 			get: function()
 			{
+				// object of model is not correct instanstiated... waits
+				if (this.cid === undefined)
+				{
+					return undefined;
+				}
+
 				if (this._observer === undefined)
 				{
 					this._observer = new ObjectObserver(this.attributes,
@@ -233,6 +238,7 @@ define(
 
 		if (this._observer !== undefined)
 		{
+			this._observer.off();
 			this._observer.unobserve();
 		}
 

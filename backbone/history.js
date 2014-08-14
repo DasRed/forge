@@ -13,17 +13,15 @@ define(
 {
 
 	/**
-	 * @returns {History}
+	 * History
 	 */
-	var History = function()
+	function History()
 	{
 		// set the new history
 		Backbone.history = this;
 
 		Backbone.History.apply(this, arguments);
-
-		return this;
-	};
+	}
 
 	// prototype creation
 	History.prototype = Object.create(Backbone.History.prototype);

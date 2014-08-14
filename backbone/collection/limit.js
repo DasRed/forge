@@ -15,14 +15,11 @@ define(
 	 *
 	 * @param {Array} models
 	 * @param {Object} options
-	 * @returns {CollectionLimit}
 	 */
-	var CollectionLimit = function(models, options)
+	function CollectionLimit(models, options)
 	{
 		Collection.apply(this, arguments);
-
-		return this;
-	};
+	}
 
 	// prototype
 	CollectionLimit.prototype = Object.create(Collection.prototype,

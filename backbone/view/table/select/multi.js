@@ -18,14 +18,11 @@ define(
 	 *
 	 * @event {void} select({ViewTableSelectEntry} viewEntry)
 	 * @param {Object} options
-	 * @returns ViewTableSelectEntry
 	 */
-	var ViewTableSelectMulti = function(options)
+	function ViewTableSelectMulti(options)
 	{
 		ViewListSelectMulti.apply(this, arguments);
-
-		return this;
-	};
+	}
 
 	// prototype
 	ViewTableSelectMulti.prototype = Object.create(ViewListSelectMulti.prototype);

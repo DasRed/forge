@@ -12,7 +12,6 @@ define(
 	 *
 	 * @param {Object} object
 	 * @param {Object} options
-	 * @returns {ObjectObserver}
 	 *
 	 * @event {void} get({ObjectOfObservation}, {PropertyName}, value) fires if some whants to get the value
 	 * @event {void} get[:PropertyName]({ObjectOfObservation}, {PropertyName}, value) fires if some whants to get the value
@@ -136,7 +135,7 @@ define(
 	 * 		// object: get:after Object {x: (...), y: function} y undefined a b c
 	 * </code>
 	 */
-	var ObjectObserver = function(object, options)
+	function ObjectObserver(object, options)
 	{
 		this.object = object;
 
@@ -146,9 +145,7 @@ define(
 		{
 			this.observe();
 		}
-
-		return this;
-	};
+	}
 
 	// prototyping
 	ObjectObserver.prototype = Object.create(Base.prototype,
@@ -523,9 +520,10 @@ define(
 		}
 
 		parameters.unshift(propertyName);
+		parameters.unshift(this.object);
 		parameters.unshift(eventType);
 
-		return this.trigger.apply(this, parameters);
+		return Base.prototype.trigger.apply(this, parameters);
 	};
 
 	/**

@@ -24,9 +24,8 @@ define(
 	 * @event {void} fetched({Collection} collection)
 	 * @param {Array} models
 	 * @param {Object} options
-	 * @returns {Collection}
 	 */
-	var Collection = function(models, options)
+	function Collection(models, options)
 	{
 		// copy options
 		if (options !== undefined && options !== null)
@@ -50,8 +49,6 @@ define(
 		this.cid = lodash.uniqueId('collection');
 
 		Backbone.Collection.apply(this, arguments);
-
-		return this;
 	};
 
 	Collection.DIRECTION_ASC = 'asc';

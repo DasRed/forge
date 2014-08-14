@@ -12,9 +12,8 @@ define(
 	 *
 	 * @param {Object} translations
 	 * @param {Object} options
-	 * @returns {Translation}
 	 */
-	var Translation = function(translations, options)
+	function Translation(translations, options)
 	{
 		this.translations = {};
 
@@ -25,9 +24,7 @@ define(
 		this.regexpTranslations = options.regexpTranslations !== undefined ? options.regexpTranslations : this.regexpTranslations;
 
 		this.setTranslations(translations);
-
-		return this;
-	};
+	}
 
 	// prototype
 	Translation.prototype = Object.create(Object.prototype,

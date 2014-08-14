@@ -71,7 +71,7 @@ require(
 	 *
 	 * @returns {String}
 	 */
-	var getScriptName = function()
+	function getScriptName()
 	{
 		var errorHelper = new Error();
 		if (errorHelper.stack === undefined)
@@ -91,7 +91,7 @@ require(
 				.replace(window.location.href, '')
 				.replace('.js', '')
 				.replace(/^(\/){0,1}(js-src|js)\//gi, '');
-	};
+	}
 
 	/**
 	 * wrapper function for console functions
@@ -104,7 +104,7 @@ require(
 	 * @param {Mixed} ...
 	 * ...
 	 */
-	var wrapper = function(warnLevel, proceed, color, profiler)
+	function wrapper(warnLevel, proceed, color, profiler)
 	{
 		var warnLevelMin = (config.level ? config.level : console.LEVEL_WARN);
 		if (warnLevel > warnLevelMin)
@@ -252,7 +252,7 @@ require(
 		{
 			return proceed(parameters.join(''));
 		}
-	};
+	}
 
 	// Backup
 	var consoleError = console.error;

@@ -13,9 +13,8 @@ define(
 	 * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Collator
 	 * @param {String}|{Array} locales
 	 * @param {Object} options
-	 * @returns {NativeIntlCollator}
 	 */
-	var NativeIntlCollator = function(locales, options)
+	function NativeIntlCollator(locales, options)
 	{
 		if (typeof locales === 'string')
 		{
@@ -32,8 +31,7 @@ define(
 			numeric: false,
 			caseFirst: false
 		});
-		return this;
-	};
+	}
 
 	/**
 	 * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Collator/supportedLocalesOf

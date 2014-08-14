@@ -12,7 +12,7 @@ define([], function()
 	 * @param {Function} callback
 	 * @param {Object} context
 	 */
-	var removeEventsByEventName = function(obj, eventName, callback, context)
+	function removeEventsByEventName(obj, eventName, callback, context)
 	{
 		var events = undefined;
 		var event = undefined;
@@ -37,7 +37,7 @@ define([], function()
 		{
 			delete obj.events[eventName];
 		}
-	};
+	}
 
 	/**
 	 * base
@@ -46,9 +46,8 @@ define([], function()
 	 * 		every options will be copied to this instance
 	 * 		magic options
 	 * 			- on: bind every defined event to this instance.
-	 * @returns {Base}
 	 */
-	var Base = function(options)
+	function Base(options)
 	{
 		this.events = {};
 
@@ -70,9 +69,7 @@ define([], function()
 			}
 			this[key] = options[key];
 		}
-
-		return this;
-	};
+	}
 
 	// prototyping
 	Base.prototype = Object.create(Object.prototype,

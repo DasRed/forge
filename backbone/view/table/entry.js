@@ -13,12 +13,11 @@ define(
 	 * A View for one entry in table
 	 *
 	 * @param {Object} options
-	 * @returns ViewListEntry
 	 */
-	var ViewTableEntry = function(options)
+	function ViewTableEntry(options)
 	{
-		return ViewListEntry.apply(this, arguments);
-	};
+		ViewListEntry.apply(this, arguments);
+	}
 
 	// prototype
 	ViewTableEntry.prototype = Object.create(ViewListEntry.prototype,

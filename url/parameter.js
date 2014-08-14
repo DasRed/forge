@@ -13,15 +13,12 @@ define(
 	/**
 	 * @param {String} url
 	 * @param {Object} options
-	 * @returns {UrlParameter}
 	 */
-	var UrlParameter = function(url, options)
+	function UrlParameter(url, options)
 	{
 		this.url = url;
 		Base.call(this, options);
-
-		return this;
-	};
+	}
 
 	// prototype
 	UrlParameter.prototype = Object.create(Base.prototype,
@@ -137,7 +134,7 @@ define(
 			// get the value
 			var value = values[parameterOptions.name];
 			var valueEscaped = window.encodeURIComponent(value);
-			
+
 			// optional parameter
 			if (parameterOptions.optional === true)
 			{

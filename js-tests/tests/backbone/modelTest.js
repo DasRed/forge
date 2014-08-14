@@ -24,10 +24,11 @@ require(
 		model: ModelModelSub
 	});
 
-	var ModelModel = function(attributes, options)
+	function ModelModel(attributes, options)
 	{
 		Model.apply(this, arguments);
-	};
+	}
+
 	ModelModel.prototype = Object.create(Model.prototype,
 	{
 		a:

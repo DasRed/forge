@@ -13,19 +13,6 @@ define(
 	Model
 )
 {
-	var excludeProperties =
-	{
-		$el: true,
-		attributes: true,
-		//className: true,
-		collection: true,
-		el: true,
-		events: true,
-		id: true,
-		model: true,
-		tagName: true
-	};
-
 	/**
 	 * returns a get formatter
 	 *
@@ -355,7 +342,7 @@ define(
 		}, view);
 
 		return true;
-	};
+	}
 
 	/**
 	 * formattes given model Property and return the result
@@ -395,8 +382,7 @@ define(
 		}
 
 		return valueFormatted;
-	};
-
+	}
 
 	/**
 	 * formattes all model Properties and return the result
@@ -419,7 +405,7 @@ define(
 		}
 
 		return result;
-	};
+	}
 
 	/**
 	 * if a HTMLElement change his value for a model property
@@ -524,7 +510,7 @@ define(
 				view.hideSaving();
 			}
 		});
-	};
+	}
 
 	/**
 	 * updates a binded model property in html
@@ -562,7 +548,7 @@ define(
 			// direct callback
 			options.callback.call(view, view, elements, value, valueFormatted);
 		};
-	};
+	}
 
 	/**
 	 * handles the change of model attributes property change
@@ -615,7 +601,7 @@ define(
 
 		// method for property
 		view.onModelPropertyChange(propertyName, newValue, oldValue);
-	};
+	}
 
 	/**
 	 * updates all binded model property in html
@@ -634,6 +620,21 @@ define(
 		{
 			updateModelPropertyInHtml(view, propertyName, view.model.attributes[propertyName]);
 		}
+	}
+
+	// ############################################################################# View
+
+	var excludeProperties =
+	{
+		$el: true,
+		attributes: true,
+		//className: true,
+		collection: true,
+		el: true,
+		events: true,
+		id: true,
+		model: true,
+		tagName: true
 	};
 
 	/**
@@ -651,9 +652,8 @@ define(
 	 * @eventMethodObject onHTMLPropertyChange[:PROPERTYNAME]({Mixed} newValue)
 	 *
 	 * @param {Object} options
-	 * @returns {View}
 	 */
-	var View = function(options)
+	function View(options)
 	{
 		options = options || {};
 
@@ -742,9 +742,7 @@ define(
 		{
 			this.render();
 		}
-
-		return this;
-	};
+	}
 
 	// prototype
 	View.prototype = Object.create(Backbone.View.prototype,

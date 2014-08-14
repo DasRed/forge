@@ -6,18 +6,15 @@ define([], function()
 	 *
 	 * @param {String} element
 	 * @param {Object} options
-	 * @returns {Loader}
 	 */
-	var Loader = function(element, options)
+	function Loader(element, options)
 	{
 		this.element = element;
 
 		options = options || {};
 
 		this.throwError = options.throwError !== undefined ? options.throwError : this.throwError;
-
-		return this;
-	};
+	}
 
 	// prototype
 	Loader.prototype = Object.create(Object.prototype,
@@ -86,7 +83,7 @@ define([], function()
 		},
 
 		/**
-		 * @var {String}|{jQuery}
+		 * @var {String}
 		 */
 		element:
 		{

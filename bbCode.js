@@ -14,18 +14,15 @@ define(
 	 *
 	 * @param {Object} codes
 	 * @param {Object} options
-	 * @returns {BBCode}
 	 */
-	var BBCode = function(codes, options)
+	function BBCode(codes, options)
 	{
 		this.codes = {};
 
 		Base.call(this, options);
 
 		this.setCodes(codes);
-
-		return this;
-	};
+	}
 
 	// prototype
 	BBCode.prototype = Object.create(Base.prototype,

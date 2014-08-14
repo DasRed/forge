@@ -13,14 +13,11 @@ define(
 	 * A View for one entry in list
 	 *
 	 * @param {Object} options
-	 * @returns ViewListEntry
 	 */
-	var ViewListEntry = function(options)
+	function ViewListEntry(options)
 	{
 		View.apply(this, arguments);
-
-		return this;
-	};
+	}
 
 	// prototype
 	ViewListEntry.prototype = Object.create(View.prototype,

@@ -18,12 +18,11 @@ define(
 	 * table of view
 	 *
 	 * @param {Object} options
-	 * @returns {ViewTable}
 	 */
-	var ViewTable = function(options)
+	function ViewTable(options)
 	{
-		return ViewList.apply(this, arguments);
-	};
+		ViewList.apply(this, arguments);
+	}
 
 	// prototype
 	ViewTable.prototype = Object.create(ViewList.prototype,

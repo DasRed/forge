@@ -16,9 +16,8 @@ define(
 	 *
 	 * @event {void} change({ViewListSelect} view, {Model} modelSelectedOld, {View} viewModelSelectedOld, {Model} modelSelectedNew, {View} viewModelSelectedNew)
 	 * @param {Object} options
-	 * @returns {ViewListSelect}
 	 */
-	var ViewListSelect = function(options)
+	function ViewListSelect(options)
 	{
 		ViewList.apply(this, arguments);
 
@@ -26,9 +25,7 @@ define(
 		{
 			this.selected = options.selected;
 		}
-
-		return this;
-	};
+	}
 
 	// prototype
 	ViewListSelect.prototype = Object.create(ViewList.prototype,

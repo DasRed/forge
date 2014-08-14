@@ -84,7 +84,7 @@ define(
 	 *		]
 	 * </code>
 	 */
-	var Router = function(configs, options)
+	function Router(configs, options)
 	{
 		Backbone.Router.call(this, options);
 
@@ -175,9 +175,7 @@ define(
 		console.debug('Default Route "' + defaultConfigRoute.route.name + '" (url://' + defaultConfigRoute.route.route + ') created.');
 
 		console.debug('initialize');
-
-		return this;
-	};
+	}
 
 	// prototype
 	Router.prototype = Object.create(Backbone.Router.prototype,

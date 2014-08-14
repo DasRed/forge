@@ -13,16 +13,13 @@ define(
 	 * Iterator
 	 *
 	 * @param {Object} options
-	 * @returns {Iterator}
 	 */
-	var Iterator = function(options)
+	function Iterator(options)
 	{
 		this.data = {};
 
 		Base.call(this, options);
-
-		return this;
-	};
+	}
 
 	// prototype
 	Iterator.prototype = Object.create(Base.prototype,

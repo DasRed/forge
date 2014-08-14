@@ -15,7 +15,7 @@ define(
 	 * @param {String} key
 	 * @returns {Object}
 	 */
-	var getPropertyDescriptor = function(obj, key)
+	function getPropertyDescriptor(obj, key)
 	{
 		var descriptor = Object.getOwnPropertyDescriptor(obj, key);
 
@@ -29,7 +29,7 @@ define(
 		}
 
 		return descriptor;
-	};
+	}
 
 	/**
 	 * extends the Backbone Extends function with predefined Values
@@ -38,7 +38,7 @@ define(
 	 * @param {Object} staticProps
 	 * @returns {Object}
 	 */
-	var extend = function(protoProps, staticProps)
+	function extend(protoProps, staticProps)
 	{
 		var parent = this;
 		var preDefinedValues = {};
@@ -59,7 +59,7 @@ define(
 			{
 				return preDefinedValues;
 			}
-			
+
 			// set a predefined property
 			var doNormalPredefine = true;
 			if ((descriptor.set instanceof Function) === false)
@@ -75,7 +75,7 @@ define(
 					};
 				}
 			}
-			
+
 			// overwrite
 			if (doNormalPredefine === true)
 			{
@@ -84,7 +84,7 @@ define(
 					value: value
 				};
 			}
-			
+
 			delete protoProps[key];
 
 			return preDefinedValues;
@@ -172,7 +172,7 @@ define(
 		protoProps.constructor.preDefinedValues = preDefinedValues;
 
 		return Backbone.View.extend.call(parent, protoProps, staticProps);
-	};
+	}
 
 	return extend;
 });

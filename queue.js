@@ -9,14 +9,11 @@ define(
 {
 	/**
 	 * @param {Object} options
-	 * @returns {Queue}
 	 */
-	var Queue = function(options)
+	function Queue(options)
 	{
 		Iterator.apply(this, arguments);
-
-		return this;
-	};
+	}
 
 	//prototype
 	Queue.prototype = Object.create(Iterator.prototype,

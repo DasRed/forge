@@ -15,14 +15,11 @@ define(
 {
 	/**
 	 * @param {Object} options
-	 * @returns {Profiler}
 	 */
-	var Profiler = function(options)
+	function Profiler(options)
 	{
 		Base.apply(this, arguments);
-
-		return this;
-	};
+	}
 
 	// prototype
 	Profiler.prototype = Object.create(Base.prototype,

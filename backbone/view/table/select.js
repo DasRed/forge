@@ -18,14 +18,11 @@ define(
 	 *
 	 * @event {void} change({ViewTableSelect} view, {Model} modelSelectedOld, {View} viewModelSelectedOld, {Model} modelSelectedNew, {View} viewModelSelectedNew)
 	 * @param {Object} options
-	 * @returns {ViewListSelect}
 	 */
-	var ViewTableSelect = function(options)
+	function ViewTableSelect(options)
 	{
 		ViewListSelect.apply(this, arguments);
-
-		return this;
-	};
+	}
 
 	// prototype
 	ViewTableSelect.prototype = Object.create(ViewListSelect.prototype);

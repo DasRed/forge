@@ -35,9 +35,8 @@ define(
 	 *
 	 * @event {void} renderEntry({ViewList} viewList, {ViewListEntry} viewListEntry, {Model} model)
 	 * @param {Object} options
-	 * @returns {ViewList}
 	 */
-	var ViewList = function(options)
+	function ViewList(options)
 	{
 		options = options || {};
 
@@ -84,9 +83,7 @@ define(
 		{
 			throw new Error('View for an entry can not be undefined for a view list');
 		}
-
-		return this;
-	};
+	}
 
 	// prototype
 	ViewList.prototype = Object.create(View.prototype,

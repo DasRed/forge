@@ -18,14 +18,11 @@ define(
 	 *
 	 * @event {void} select({ViewTableSelectEntry} viewEntry)
 	 * @param {Object} options
-	 * @returns ViewTableSelectEntry
 	 */
-	var ViewTableSelectEntry = function(options)
+	function ViewTableSelectEntry(options)
 	{
 		ViewListSelectEntry.apply(this, arguments);
-
-		return this;
-	};
+	}
 
 	// prototype
 	ViewTableSelectEntry.prototype = Object.create(ViewListSelectEntry.prototype);

@@ -9,14 +9,11 @@ define(
 {
 	/**
 	 * @param {Object} options
-	 * @returns {QueueTimeout}
 	 */
-	var QueueTimeout = function(options)
+	function QueueTimeout(options)
 	{
 		Queue.apply(this, arguments);
-
-		return this;
-	};
+	}
 
 	// prototype
 	QueueTimeout.prototype = Object.create(Queue.prototype,

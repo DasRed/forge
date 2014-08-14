@@ -25,9 +25,8 @@ define(
 	 * view list sorted
 	 *
 	 * @param {Object} Options
-	 * @returns {ViewListFilter}
 	 */
-	var ViewListFilter = function(options)
+	function ViewListFilter(options)
 	{
 		if (ViewList === undefined)
 		{
@@ -62,9 +61,7 @@ define(
 		this.collection.on('add', this.filter, this);
 		this.collection.on('reset', this.filter, this);
 		this.view.on('renderEntry', this.filter, this);
-
-		return this;
-	};
+	}
 
 	// prototype
 	ViewListFilter.prototype = Object.create(View.prototype,

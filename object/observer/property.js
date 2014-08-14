@@ -13,7 +13,6 @@ define(
 	 * @param {Object} object
 	 * @param {String} property
 	 * @param {Object} options
-	 * @returns {ObjectObserverProperty}
 	 *
 	 * @event {void} get({ObjectOfObservedProperty}, {PropertyName}, value [, PARAMETERS]) fires if some whants to get the value
 	 * @event {mixed} get:before({ObjectOfObservedProperty}, {PropertyName} [, PARAMETERS]) fires before if some wants to get the value. if callback returns a value other then undefined, this value will be retruned from get
@@ -87,16 +86,14 @@ define(
 	 * 		// nuff undefined undefined undefined
 	 * </code>
 	 */
-	var ObjectObserverProperty = function(object, property, options)
+	function ObjectObserverProperty(object, property, options)
 	{
 		options = options || {};
 		options.properties = {};
 		options.properties[property] = true;
 
 		ObjectObserver.call(this, object, options);
-
-		return this;
-	};
+	}
 
 	// prototyping
 	ObjectObserverProperty.prototype = Object.create(ObjectObserver.prototype);

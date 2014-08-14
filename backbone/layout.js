@@ -20,9 +20,8 @@ define(
 	 * @event {void} onCreateView({View} view, {Object} config, {String} key)
 	 *
 	 * @param {Object} options
-	 * @returns {Layout}
 	 */
-	var Layout = function(options)
+	function Layout(options)
 	{
 		this.views = {};
 		if (this.configs === null)
@@ -35,9 +34,7 @@ define(
 		}
 
 		View.apply(this, arguments);
-
-		return this;
-	};
+	}
 
 	// prototype
 	Layout.prototype = Object.create(View.prototype,

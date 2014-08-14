@@ -25,9 +25,8 @@ define(
 	 * view list sorted
 	 *
 	 * @param {Object} Options
-	 * @returns {ViewListSorter}
 	 */
-	var ViewListSorter = function(options)
+	function ViewListSorter(options)
 	{
 		if (ViewList === undefined)
 		{
@@ -75,9 +74,7 @@ define(
 		{
 			this.setProperty(options.property);
 		}
-
-		return this;
-	};
+	}
 
 	// prototype
 	ViewListSorter.prototype = Object.create(View.prototype,

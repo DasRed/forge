@@ -35,7 +35,7 @@ define(
 	 * @param {Object} options
 	 * @returns {Controller}
 	 */
-	var Controller = function(options)
+	function Controller(options)
 	{
 		options = options || {};
 		lodash.extend(this, options);
@@ -43,9 +43,7 @@ define(
 		this.cid = lodash.uniqueId('controller');
 
 		this.initialize.apply(this, arguments);
-
-		return this;
-	};
+	}
 
 	// prototyping
 	Controller.prototype = Object.create(Backbone.Events,

@@ -13,7 +13,7 @@ define(
 	 * @param {Object} ObjectConstructor
 	 * @returns {Object}
 	 */
-	var compatibility = function(ObjectConstructor)
+	function compatibility(ObjectConstructor)
 	{
 		ObjectConstructor.extend = extend;
 		ObjectConstructor.prototype.constructor = ObjectConstructor;
@@ -33,10 +33,9 @@ define(
 			{
 				return this.preDefinedValues[propertyName].value;
 			}
-			
+
 			return undefined;
 		};
-
 
 		return ObjectConstructor;
 	};

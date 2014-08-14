@@ -20,9 +20,8 @@ define(
 	 * @event {void} change({ViewListSelectMulti} view, {Collection}, selections, {Model} modelSelections, {Collection} collection, {Model} modelCollection)
 	 * @event {void} remove({ViewListSelectMulti} view, {Collection}, selections, {Model} modelSelectionsRemoved, {Collection} collection, {Model} modelCollection)
 	 * @param {Object} options
-	 * @returns {ViewListSelectMulti}
 	 */
-	var ViewListSelectMulti = function(options)
+	function ViewListSelectMulti(options)
 	{
 		options = options || {};
 
@@ -45,9 +44,7 @@ define(
 		this.selected.on('add', this.onSelectedAdd, this);
 		this.selected.on('remove', this.onSelectedRemove, this);
 		this.selected.on('reset', this.onSelectedReset, this);
-
-		return this;
-	};
+	}
 
 	// prototype
 	ViewListSelectMulti.prototype = Object.create(ViewList.prototype,

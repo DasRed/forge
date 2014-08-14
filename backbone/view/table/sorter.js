@@ -23,9 +23,8 @@ define(
 	 * view table sorted
 	 *
 	 * @param {Object} Options
-	 * @returns {ViewTableSorter}
 	 */
-	var ViewTableSorter = function(options)
+	function ViewTableSorter(options)
 	{
 		if (ViewList === undefined)
 		{
@@ -81,9 +80,7 @@ define(
 		this.collection.on('add', this.showSortedProperty.bind(this, true), this);
 		this.collection.on('reset', this.showSortedProperty.bind(this, true), this);
 		this.view.on('renderEntry', this.updateSortedColumn, this);
-
-		return this;
-	};
+	}
 
 	// prototype
 	ViewTableSorter.prototype = Object.create(View.prototype,
