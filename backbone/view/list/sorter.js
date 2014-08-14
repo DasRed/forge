@@ -7,7 +7,6 @@ define(
 	'jQuery',
 	'forge/backbone/compatibility',
 	'forge/backbone/collection',
-	'forge/backbone/collection/sorter',
 	'forge/backbone/view',
 	'forge/backbone/view/list',
 	'tpl!forge/backbone/view/list/template/sorter'
@@ -17,7 +16,6 @@ define(
 	jQuery,
 	compatibility,
 	Collection,
-	CollectionSorter,
 	View,
 	ViewList,
 	tplViewListSorter
@@ -165,7 +163,7 @@ define(
 	{
 		event.stop();
 
-		this.setDirection(this.collection.direction === CollectionSorter.DIRECTION_ASC ? CollectionSorter.DIRECTION_DESC : CollectionSorter.DIRECTION_ASC);
+		this.setDirection(this.collection.direction === Collection.DIRECTION_ASC ? Collection.DIRECTION_DESC : Collection.DIRECTION_ASC);
 
 		return this;
 	};
@@ -254,7 +252,7 @@ define(
 	 */
 	ViewListSorter.prototype.setDirection = function(direction)
 	{
-		this.$el.find('.direction').removeClass(CollectionSorter.DIRECTION_ASC + ' ' + CollectionSorter.DIRECTION_DESC).addClass(direction);
+		this.$el.find('.direction').removeClass(Collection.DIRECTION_ASC + ' ' + Collection.DIRECTION_DESC).addClass(direction);
 
 		this.collection.direction = direction;
 

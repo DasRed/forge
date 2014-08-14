@@ -6,17 +6,17 @@ define(
 	'backbone',
 	'forge/url/parameter',
 	'forge/backbone/compatibility',
-	'forge/backbone/model',
-	'forge/backbone/collection/sorter'
+	'forge/backbone/model'
 ], function(
 	lodash,
 	Backbone,
 	UrlParameter,
 	compatibility,
-	Model,
-	CollectionSorter
+	Model
 )
 {
+	var collator = undefined;
+
 	/**
 	 * Collection for Models
 	 *
@@ -28,17 +28,16 @@ define(
 	 */
 	var Collection = function(models, options)
 	{
-		this.cid = lodash.uniqueId('collection');
-
-
 		// copy options
-		options = options || {};
-		var key = undefined;
-		for (key in options)
+		if (options !== undefined && options !== null)
 		{
-			if (this[key] !== undefined)
+			var key = undefined;
+			for (key in options)
 			{
-				this[key] = options[key];
+				if (this[key] !== undefined)
+				{
+					this[key] = options[key];
+				}
 			}
 		}
 
@@ -48,46 +47,15 @@ define(
 			throw new Error('A collection must define a model.');
 		}
 
-		// set the direction if not setted
-		if (this.direction === null || this.direction === undefined)
-		{
-			var attributeType = this.model.getPrototypeValue('attributeTypes')[this.comparator];
-
-			// initial direction is
-			this.direction = CollectionSorter.DIRECTION_ASC;
-
-			// sort by another collection can not work
-			if (attributeType === Model.ATTRIBUTE_TYPE_COLLECTION)
-			{
-				throw new Error('Sorting for an attribute of type collection is not allowed.');
-			}
-
-			// sort by another model can not work
-			else if (attributeType === Model.ATTRIBUTE_TYPE_MODEL)
-			{
-				throw new Error('Sorting for an attribute of type model is not allowed.');
-			}
-
-			// sort by date always sort DESC
-			else if (attributeType === Model.ATTRIBUTE_TYPE_DATE)
-			{
-				this.direction = CollectionSorter.DIRECTION_DESC;
-			}
-		}
-
-		// create the default sorter
-		if (this.comparator !== undefined && this.comparator !== null)
-		{
-			this.sorter = new CollectionSorter(
-			{
-				collection: this
-			});
-		}
+		this.cid = lodash.uniqueId('collection');
 
 		Backbone.Collection.apply(this, arguments);
 
 		return this;
 	};
+
+	Collection.DIRECTION_ASC = 'asc';
+	Collection.DIRECTION_DESC = 'desc';
 
 	// prototype
 	Collection.prototype = Object.create(Backbone.Collection.prototype,
@@ -108,21 +76,80 @@ define(
 		 */
 		comparator:
 		{
-			value: 'id',
 			enumerable: true,
 			configurable: true,
-			writable: true
+			get: function()
+			{
+				if (this._comparator === undefined)
+				{
+					return 'id';
+				}
+				return this._comparator;
+			},
+			set: function(comparator)
+			{
+				if (this._comparator !== comparator)
+				{
+					this._comparator = comparator;
+					if (this.cid !== null && this.cid !== undefined)
+					{
+						this.sort();
+					}
+				}
+			}
 		},
 
 		/**
+		 * current direction
+		 *
 		 * @var {String}
 		 */
 		direction:
 		{
-			value: null,
 			enumerable: true,
 			configurable: true,
-			writable: true
+			get: function()
+			{
+				// set the direction if not setted
+				if (this._direction === undefined)
+				{
+					var attributeType = this.model.getPrototypeValue('attributeTypes')[this.comparator];
+
+					// initial direction is
+					this._direction = Collection.DIRECTION_ASC;
+
+					// sort by another collection can not work
+					if (attributeType === Model.ATTRIBUTE_TYPE_COLLECTION)
+					{
+						throw new Error('Sorting for an attribute of type collection is not allowed.');
+					}
+
+					// sort by another model can not work
+					else if (attributeType === Model.ATTRIBUTE_TYPE_MODEL)
+					{
+						throw new Error('Sorting for an attribute of type model is not allowed.');
+					}
+
+					// sort by date always sort DESC
+					else if (attributeType === Model.ATTRIBUTE_TYPE_DATE)
+					{
+						this._direction = Collection.DIRECTION_DESC;
+					}
+				}
+
+				return this._direction;
+			},
+			set: function(direction)
+			{
+				if (this._direction !== direction)
+				{
+					this._direction = direction;
+					if (this.cid !== null && this.cid !== undefined)
+					{
+						this.sort();
+					}
+				}
+			}
 		},
 
 		/**
@@ -135,17 +162,6 @@ define(
 			value: null,
 			enumerable: true,
 			configurable: true,
-			writable: true
-		},
-
-		/**
-		 * @var {CollectionSorter}
-		 */
-		sorter:
-		{
-			value: null,
-			enumerable: false,
-			configurable: false,
 			writable: true
 		},
 
@@ -264,12 +280,49 @@ define(
 	 */
 	Collection.prototype.sort = function(options)
 	{
-		if (this.sorter === undefined || this.sorter === null || this.models === undefined || this.models === null || this.models.length === 0 || this.comparator === undefined || this.comparator === null)
+		var propertyName = this.comparator;
+		if (this.models === undefined || this.models === null || this.models.length === 0 || propertyName === undefined || propertyName === null)
 		{
 			return this;
 		}
 
-		this.sorter.sort();
+		if (collator === undefined)
+		{
+			collator = new Intl.Collator();
+		}
+
+		var direction = this.direction;
+
+		this.models.sort(function(modelA, modelB)
+		{
+			var valueA = modelA.attributes[propertyName];
+			var valueB = modelB.attributes[propertyName];
+
+			var result = 0;
+
+			// use natural sort for strings
+			if (modelA.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_STRING || modelB.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_STRING)
+			{
+				result = collator.compare(valueA, valueB);
+			}
+			// use direct value compare
+			else if (valueA < valueB)
+			{
+				result = -1;
+			}
+			else if (valueA > valueB)
+			{
+				result = 1;
+			}
+
+			// reverse sort?
+			if (direction == Collection.DIRECTION_DESC)
+			{
+				result *= -1;
+			}
+
+			return result;
+		});
 
 		options = options || {};
 		if (options.silent === false)

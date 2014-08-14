@@ -3,11 +3,9 @@
 require(
 [
 	'forge/backbone/collection',
-	'forge/backbone/collection/sorter',
 	'forge/backbone/model'
 ], function(
 	Collection,
-	CollectionSorter,
 	Model
 )
 {
@@ -24,7 +22,7 @@ require(
 	{
 		a: 'nuff',
 		comparator: 'id',
-		direction: CollectionSorter.DIRECTION_DESC,
+		direction: Collection.DIRECTION_DESC,
 		model: ModelCollection
 	});
 
@@ -79,7 +77,7 @@ require(
 			expect(collection.models[2]).toBe(model4);
 			expect(collection.models[3]).toBe(model3);
 
-			collection.direction = CollectionSorter.DIRECTION_ASC;
+			collection.direction = Collection.DIRECTION_ASC;
 			expect(collection.models[0]).toBe(model3);
 			expect(collection.models[1]).toBe(model4);
 			expect(collection.models[2]).toBe(model2);
@@ -91,7 +89,7 @@ require(
 			expect(collection.models[2]).toBe(model3);
 			expect(collection.models[3]).toBe(model4);
 
-			collection.direction = CollectionSorter.DIRECTION_DESC;
+			collection.direction = Collection.DIRECTION_DESC;
 			expect(collection.models[0]).toBe(model4);
 			expect(collection.models[1]).toBe(model3);
 			expect(collection.models[2]).toBe(model2);

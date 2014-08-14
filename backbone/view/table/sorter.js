@@ -6,7 +6,6 @@ define(
 	'jQuery',
 	'forge/backbone/compatibility',
 	'forge/backbone/collection',
-	'forge/backbone/collection/sorter',
 	'forge/backbone/view',
 	'forge/backbone/view/list',
 	'forge/backbone/view/table'
@@ -15,7 +14,6 @@ define(
 	jQuery,
 	compatibility,
 	Collection,
-	CollectionSorter,
 	View,
 	ViewList,
 	ViewTable
@@ -73,7 +71,7 @@ define(
 		if (propertyNameToSort !== undefined)
 		{
 			this.collection.comparator = propertyNameToSort;
-			this.collection.direction = elementToSort.data('model-sorted') || CollectionSorter.DIRECTION_ASC;
+			this.collection.direction = elementToSort.data('model-sorted') || Collection.DIRECTION_ASC;
 		}
 
 		// show sorting
@@ -238,7 +236,7 @@ define(
 		// toggle direction
 		if (this.collection.comparator === propertyName)
 		{
-			this.collection.direction = this.collection.direction === CollectionSorter.DIRECTION_ASC ? CollectionSorter.DIRECTION_DESC : CollectionSorter.DIRECTION_ASC;
+			this.collection.direction = this.collection.direction === Collection.DIRECTION_ASC ? Collection.DIRECTION_DESC : Collection.DIRECTION_ASC;
 		}
 		// set new sort column
 		else
@@ -287,12 +285,12 @@ define(
 		// column not changed only change direction
 		if (columnChanged === false)
 		{
-			this.$element.find('.sorted' + this.selectorDataModel).removeClass(CollectionSorter.DIRECTION_ASC + ' ' + CollectionSorter.DIRECTION_DESC).addClass(this.collection.direction);
+			this.$element.find('.sorted' + this.selectorDataModel).removeClass(Collection.DIRECTION_ASC + ' ' + Collection.DIRECTION_DESC).addClass(this.collection.direction);
 			return this;
 		}
 
 		// everything is changing
-		this.$element.find(this.selectorDataModel).removeClass('sorted ' + CollectionSorter.DIRECTION_ASC + ' ' + CollectionSorter.DIRECTION_DESC);
+		this.$element.find(this.selectorDataModel).removeClass('sorted ' + Collection.DIRECTION_ASC + ' ' + Collection.DIRECTION_DESC);
 		this.$element.find(this.selectorDataModel.slice(0, -1) + '=' + this.collection.comparator + ']').addClass('sorted ' + this.collection.direction);
 
 		// find column to highlight in body
