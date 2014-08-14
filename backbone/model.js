@@ -30,8 +30,7 @@ define(
 	 * @param {Object} options
 	 * @returns {Model}
 	 */
-	var Model = null;
-	Model = function(attributes, options)
+	var Model = function(attributes, options)
 	{
 		options = options || {};
 		if (this.parseOnCreate === true && options.parse === undefined)
@@ -40,34 +39,24 @@ define(
 		}
 
 		// copy options
-		lodash.each(options, function(value, key)
+		var key = undefined;
+		for (key in options)
 		{
 			if (excludeProperties[key] === true)
 			{
-				return;
+				continue;
 			}
 			if (this[key] !== undefined)
 			{
-				this[key] = value;
+				this[key] = options[key];
 			}
-		}, this);
+		}
 
-
-		// create defaults property keys from attribute Types
-		this.defaults = lodash.reduce(this.attributeTypes, function(acc, attributeType, propertyName)
+		// validation
+		if ((this.attributeTypes instanceof Object) === false)
 		{
-			if (attributeType !== Model.ATTRIBUTE_TYPE_COLLECTION && acc[propertyName] === undefined)
-			{
-				acc[propertyName] = undefined;
-			}
-
-			else if (attributeType !== Model.ATTRIBUTE_TYPE_MODEL && acc[propertyName] === undefined)
-			{
-				acc[propertyName] = undefined;
-			}
-
-			return acc;
-		}, this.defaults || {});
+			throw new Error('The property "attributeTypes" of a model must be defined!');
+		}
 
 		Backbone.Model.call(this, attributes, options);
 
@@ -84,7 +73,6 @@ define(
 	// prototype
 	Model.prototype = Object.create(Backbone.Model.prototype,
 	{
-
 		/**
 		 * mapping of attributes types
 		 *
@@ -97,6 +85,7 @@ define(
 			configurable: true,
 			writable: true
 		},
+
 		/**
 		 * defaults
 		 *
@@ -132,7 +121,10 @@ define(
 			{
 				if (this._observer === undefined)
 				{
-					this._observer = new ObjectObserver(this.attributes);
+					this._observer = new ObjectObserver(this.attributes,
+					{
+						autoObserve: false
+					});
 				}
 
 				return this._observer;
@@ -291,101 +283,123 @@ define(
 	{
 		attributes = Backbone.Model.prototype.parse.apply(this, arguments);
 
-		// type conversion
-		attributes = lodash.reduce(this.attributeTypes, function(attributes, propertyType, propertyName)
+		var attributeType = undefined;
+		var value = undefined;
+		var propertyName = undefined;
+		var number = undefined;
+		var valueConverted = undefined;
+
+		// test properties in attributes if they are defined in attributeTypes
+		for (propertyName in attributes)
 		{
-			// not found nothing to do
-			if (attributes[propertyName] === null || attributes[propertyName] === undefined)
+			attributeType = this.attributeTypes[propertyName];
+			// exists propertyName?
+			if (attributeType === undefined)
 			{
-				return attributes;
+				throw new Error('Can not parse model property "' + propertyName + '" in model. The property is not defined in "attributeTypes"!');
 			}
 
-			// get
-			var value = attributes[propertyName];
+			value = attributes[propertyName];
+
+			// not found nothing to do
+			if (value === null || value === undefined)
+			{
+				continue;
+			}
 
 			// convert
-			switch (propertyType)
+			// write to a collection property direct on the model
+			if (attributeType === Model.ATTRIBUTE_TYPE_COLLECTION)
 			{
-				// write to a collection property direct on the model
-				case Model.ATTRIBUTE_TYPE_COLLECTION:
-					if (this[propertyName] === undefined || this[propertyName] === null || (this[propertyName].reset instanceof Function) === false)
-					{
-						throw new Error('The model property "' + propertyName + '" must be an instance of Collection to use the attribute type "collection" on the attribute "' + propertyName + '".');
-					}
-					this[propertyName].reset(value);
-					delete attributes[propertyName];
-					break;
+				if (this[propertyName] === undefined || this[propertyName] === null || (this[propertyName].reset instanceof Function) === false)
+				{
+					throw new Error('The model property "' + propertyName + '" must be an instance of Collection to use the attribute type "collection" on the attribute "' + propertyName + '".');
+				}
+				this[propertyName].reset(value);
+				delete attributes[propertyName];
+			}
 
-				// write to a model property direct on the model
-				case Model.ATTRIBUTE_TYPE_MODEL:
-					if (this[propertyName] === undefined || this[propertyName] === null || (this[propertyName].set instanceof Function) === false)
-					{
-						throw new Error('The model property "' + propertyName + '" must be an instance of Model to use the attribute type "model" on the attribute "' + propertyName + '".');
-					}
-					this[propertyName].set(value);
-					delete attributes[propertyName];
-					break;
+			// write to a model property direct on the model
+			else if (attributeType === Model.ATTRIBUTE_TYPE_MODEL)
+			{
+				if (this[propertyName] === undefined || this[propertyName] === null || (this[propertyName].set instanceof Function) === false)
+				{
+					throw new Error('The model property "' + propertyName + '" must be an instance of Model to use the attribute type "model" on the attribute "' + propertyName + '".');
+				}
+				this[propertyName].set(value);
+				delete attributes[propertyName];
+			}
 
-				// convert to number
-				case Model.ATTRIBUTE_TYPE_NUMBER:
-					if (typeof value !== 'number')
+			// convert to number
+			else if (attributeType === Model.ATTRIBUTE_TYPE_NUMBER)
+			{
+				if (typeof value !== 'number' || isNaN(value) === true)
+				{
+					number = Number(value);
+					if (isNaN(number) === true)
 					{
-						var number = Number(value);
-						if (isNaN(number) === false)
+						throw new Error('The model property "' + propertyName + '" must be a number but the value "' + String(value) + '" can not be converted to a number.');
+					}
+
+					value = number;
+				}
+			}
+
+			// convert to boolean
+			else if (attributeType === Model.ATTRIBUTE_TYPE_BOOLEAN)
+			{
+				if (typeof value !== 'boolean')
+				{
+					if (value === 'True' || value === 'TRUE' || value === 'true')
+					{
+						value = true;
+					}
+					else if (value === 'False' || value === 'FALSE' || value === 'false')
+					{
+						value = false;
+					}
+					else
+					{
+						valueConverted = Number(value);
+						if (isNaN(valueConverted) === false)
 						{
-							value = number;
+							value = Boolean(valueConverted);
+						}
+						else
+						{
+							value = false;
 						}
 					}
-					break;
+				}
+			}
 
-				// convert to boolean
-				case Model.ATTRIBUTE_TYPE_BOOLEAN:
-					if (typeof value !== 'boolean')
+			// convert to date
+			else if (attributeType === Model.ATTRIBUTE_TYPE_DATE)
+			{
+				if ((value instanceof Date) === false)
+				{
+					valueConverted = new Date(value);
+					if (isNaN(valueConverted.getTime()) === true)
 					{
-						switch (true)
-						{
-							case value === 'True':
-							case value === 'TRUE':
-							case value === 'true':
-								value = true;
-								break;
-
-							case value === 'False':
-							case value === 'FALSE':
-							case value === 'false':
-								value = false;
-								break;
-
-							case isNaN(Number(value)) === false:
-								value = Boolean(Number(value));
-								break;
-
-							default:
-								value = false;
-								break;
-						}
+						throw new Error('Model attribute "' + propertyName + '" with "' + String(value) + '" is not an date.');
 					}
-					break;
+					value = valueConverted;
+				}
+			}
 
-				// convert to date
-				case Model.ATTRIBUTE_TYPE_DATE:
-					if ((value instanceof Date) === false)
-					{
-						var valueConverted = new Date(value);
-						if (isNaN(valueConverted.getTime()) === true)
-						{
-							throw new Error('Model attribute "' + propertyName + '" with "' + String(value) + '" is not an date.');
-						}
-					}
-					break;
+			// strings
+			else if (attributeType === Model.ATTRIBUTE_TYPE_STRING)
+			{
+				if (typeof value !== 'string')
+				{
+					value = String(value);
+				}
+			}
 
-				// strings
-				case Model.ATTRIBUTE_TYPE_STRING:
-					if (typeof value !== 'string')
-					{
-						value = String(value);
-					}
-					break;
+			// unknown type
+			else
+			{
+				throw new Error('Model attributeType "' + attributeType + '" does not exists.');
 			}
 
 			// write back
@@ -393,9 +407,7 @@ define(
 			{
 				attributes[propertyName] = value;
 			}
-
-			return attributes;
-		}, attributes, this);
+		}
 
 		return attributes;
 	};

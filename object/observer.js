@@ -142,7 +142,7 @@ define(
 
 		Base.call(this, options);
 
-		if (this.autoObserver === true)
+		if (this.autoObserve === true)
 		{
 			this.observe();
 		}
@@ -156,7 +156,7 @@ define(
 		/**
 		 * @var {Boolean}
 		 */
-		autoObserver:
+		autoObserve:
 		{
 			value: true,
 			enumerable: false,

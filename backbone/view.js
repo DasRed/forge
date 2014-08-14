@@ -26,6 +26,94 @@ define(
 		tagName: true
 	};
 
+	var createModelPropertyBindings = function(obj, propertyName)
+	{
+		if (obj.model.idAttribute === propertyName)
+		{
+			return;
+		}
+
+		var bindingOptions = obj.modelBindings[propertyName];
+
+		// no auto
+		if (bindingOptions === undefined && obj.autoModelBindings !== true)
+		{
+			return;
+		}
+
+		// binding options entry is a string, convert it to object with selector
+		if (typeof bindingOptions === 'string')
+		{
+			bindingOptions =
+			{
+				selector: bindingOptions
+			};
+		}
+		// binding options entry is a function, convert it to object with callback
+		else if (bindingOptions instanceof Function)
+		{
+			bindingOptions =
+			{
+				callback: bindingOptions
+			};
+		}
+		// no data
+		else if (bindingOptions === undefined || bindingOptions === null)
+		{
+			bindingOptions =
+			{
+				selector: '',
+				callback: obj['onChange' + propertyName.charAt(0).toUpperCase() + propertyName.slice(1)]
+			};
+		}
+
+		// prepare callback
+		// in the options is a callback function as String. call the function from this
+		if (typeof bindingOptions.callback === 'string')
+		{
+			bindingOptions.callback = obj[bindingOptions.callback];
+		}
+		// not a function
+		if ((bindingOptions.callback instanceof Function) === false)
+		{
+			bindingOptions.callback = lodash.noop;
+		}
+
+		// formatter options of view overwrites formatter settings in modelBindings
+		if (obj.formatter[propertyName] !== undefined)
+		{
+			bindingOptions.formatter = obj.formatter[propertyName];
+		}
+		// formatter
+		if (bindingOptions.formatter === undefined)
+		{
+			bindingOptions.formatter = {};
+		}
+		// convert formatter settings to getter only
+		if (typeof bindingOptions.formatter !== 'object')
+		{
+			bindingOptions.formatter =
+			{
+				get: bindingOptions.formatter
+			};
+		}
+
+		// formatter
+		bindingOptions.formatter.get = obj.getFormatterFunctionGet(propertyName, bindingOptions.formatter.get);
+		bindingOptions.formatter.set = obj.getFormatterFunctionSet(propertyName, bindingOptions.formatter.set);
+
+		// in the options is an selector define. find HTMLElement and update the html with the new value
+		if (bindingOptions.selector !== undefined)
+		{
+			// create specific selectors
+			bindingOptions.selectors = obj.createSelectorForPropertyChange(propertyName, bindingOptions.selector);
+		}
+
+		// set preprare modelBindings
+		obj.modelBindings[propertyName] = bindingOptions;
+
+	};
+
 	/**
 	 * View
 	 *
@@ -341,13 +429,14 @@ define(
 				// stop previous model observer
 				if (isInObservation === true && this._model instanceof Model)
 				{
-					this._model.observer.off('set', this.onModelPropertyChangeHandler, this);
+					this._model.observer.off(undefined, this.onModelPropertyChangeHandler, this);
 				}
 
 				// this is a model and not null or so... create the observer
 				if (isInObservation === true && model instanceof Model)
 				{
 					model.observer.on('set', this.onModelPropertyChangeHandler, this);
+					model.observer.observe();
 				}
 
 				if (model === null)
@@ -846,87 +935,10 @@ define(
 		// prepare modelBindings
 		if (this.model instanceof Model)
 		{
-			lodash.each(this.model.attributes, function(value, propertyName)
+			for (var propertyName in this.model.attributeTypes)
 			{
-				var bindingOptions = this.modelBindings[propertyName];
-
-				// no auto
-				if (bindingOptions === undefined && this.autoModelBindings !== true)
-				{
-					return this;
-				}
-
-				// binding options entry is a string, convert it to object with selector
-				if (typeof bindingOptions === 'string')
-				{
-					bindingOptions =
-					{
-						selector: bindingOptions
-					};
-				}
-				// binding options entry is a function, convert it to object with callback
-				else if (bindingOptions instanceof Function)
-				{
-					bindingOptions =
-					{
-						callback: bindingOptions
-					};
-				}
-				// no data
-				else if (bindingOptions === undefined || bindingOptions === null)
-				{
-					bindingOptions =
-					{
-						selector: '',
-						callback: this['onChange' + propertyName.charAt(0).toUpperCase() + propertyName.slice(1)]
-					};
-				}
-
-				// prepare callback
-				// in the options is a callback function as String. call the function from this
-				if (typeof bindingOptions.callback === 'string')
-				{
-					bindingOptions.callback = this[bindingOptions.callback];
-				}
-				// not a function
-				if ((bindingOptions.callback instanceof Function) === false)
-				{
-					bindingOptions.callback = lodash.noop;
-				}
-
-				// formatter options of view overwrites formatter settings in modelBindings
-				if (this.formatter[propertyName] !== undefined)
-				{
-					bindingOptions.formatter = this.formatter[propertyName];
-				}
-				// formatter
-				if (bindingOptions.formatter === undefined)
-				{
-					bindingOptions.formatter = {};
-				}
-				// convert formatter settings to getter only
-				if (typeof bindingOptions.formatter !== 'object')
-				{
-					bindingOptions.formatter =
-					{
-						get: bindingOptions.formatter
-					};
-				}
-
-				// formatter
-				bindingOptions.formatter.get = this.getFormatterFunctionGet(propertyName, bindingOptions.formatter.get);
-				bindingOptions.formatter.set = this.getFormatterFunctionSet(propertyName, bindingOptions.formatter.set);
-
-				// in the options is an selector define. find HTMLElement and update the html with the new value
-				if (bindingOptions.selector !== undefined)
-				{
-					// create specific selectors
-					bindingOptions.selectors = this.createSelectorForPropertyChange(propertyName, bindingOptions.selector);
-				}
-
-				// set preprare modelBindings
-				this.modelBindings[propertyName] = bindingOptions;
-			}, this);
+				createModelPropertyBindings(this, propertyName);
+			}
 		}
 
 		return this;
@@ -1301,7 +1313,7 @@ define(
 		// stop previous model observer
 		if (isInObservation === true && this.model instanceof Model)
 		{
-			this.model.observer.off('set', this.onModelPropertyChangeHandler, this);
+			this.model.observer.off(undefined, this.onModelPropertyChangeHandler, this);
 		}
 
 		this.undelegateEvents();
