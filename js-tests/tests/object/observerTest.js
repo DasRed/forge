@@ -119,6 +119,42 @@ require(
 			object = null;
 		});
 
+		it('should not starts the observation more then once', function()
+		{
+			var callback = jasmine.createSpy();
+
+			var objectLocal = {a: 1};
+			var observerLocal = new ObjectObserver(objectLocal,
+			{
+				autoObserve: false,
+				properties:
+				{
+					a: true
+				},
+				on:
+				{
+					set: callback
+				}
+			});
+
+			objectLocal.a = 2;
+
+			expect(callback).not.toHaveBeenCalledWith(objectLocal, 'a', 2, 1);
+			expect(callback.calls.count()).toBe(0);
+
+			observerLocal.observe();
+			objectLocal.a = 3;
+
+			expect(callback).toHaveBeenCalledWith(objectLocal, 'a', 3, 2);
+			expect(callback.calls.count()).toBe(1);
+
+			observerLocal.observe();
+			objectLocal.a = 4;
+
+			expect(callback).toHaveBeenCalledWith(objectLocal, 'a', 4, 3);
+			expect(callback.calls.count()).toBe(2);
+		});
+
 		it('should observe property "x" and property function "y"', function()
 		{
 			var result = object.x;

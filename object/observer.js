@@ -435,6 +435,11 @@ define(
 	 */
 	ObjectObserver.prototype.observe = function()
 	{
+		if (this.started === true)
+		{
+			return this;
+		}
+
 		this.started = true;
 
 		// convert to Object
@@ -530,6 +535,11 @@ define(
 	 */
 	ObjectObserver.prototype.unobserve = function()
 	{
+		if (this.started === false)
+		{
+			return this;
+		}
+
 		this.started = false;
 
 		for (var propertyName in this.properties)
