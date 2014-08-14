@@ -26,19 +26,255 @@ define(
 		tagName: true
 	};
 
-	var createModelPropertyBindings = function(obj, propertyName)
+	/**
+	 * returns a get formatter
+	 *
+	 * @param {View} view
+	 * @param {Model} model
+	 * @param {String} propertyName
+	 * @param {String}|{Function} getOption
+	 * @returns {Function}
+	 */
+	function getFormatterFunctionGet(view, model, propertyName, getOption)
 	{
-		if (obj.model.idAttribute === propertyName)
+		var formatter = getOption;
+
+		// formatter getter is a string, use function from this
+		if (typeof formatter === 'string')
 		{
-			return;
+			formatter = view[formatter];
 		}
 
-		var bindingOptions = obj.modelBindings[propertyName];
+		// formatter getter is a string, use function from this
+		if ((formatter instanceof Function) === false)
+		{
+			if (model.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_NUMBER)
+			{
+				formatter = view.formatterNumber;
+			}
+			else if (model.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_NUMBER)
+			{
+				formatter = view.formatterDate;
+			}
+		}
+
+		// formatter getter not a function
+		if ((formatter instanceof Function) === false)
+		{
+			formatter = undefined;
+		}
+
+		return formatter;
+	}
+
+	/**
+	 * returns a set formatter
+	 *
+	 * @param {View} view
+	 * @param {String}|{Function} setOption
+	 * @returns {Function}
+	 */
+	function getFormatterFunctionSet(view, setOption)
+	{
+		var formatter = setOption;
+
+		// formatter setter is a string, use function from this
+		if (typeof formatter === 'string')
+		{
+			formatter = view[formatter];
+		}
+
+		// formatter getter not a function
+		if ((formatter instanceof Function) === false)
+		{
+			formatter = undefined;
+		}
+
+		return formatter;
+	}
+
+	/**
+	 * @param {View} view
+	 * @param {jQuery} element
+	 * @param {Mixed} newValue
+	 * @param {String} newValueFormatted
+	 */
+	function propertyChangeHandlerHtml(view, elements, newValue, newValueFormatted)
+	{
+		elements.html(newValueFormatted);
+	}
+
+	/**
+	 * @param {View} view
+	 * @param {jQuery} element
+	 * @param {Mixed} newValue
+	 * @param {String} newValueFormatted
+	 */
+	function propertyChangeHandlerInputWithValue(view, elements, newValue, newValueFormatted)
+	{
+		if (elements.is('[type=number]') === true)
+		{
+			elements.val(newValue);
+		}
+		else
+		{
+			elements.val(newValueFormatted);
+		}
+	}
+
+	/**
+	 * @param {View} view
+	 * @param {jQuery} element
+	 * @param {Mixed} newValue
+	 * @param {String} newValueFormatted
+	 */
+	function propertyChangeHandlerInputTypeRadio(view, elements, newValue, newValueFormatted)
+	{
+		elements.val([newValue]);
+	}
+
+	/**
+	 * @param {View} view
+	 * @param {jQuery} element
+	 * @param {Boolean} newValue
+	 * @param {String} newValueFormatted
+	 */
+	function propertyChangeHandlerInputTypeCheckbox(view, elements, newValue, newValueFormatted)
+	{
+		elements.prop('checked', newValue);
+	}
+
+	/**
+	 * handles the model property value of type date to put in into an input[type=date], input[type=time}, input[type=datetime]
+	 *
+	 * @param {View} view
+	 * @param {jQuery} element
+	 * @param {Date} newValue
+	 * @param {String} newValueFormatted
+	 */
+	function propertyChangeHandlerInputTypeDateTime(view, elements, newValue, newValueFormatted)
+	{
+		var newValueIsADate = newValue instanceof Date;
+
+		if (newValueIsADate === true)
+		{
+			if (
+					elements.is('[type=date]') === true ||
+					elements.is('[type=time]') === true ||
+					elements.is('[type=datetime-local]') === true ||
+					elements.is('[type=datetime]') === true
+				)
+			{
+				elements.prop('valueAsDate', newValue);
+			}
+		}
+
+		// fallback
+		elements.val(newValueFormatted);
+	}
+
+	/**
+	 * creates the prefix for "createSelectorForPropertyChange"
+	 *
+	 * @param {String} value
+	 * @param {String} selector
+	 * @param {String} selectorDataModel
+	 * @returns {String}
+	 */
+	function createSelectorForPropertyChangePrefix(value, selector, selectorDataModel)
+	{
+		return (value !== '' ? ',' : '') + selector.trimRight() + ' ' + selectorDataModel;
+	}
+
+	/**
+	 * creates selectors for elements with different functions call to set a value
+	 *
+	 * @param {View} view
+	 * @param {String} propertyName
+	 * @param {String} selector
+	 * @returns {Object}
+	 */
+	function createSelectorForPropertyChange(view, propertyName, selector)
+	{
+		var selectorDataModel = view.selectorDataModel.slice(0, -1) + '="' + propertyName + '"]';
+		var selectors = selector.split(',');
+		var selectorsLength = selectors.length;
+		var result  =
+		{
+			html:
+			{
+				selector: '',
+				callback: propertyChangeHandlerHtml
+			},
+			val:
+			{
+				selector: '',
+				callback: propertyChangeHandlerInputWithValue
+			},
+			radio:
+			{
+				selector: '',
+				callback: propertyChangeHandlerInputTypeRadio
+			},
+			checkbox:
+			{
+				selector: '',
+				callback: propertyChangeHandlerInputTypeCheckbox
+			},
+			dateTime:
+			{
+				selector: '',
+				callback: propertyChangeHandlerInputTypeDateTime
+			}
+		};
+
+		var i = undefined;
+		var selector = undefined;
+		for (i = 0; i < selectorsLength; i++)
+		{
+			selector = selectors[i];
+
+			result.html.selector += createSelectorForPropertyChangePrefix(result.html.selector, selector, selectorDataModel) + ':not(:input)';
+			result.val.selector += createSelectorForPropertyChangePrefix(result.val.selector, selector, selectorDataModel) + ':input'
+									+ ':not([type=radio])'
+									+ ':not([type=checkbox])'
+									+ ':not([type=file])'
+									+ ':not([type=date])'
+									+ ':not([type=time])'
+									+ ':not([type=datetime-local])'
+									+ ':not([type=datetime])'
+			;
+
+			result.dateTime.selector += createSelectorForPropertyChangePrefix(result.dateTime.selector, selector, selectorDataModel) + ':input[type=date]';
+			result.dateTime.selector += createSelectorForPropertyChangePrefix(result.dateTime.selector, selector, selectorDataModel) + ':input[type=time]';
+			result.dateTime.selector += createSelectorForPropertyChangePrefix(result.dateTime.selector, selector, selectorDataModel) + ':input[type=datetime-local]';
+
+			result.radio.selector += createSelectorForPropertyChangePrefix(result.radio.selector, selector, selectorDataModel) + '[type=radio]';
+			result.checkbox.selector += createSelectorForPropertyChangePrefix(result.checkbox.selector, selector, selectorDataModel) + '[type=checkbox]';
+		}
+
+		return result;
+	}
+
+	/**
+	 * @param {View} view
+	 * @param {Model} model
+	 * @param {String} propertyName
+	 * @returns {Boolean}
+	 */
+	function createModelPropertyBindings(view, model, propertyName)
+	{
+		var bindingOptions = undefined;
+
+		if (view.modelBindings !== undefined && view.modelBindings !== null)
+		{
+			bindingOptions = view.modelBindings[propertyName];
+		};
 
 		// no auto
-		if (bindingOptions === undefined && obj.autoModelBindings !== true)
+		if (bindingOptions === undefined && view.autoModelBindings !== true)
 		{
-			return;
+			return false;
 		}
 
 		// binding options entry is a string, convert it to object with selector
@@ -63,7 +299,7 @@ define(
 			bindingOptions =
 			{
 				selector: '',
-				callback: obj['onChange' + propertyName.charAt(0).toUpperCase() + propertyName.slice(1)]
+				callback: view['onChange' + propertyName.charAt(0).toUpperCase() + propertyName.slice(1)]
 			};
 		}
 
@@ -71,7 +307,7 @@ define(
 		// in the options is a callback function as String. call the function from this
 		if (typeof bindingOptions.callback === 'string')
 		{
-			bindingOptions.callback = obj[bindingOptions.callback];
+			bindingOptions.callback = view[bindingOptions.callback];
 		}
 		// not a function
 		if ((bindingOptions.callback instanceof Function) === false)
@@ -80,9 +316,9 @@ define(
 		}
 
 		// formatter options of view overwrites formatter settings in modelBindings
-		if (obj.formatter[propertyName] !== undefined)
+		if (view.formatter !== undefined && view.formatter !== null && view.formatter[propertyName] !== undefined)
 		{
-			bindingOptions.formatter = obj.formatter[propertyName];
+			bindingOptions.formatter = view.formatter[propertyName];
 		}
 		// formatter
 		if (bindingOptions.formatter === undefined)
@@ -99,29 +335,315 @@ define(
 		}
 
 		// formatter
-		bindingOptions.formatter.get = obj.getFormatterFunctionGet(propertyName, bindingOptions.formatter.get);
-		bindingOptions.formatter.set = obj.getFormatterFunctionSet(propertyName, bindingOptions.formatter.set);
+		bindingOptions.formatter.get = getFormatterFunctionGet(view, model, propertyName, bindingOptions.formatter.get);
+		bindingOptions.formatter.set = getFormatterFunctionSet(view, bindingOptions.formatter.set);
 
 		// in the options is an selector define. find HTMLElement and update the html with the new value
 		if (bindingOptions.selector !== undefined)
 		{
 			// create specific selectors
-			bindingOptions.selectors = obj.createSelectorForPropertyChange(propertyName, bindingOptions.selector);
+			bindingOptions.selectors = createSelectorForPropertyChange(view, propertyName, bindingOptions.selector);
 		}
 
 		// set preprare modelBindings
-		obj.modelBindings[propertyName] = bindingOptions;
+		view.modelBindings[propertyName] = bindingOptions;
 
+		// bind property to observer
+		model.observer.on('set:' + propertyName, function(modelAttributes, propertyName, newValue, oldValue)
+		{
+			onModelPropertyChangeHandler(view, modelAttributes, propertyName, newValue, oldValue);
+		}, view);
+
+		return true;
+	};
+
+	/**
+	 * formattes given model Property and return the result
+	 *
+	 * @param {View} view
+	 * @param {String} propertyName
+	 * @param {Mixed} value
+	 * @param {String} method can be one of the formatter methods 'get' or 'set'
+	 * @returns {Mixed}
+	 */
+	function formatModelProperty(view, propertyName, value, method)
+	{
+		// find bindings options
+		var bindingOption = view.modelBindings[propertyName];
+		if (bindingOption === undefined)
+		{
+			return value;
+		}
+
+		// get the callback
+		var callback = bindingOption.formatter[method];
+		if (callback === undefined)
+		{
+			return value;
+		}
+
+		if ((callback instanceof Function) === false)
+		{
+			throw new Error('Invalid formatter method name "' + method + '" for model property "' + propertyName + '".');
+		}
+
+		// format the value
+		var valueFormatted = callback.call(view, value, view.model.attributes, propertyName);
+		if (valueFormatted === undefined)
+		{
+			return value;
+		}
+
+		return valueFormatted;
+	};
+
+
+	/**
+	 * formattes all model Properties and return the result
+	 *
+	 * @param {View} view
+	 * @returns {Object}
+	 */
+	function getFormattedModelProperties(view)
+	{
+		var result = {};
+		if ((view.model instanceof Model) === false)
+		{
+			return result;
+		}
+
+		var propertyName = undefined;
+		for (propertyName in view.modelBindings)
+		{
+			result[propertyName] = formatModelProperty(view, propertyName, view.model.attributes[propertyName], 'get');
+		}
+
+		return result;
+	};
+
+	/**
+	 * if a HTMLElement change his value for a model property
+	 *
+	 * @param {jQuery.Event} event
+	 * @param {View} view
+	 */
+	function onHTMLElementPropertyChangeHandler(event, view)
+	{
+		// find element and property
+		var element = jQuery(event.target);
+		var propertyName = element.data('model');
+
+		// no property nothing to do
+		if (propertyName === undefined)
+		{
+			return;
+		}
+
+		// find bindingOptions
+		var bindingOptions = view.modelBindings[propertyName];
+		// nothing to do
+		if (bindingOptions === undefined)
+		{
+			return;
+		}
+
+		// no model nothing to do
+		if ((view.model instanceof Model) === false)
+		{
+			return;
+		}
+
+		// stop event, we can update the model
+		event.stop();
+
+		// get the value from property
+		var newValue = undefined;
+
+		// input is checkbox
+		if (element.is(':checkbox') === true)
+		{
+			newValue = element.prop('checked');
+		}
+		// input is radio element
+		else if (element.is(':radio') === true)
+		{
+			newValue = view.$el.find('[name=' + element.attr('name') + ']:checked').val();
+		}
+		// input is number element
+		else if (element.is('[type=number]') === true)
+		{
+			newValue = element.prop('valueAsNumber');
+		}
+		// input is date element
+		else if (element.is('[type=date]') === true || element.is('[type=time]') === true || element.is('[type=datetime-local]') === true || element.is('[type=datetime]') === true)
+		{
+			newValue = element.prop('valueAsDate');
+		}
+		// other inputs
+		else
+		{
+			newValue = element.val();
+		}
+
+		// format the value
+		newValue = formatModelProperty(view, propertyName, newValue, 'set');
+
+		// set it
+		var methodToSet = 'set';
+		// save it
+		if (view.autoModelSave === true)
+		{
+			methodToSet = 'save';
+		}
+
+		// show saving
+		view.showSaving(element);
+
+		// set the new value to model and set or save
+		this.model[methodToSet](propertyName, newValue,
+		{
+			complete: function()
+			{
+				var propertyNameUcFirst = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
+
+				// trigger event for property
+				view.trigger('htmlPropertyChange:' + propertyNameUcFirst, view, view.model, propertyName, newValue);
+
+				// method for property
+				if (view['onHTMLPropertyChange' + propertyNameUcFirst] instanceof Function)
+				{
+					view['onHTMLPropertyChange' + propertyNameUcFirst](newValue);
+				}
+
+				// trigger event
+				view.trigger('htmlPropertyChange', view, view.model, propertyName, newValue);
+
+				// method for property
+				view.onHTMLPropertyChange(propertyName, newValue);
+
+				view.hideSaving();
+			}
+		});
+	};
+
+	/**
+	 * updates a binded model property in html
+	 *
+	 * @param {View} view
+	 * @param {String} propertyName
+	 * @param {Mixed} value
+	 */
+	function updateModelPropertyInHtml(view, propertyName, value)
+	{
+		var bindingOptions = view.modelBindings[propertyName];
+
+		// nothing to do
+		if (bindingOptions === undefined)
+		{
+			return;
+		}
+
+		// format the value
+		var valueFormatted = formatModelProperty(view, propertyName, value, 'get');
+
+		// set on every selector the value
+		var selectorType = undefined;
+		var options = undefined;
+		var elements = undefined;
+		for (selectorType in bindingOptions.selectors)
+		{
+			options = bindingOptions.selectors[selectorType];
+			elements = view.$el.find(options.selector);
+			if (elements.length === 0)
+			{
+				continue;
+			}
+
+			// direct callback
+			options.callback.call(view, view, elements, value, valueFormatted);
+		};
+	};
+
+	/**
+	 * handles the change of model attributes property change
+	 *
+	 * @param {View} view
+	 * @param {Object} modelAttributes
+	 * @param {String} propertyName
+	 * @param {Midex} newValue
+	 * @param {Midex} oldValue
+	 */
+	function onModelPropertyChangeHandler(view, modelAttributes, propertyName, newValue, oldValue)
+	{
+		var bindingOptions = view.modelBindings[propertyName];
+
+		// nothing to do
+		if (bindingOptions === undefined)
+		{
+			return;
+		}
+
+		// nothing changed, nothing to do
+		if (newValue === oldValue)
+		{
+			return;
+		}
+
+		// in the options is a callback function as Function. call the function
+		var callbackResult = bindingOptions.callback.call(view, newValue, modelAttributes, propertyName);
+		if (callbackResult !== undefined)
+		{
+			newValue = callbackResult;
+		}
+
+		// set in the html
+		updateModelPropertyInHtml(view, propertyName, newValue);
+
+		var propertyNameUcFirst = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
+
+		// trigger event for property
+		view.trigger('modelPropertyChange:' + propertyNameUcFirst, view, view.model, propertyName, newValue, oldValue);
+
+		// method for property
+		if (view['onModelPropertyChange' + propertyNameUcFirst] instanceof Function)
+		{
+			view['onModelPropertyChange' + propertyNameUcFirst](newValue, oldValue);
+		}
+
+		// trigger event
+		view.trigger('modelPropertyChange', view, view.model, propertyName, newValue);
+
+		// method for property
+		view.onModelPropertyChange(propertyName, newValue, oldValue);
+	};
+
+	/**
+	 * updates all binded model property in html
+	 *
+	 * @param {View} view
+	 */
+	function updateModelPropertiesToHtml(view)
+	{
+		if ((view.model instanceof Model) === false)
+		{
+			return;
+		}
+
+		var propertyName = undefined;
+		for (propertyName in view.modelBindings)
+		{
+			updateModelPropertyInHtml(view, propertyName, view.model.attributes[propertyName]);
+		}
 	};
 
 	/**
 	 * View
 	 *
 	 * @event {void} remove({View} view)
-	 * @event {void} modelPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue)
-	 * @event {void} modelPropertyChange[:PROPERTYNAME]({View} view, {Model} model, {String} propertyName, {Mixed} newValue)
-	 * @eventMethodObject onModelPropertyChange({String} propertyName, {Mixed} newValue)
-	 * @eventMethodObject onModelPropertyChange[:PROPERTYNAME]({Mixed} newValue)
+	 * @event {void} modelPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue, {Mixed} oldValue)
+	 * @event {void} modelPropertyChange[:PROPERTYNAME]({View} view, {Model} model, {String} propertyName, {Mixed} newValue, {Mixed} oldValue)
+	 * @eventMethodObject onModelPropertyChange({String} propertyName, {Mixed} newValue, {Mixed} oldValue)
+	 * @eventMethodObject onModelPropertyChange[:PROPERTYNAME]({Mixed} newValue, {Mixed} oldValue)
 	 *
 	 * @event {void} htmlPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue)
 	 * @event {void} htmlPropertyChange[:PROPERTYNAME]({View} view, {Model} model, {String} propertyName, {Mixed} newValue)
@@ -160,22 +682,17 @@ define(
 		}
 
 		// copy options
-		lodash.each(options, function(value, key)
+		var key = undefined;
+		for (key in options)
 		{
 			if (excludeProperties[key] === true)
 			{
-				return;
+				continue;
 			}
 			if (this[key] !== undefined)
 			{
-				this[key] = value;
+				this[key] = options[key];
 			}
-		}, this);
-
-		// read set model to view.. in start mode, backbone made strange things with prototype :( and so we have the initial event binding and fetching here
-		if (this.model instanceof Model)
-		{
-			this.model = this.model;
 		}
 
 		// convert additional templates to template function and structur
@@ -207,6 +724,16 @@ define(
 			this.container = jQuery(this.container);
 		}
 
+		// preinit is done!
+		this._preInitialized = true;
+
+		// read set model to view.. in start mode, backbone made strange things with prototype :( and so we have the initial event binding and fetching here
+		if (this.model instanceof Model)
+		{
+			var model = this.model;
+			this.model = model;
+		}
+
 		// parent
 		Backbone.View.apply(this, arguments);
 
@@ -222,6 +749,19 @@ define(
 	// prototype
 	View.prototype = Object.create(Backbone.View.prototype,
 	{
+		/**
+		 * little helper to indicate if all pre-initialized
+		 *
+		 * @var {Boolean}
+		 */
+		_preInitialized:
+		{
+			value: false,
+			enumerable: false,
+			configurable: false,
+			writable: true
+		},
+
 		/**
 		 * A cached jQuery object for the view's element. A handy reference instead of
 		 * re-wrapping the DOM element all the time.
@@ -423,20 +963,44 @@ define(
 			},
 			set: function(model)
 			{
+				if (this._preInitialized === false)
+				{
+					this._model = model;
+					return;
+				}
+
 				// only if autoModelBindings === true OR modelBindings contains entries
 				var isInObservation = (this.autoModelBindings === true || lodash.keys(this.modelBindings).length !== 0);
 
 				// stop previous model observer
 				if (isInObservation === true && this._model instanceof Model)
 				{
-					this._model.observer.off(undefined, this.onModelPropertyChangeHandler, this);
+					this._model.observer.off(undefined, undefined, this);
 				}
 
 				// this is a model and not null or so... create the observer
 				if (isInObservation === true && model instanceof Model)
 				{
-					model.observer.on('set', this.onModelPropertyChangeHandler, this);
-					model.observer.observe();
+					// prepare modelBindings
+					var startObservation = false;
+					for (var propertyName in model.attributeTypes)
+					{
+						// do not track properties of type COLLECTION
+						// do not track properties of type MODEL
+						// do not track id property
+						if (model.attributeTypes[propertyName] !== Model.ATTRIBUTE_TYPE_COLLECTION && model.attributeTypes[propertyName] !== Model.ATTRIBUTE_TYPE_MODEL && model.idAttribute !== propertyName)
+						{
+							if (createModelPropertyBindings(this, model, propertyName) === true)
+							{
+								startObservation = true;
+							}
+						}
+					}
+
+					if (startObservation === true)
+					{
+						model.observer.observe();
+					}
 				}
 
 				if (model === null)
@@ -573,142 +1137,6 @@ define(
 	});
 
 	/**
-	 * creates selectors for elements with different functions call to set a value
-	 *
-	 * @param {String} propertyName
-	 * @param {String} selector
-	 * @returns {Object}
-	 */
-	View.prototype.createSelectorForPropertyChange = function(propertyName, selector)
-	{
-		var selectorDataModel = this.selectorDataModel.slice(0, -1) + '="' + propertyName + '"]';
-		var fnPrefix = function(value, selector)
-		{
-			return (value !== '' ? ',' : '') + selector.trimRight() + ' ' + selectorDataModel;
-		};
-
-		return lodash.reduce(selector.split(','), function(result, selector)
-		{
-			result.html.selector += fnPrefix(result.html.selector, selector) + ':not(:input)';
-			result.val.selector += fnPrefix(result.val.selector, selector) + ':input'
-									+ ':not([type=radio])'
-									+ ':not([type=checkbox])'
-									+ ':not([type=file])'
-									+ ':not([type=date])'
-									+ ':not([type=time])'
-									+ ':not([type=datetime-local])'
-									+ ':not([type=datetime])'
-			;
-
-			result.dateTime.selector += fnPrefix(result.dateTime.selector, selector) + ':input[type=date]';
-			result.dateTime.selector += fnPrefix(result.dateTime.selector, selector) + ':input[type=time]';
-			result.dateTime.selector += fnPrefix(result.dateTime.selector, selector) + ':input[type=datetime-local]';
-
-			result.radio.selector += fnPrefix(result.radio.selector, selector) + '[type=radio]';
-			result.checkbox.selector += fnPrefix(result.checkbox.selector, selector) + '[type=checkbox]';
-
-			return result;
-		},
-		{
-			html:
-			{
-				selector: '',
-				callback: function(view, elements, newValue, newValueFormatted)
-				{
-					elements.html(newValueFormatted);
-				}
-			},
-			val:
-			{
-				selector: '',
-				callback: function(view, elements, newValue, newValueFormatted)
-				{
-					if (elements.is('[type=number]') === true)
-					{
-						elements.val(newValue);
-					}
-					else
-					{
-						elements.val(newValueFormatted);
-					}
-				}
-			},
-			radio:
-			{
-				selector: '',
-				callback: function(view, elements, newValue, newValueFormatted)
-				{
-					elements.val([newValue]);
-				}
-			},
-			checkbox:
-			{
-				selector: '',
-				callback: function(view, elements, newValue, newValueFormatted)
-				{
-					elements.prop('checked', newValue);
-				}
-			},
-			dateTime:
-			{
-				selector: '',
-				callback: function(view, elements, newValue, newValueFormatted)
-				{
-					switch (true)
-					{
-						case (newValue instanceof Date && elements.is('[type=date]') === true):
-						case (newValue instanceof Date && elements.is('[type=time]') === true):
-						case (newValue instanceof Date && elements.is('[type=datetime-local]') === true):
-						case (newValue instanceof Date && elements.is('[type=datetime]') === true):
-							elements.prop('valueAsDate', newValue);
-							break;
-
-						default:
-							elements.val(newValueFormatted);
-							break;
-					}
-				}
-			}
-		}, this);
-	};
-
-	/**
-	 * formattes given model Property and return the result
-	 *
-	 * @param {String} propertyName
-	 * @param {Mixed} value
-	 * @param {String} method can be one of the formatter methods default is 'get'
-	 * @returns {Mixed}
-	 */
-	View.prototype.formatModelProperty = function(propertyName, value, method)
-	{
-		method = method || 'get';
-
-		// find bindings options
-		var bindingOption = this.modelBindings[propertyName];
-		if (bindingOption === undefined)
-		{
-			return value;
-		}
-
-		// get the callback
-		var callback = bindingOption.formatter[method];
-		if ((callback instanceof Function) === false)
-		{
-			throw new Error('Invalid formatter method name "' + method + '" for model property "' + propertyName + '".');
-		}
-
-		// format the value
-		var valueFormatted = callback.call(this, value, this.model.attributes, propertyName);
-		if (valueFormatted === undefined)
-		{
-			return value;
-		}
-
-		return valueFormatted;
-	};
-
-	/**
 	 * formatter for date
 	 *
 	 * @param {Date} value
@@ -781,91 +1209,6 @@ define(
 	};
 
 	/**
-	 * returns a get formatter
-	 *
-	 * @param {String} propertyName
-	 * @param {String}|{Function}
-	 * @returns {Function}
-	 */
-	View.prototype.getFormatterFunctionGet = function(propertyName, getOption)
-	{
-		var formatter = getOption;
-
-		// formatter getter is a string, use function from this
-		if (typeof formatter === 'string')
-		{
-			formatter = this[formatter];
-		}
-
-		// formatter getter is a string, use function from this
-		if ((formatter instanceof Function) === false)
-		{
-			switch (this.model.attributeTypes[propertyName])
-			{
-				case Model.ATTRIBUTE_TYPE_NUMBER:
-					formatter = this.formatterNumber;
-					break;
-
-				case Model.ATTRIBUTE_TYPE_DATE:
-					formatter = this.formatterDate;
-					break;
-			}
-		}
-
-		// formatter getter not a function
-		if ((formatter instanceof Function) === false)
-		{
-			formatter = lodash.noop;
-		}
-
-		return formatter;
-	};
-
-	/**
-	 * returns a set formatter
-	 *
-	 * @param {String}|{Function}
-	 * @returns {Function}
-	 */
-	View.prototype.getFormatterFunctionSet = function(propertyName, setOption)
-	{
-		var formatter = setOption;
-
-		// formatter setter is a string, use function from this
-		if (typeof formatter === 'string')
-		{
-			formatter = this[formatter];
-		}
-
-		// formatter getter not a function
-		if ((formatter instanceof Function) === false)
-		{
-			formatter = lodash.noop;
-		}
-
-		return formatter;
-	};
-
-	/**
-	 * formattes all model Properties and return the result
-	 *
-	 * @returns {Object}
-	 */
-	View.prototype.getFormattedModelProperties = function()
-	{
-		if ((this.model instanceof Model) === false)
-		{
-			return {};
-		}
-
-		return lodash.reduce(this.modelBindings, function(dataModel, bindingOption, propertyName)
-		{
-			dataModel[propertyName] = this.formatModelProperty(propertyName, dataModel[propertyName], 'get');
-			return dataModel;
-		}, lodash.clone(this.model.attributes), this);
-	};
-
-	/**
 	 * hide last show saving
 	 *
 	 * @returns {View}
@@ -923,28 +1266,6 @@ define(
 	};
 
 	/**
-	 * initialize
-	 *
-	 * @param {Object} options
-	 * @returns {View}
-	 */
-	View.prototype.initialize = function(options)
-	{
-		Backbone.View.prototype.initialize.apply(this, arguments);
-
-		// prepare modelBindings
-		if (this.model instanceof Model)
-		{
-			for (var propertyName in this.model.attributeTypes)
-			{
-				createModelPropertyBindings(this, propertyName);
-			}
-		}
-
-		return this;
-	};
-
-	/**
 	 * on html property change
 	 *
 	 * @param {String} propertyName
@@ -957,114 +1278,6 @@ define(
 	};
 
 	/**
-	 * if a HTMLElement change his value for a model property
-	 *
-	 * @param {jQuery.Event}
-	 * @returns {View}
-	 */
-	View.prototype.onHTMLElementPropertyChangeHandler = function(event)
-	{
-		// find element and property
-		var element = jQuery(event.target);
-		var propertyName = element.data('model');
-
-		// no property nothing to do
-		if (propertyName === undefined)
-		{
-			return this;
-		}
-
-		// find bindingOptions
-		var bindingOptions = this.modelBindings[propertyName];
-		// nothing to do
-		if (bindingOptions === undefined)
-		{
-			return this;
-		}
-
-		// no model nothing to do
-		if ((this.model instanceof Model) === false)
-		{
-			return this;
-		}
-
-		// stop event, we can update the model
-		event.stop();
-
-		// get the value from property
-		var newValue = undefined;
-
-		// input is checkbox
-		if (element.is(':checkbox') === true)
-		{
-			newValue = element.prop('checked');
-		}
-		// input is radio element
-		else if (element.is(':radio') === true)
-		{
-			newValue = this.$el.find('[name=' + element.attr('name') + ']:checked').val();
-		}
-		// input is number element
-		else if (element.is('[type=number]') === true)
-		{
-			newValue = element.prop('valueAsNumber');
-		}
-		// input is date element
-		else if (element.is('[type=date]') === true || element.is('[type=time]') === true || element.is('[type=datetime-local]') === true || element.is('[type=datetime]') === true)
-		{
-			newValue = element.prop('valueAsDate');
-		}
-		// other inputs
-		else
-		{
-			newValue = element.val();
-		}
-
-		// format the value
-		newValue = this.formatModelProperty(propertyName, newValue, 'set');
-
-		// set it
-		var methodToSet = 'set';
-		// save it
-		if (this.autoModelSave === true)
-		{
-			methodToSet = 'save';
-		}
-
-		// show saving
-		this.showSaving(element);
-
-		var self = this;
-		// set the new value to model and set or save
-		this.model[methodToSet](propertyName, newValue,
-		{
-			complete: function()
-			{
-				var propertyNameUcFirst = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
-
-				// trigger event for property
-				self.trigger('htmlPropertyChange:' + propertyNameUcFirst, self, self.model, propertyName, newValue);
-
-				// method for property
-				if (self['onHTMLPropertyChange' + propertyNameUcFirst] instanceof Function)
-				{
-					self['onHTMLPropertyChange' + propertyNameUcFirst](newValue);
-				}
-
-				// trigger event
-				self.trigger('htmlPropertyChange', self, self.model, propertyName, newValue);
-
-				// method for property
-				self.onHTMLPropertyChange(propertyName, newValue);
-
-				self.hideSaving();
-			}
-		});
-
-		return this;
-	};
-
-	/**
 	 * on model property change
 	 *
 	 * @param {String} propertyName
@@ -1073,61 +1286,6 @@ define(
 	 */
 	View.prototype.onModelPropertyChange = function(propertyName, newValue)
 	{
-		return this;
-	};
-
-	/**
-	 * handles the change of model attributes property change
-	 *
-	 * @param {Object} modelAttributes
-	 * @param {String} propertyName
-	 * @param {Midex} newValue
-	 * @param {Midex} oldValue
-	 * @returns {View}
-	 */
-	View.prototype.onModelPropertyChangeHandler = function(modelAttributes, propertyName, newValue, oldValue)
-	{
-		var bindingOptions = this.modelBindings[propertyName];
-
-		// nothing to do
-		if (bindingOptions === undefined)
-		{
-			return this;
-		}
-
-		// nothing changed, nothing to do
-		if (newValue === oldValue)
-		{
-			return this;
-		}
-
-		// in the options is a callback function as Function. call the function
-		var callbackResult = bindingOptions.callback.call(this, newValue, modelAttributes, propertyName);
-		if (callbackResult !== undefined)
-		{
-			newValue = callbackResult;
-		}
-
-		// set in the html
-		this.updateModelPropertyInHtml(propertyName, newValue);
-
-		var propertyNameUcFirst = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
-
-		// trigger event for property
-		this.trigger('modelPropertyChange:' + propertyNameUcFirst, this, this.model, propertyName, newValue);
-
-		// method for property
-		if (this['onModelPropertyChange' + propertyNameUcFirst] instanceof Function)
-		{
-			this['onModelPropertyChange' + propertyNameUcFirst](newValue);
-		}
-
-		// trigger event
-		this.trigger('modelPropertyChange', this, this.model, propertyName, newValue);
-
-		// method for property
-		this.onModelPropertyChange(propertyName, newValue);
-
 		return this;
 	};
 
@@ -1204,7 +1362,7 @@ define(
 		}
 
 		// get model data if there is a model
-		var dataModelFormatted = this.getFormattedModelProperties();
+		var dataModelFormatted = getFormattedModelProperties(this);
 
 		// get template Data
 		var dataTemplate = this.templateData;
@@ -1229,30 +1387,42 @@ define(
 		// auto append templates
 		if (this.autoTemplatesAppend === true)
 		{
-			lodash.each(this.templates, function(template)
+			var templateKey = undefined;
+			var template = undefined;
+			for (templateKey in this.templates)
 			{
+				template = this.templates[templateKey];
 				if (template.template instanceof Function)
 				{
 					this.htmlAppend(template.template(dataComplete), template.selector);
 				}
-			}, this);
+			}
 		}
 
 		// remap to unique view selector
-		lodash.each(this.$el.find('[data-model]'), function(element)
+		var elementDataModels = this.$el.find('[data-model]');
+		var elementDataModelsLength = elementDataModels.length;
+		var elementDataModelSelector = this.selectorDataModel.slice(1, -1);
+		var elementDataModel = undefined;
+		var i = undefined;
+		for (i = 0; i < elementDataModelsLength; i++)
 		{
-			element = jQuery(element);
-			element.attr(this.selectorDataModel.slice(1, -1), element.data('model'));
-		}, this);
+			elementDataModel = jQuery(elementDataModels[i]);
+			elementDataModel.attr(elementDataModelSelector, elementDataModel.data('model'));
+		}
 
 		// create observing of inputs for observed modelBindings
 		if (this.autoModelUpdate === true)
 		{
-			this.$el.find(this.selectorDataModel + ':input').on('change.model', this.onHTMLElementPropertyChangeHandler.bind(this));
+			var self = this;
+			this.$el.find(this.selectorDataModel + ':input').on('change.model', function(event)
+			{
+				onHTMLElementPropertyChangeHandler(event, self);
+			});
 		}
 
 		// fill in the model data into template
-		this.updateModelPropertiesToHtml();
+		updateModelPropertiesToHtml(this);
 
 		return this;
 	};
@@ -1313,68 +1483,11 @@ define(
 		// stop previous model observer
 		if (isInObservation === true && this.model instanceof Model)
 		{
-			this.model.observer.off(undefined, this.onModelPropertyChangeHandler, this);
+			this.model.observer.off(undefined, undefined, this);
 		}
 
 		this.undelegateEvents();
 		Backbone.View.prototype.stopListening.apply(this, arguments);
-
-		return this;
-	};
-
-	/**
-	 * updates all binded model property in html
-	 *
-	 * @returns {View}
-	 */
-	View.prototype.updateModelPropertiesToHtml = function()
-	{
-		if ((this.model instanceof Model) === false)
-		{
-			return this;
-		}
-
-		lodash.each(this.modelBindings, function(bindingOption, propertyName)
-		{
-			this.updateModelPropertyInHtml(propertyName, this.model.attributes[propertyName]);
-		}, this);
-
-		return this;
-	};
-
-	/**
-	 * updates a binded model property in html
-	 *
-	 * @param {String} propertyName
-	 * @param {Mixed} value
-	 * @returns {View}
-	 */
-	View.prototype.updateModelPropertyInHtml = function(propertyName, value)
-	{
-		var bindingOptions = this.modelBindings[propertyName];
-
-		// nothing to do
-		if (bindingOptions === undefined)
-		{
-			return this;
-		}
-
-		// format the value
-		var valueFormatted = this.formatModelProperty(propertyName, value);
-
-		// set on every selector the value
-		lodash.each(bindingOptions.selectors, function(options)
-		{
-			var elements = this.$el.find(options.selector);
-
-			if (elements.length === 0)
-			{
-				return;
-			}
-
-			// direct callback
-			options.callback.call(this, this, elements, value, valueFormatted);
-		}, this);
 
 		return this;
 	};

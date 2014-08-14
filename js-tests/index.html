@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<base href="/Javascript/forge/js-tests/" />
+
+		<meta charset="UTF-8" />
+
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<meta http-equiv="expires" content="Sat, 01 Dec 2001 00:00:00 GMT">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+		<title></title>
+
+		<script id="application" type="application/json">{"log":{"level":7,"sendToServer":false,"serverUrl":"\/log\/console"},"profiling":{"sendToServer":false,"serverUrl":"\/log\/profiling"}}</script>
+		<script id="translation" type="application/json">{"en_GB":{"translation":{"h2":"this is the h2"}}}</script>
+		<script id="configTest1" type="application/json">{"a":1, "b": 2, "c": "c"}</script>
+		<script id="configTest2" type="application/json"></script>
+		<script id="configTest3" type="application/json">{"a':1, "b": 2, "c": "c"}</script>
+
+		<script data-main="app/config" src="lib/require.js"></script>
+		<script>
+			(function(window, requirejs)
+			{
+				// wrapping require js config so that the original configuration can be overwritten
+				var requirejsConfig = requirejs.config;
+				requirejs.config = function(config)
+				{
+					config.deps = config.shim.main.deps;
+					config.baseUrl = "/Javascript/forge/js-tests/app/";
+					return requirejsConfig.call(requirejs, config);
+				};
+			})(window, requirejs);
+		</script>
+	</head>
+	<body></body>
+</html>
