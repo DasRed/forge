@@ -249,12 +249,12 @@ define(
 
 		var self = this;
 		var completeCallback = options.complete;
-		options.complete = function()
+		options.complete = function(jqXHR, textStatus)
 		{
 			var result = undefined;
 			if (completeCallback instanceof Function)
 			{
-				result = completeCallback.apply(self, arguments);
+				result = completeCallback.call(self, jqXHR, textStatus);
 			}
 
 			self.trigger('fetched', self);
