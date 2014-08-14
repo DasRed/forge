@@ -4,7 +4,6 @@ define(
 [
 	'lodash',
 	'backbone',
-	'forge/collator',
 	'forge/url/parameter',
 	'forge/backbone/compatibility',
 	'forge/backbone/model',
@@ -12,19 +11,12 @@ define(
 ], function(
 	lodash,
 	Backbone,
-	collator,
 	UrlParameter,
 	compatibility,
 	Model,
 	CollectionSorter
 )
 {
-	var excludeProperties =
-	{
-		model: true,
-		comparator: true
-	};
-
 	/**
 	 * Collection for Models
 	 *
@@ -38,54 +30,57 @@ define(
 	{
 		this.cid = lodash.uniqueId('collection');
 
+
 		// copy options
-		lodash.each(options, function(value, key)
+		options = options || {};
+		var key = undefined;
+		for (key in options)
 		{
-			if (excludeProperties[key] === true)
-			{
-				return;
-			}
 			if (this[key] !== undefined)
 			{
-				this[key] = value;
+				this[key] = options[key];
 			}
-		}, this);
+		}
 
-		// define a sorter
+		// only collection with models
+		if (this.model === undefined || this.model === null)
+		{
+			throw new Error('A collection must define a model.');
+		}
+
+		// set the direction if not setted
+		if (this.direction === null || this.direction === undefined)
+		{
+			var attributeType = this.model.getPrototypeValue('attributeTypes')[this.comparator];
+
+			// initial direction is
+			this.direction = CollectionSorter.DIRECTION_ASC;
+
+			// sort by another collection can not work
+			if (attributeType === Model.ATTRIBUTE_TYPE_COLLECTION)
+			{
+				throw new Error('Sorting for an attribute of type collection is not allowed.');
+			}
+
+			// sort by another model can not work
+			else if (attributeType === Model.ATTRIBUTE_TYPE_MODEL)
+			{
+				throw new Error('Sorting for an attribute of type model is not allowed.');
+			}
+
+			// sort by date always sort DESC
+			else if (attributeType === Model.ATTRIBUTE_TYPE_DATE)
+			{
+				this.direction = CollectionSorter.DIRECTION_DESC;
+			}
+		}
+
+		// create the default sorter
 		if (this.comparator !== undefined && this.comparator !== null)
 		{
-			var direction = this.directionInitial;
-			if (direction === null)
-			{
-				// find correct default sort by attribute type
-				switch (this.model.getPrototypeValue('attributeTypes')[this.comparator])
-				{
-					case Model.ATTRIBUTE_TYPE_DATE:
-						direction = CollectionSorter.DIRECTION_DESC;
-						break;
-
-					case Model.ATTRIBUTE_TYPE_COLLECTION:
-						throw new Error('Sorting for an attribute of type collection is not allowed.');
-						break;
-
-					case Model.ATTRIBUTE_TYPE_MODEL:
-						throw new Error('Sorting for an attribute of type model is not allowed.');
-						break;
-
-					case Model.ATTRIBUTE_TYPE_NUMBER:
-					case Model.ATTRIBUTE_TYPE_STRING:
-					case Model.ATTRIBUTE_TYPE_BOOLEAN:
-					default:
-						direction = CollectionSorter.DIRECTION_ASC;
-						break;
-				}
-			}
-
-			// create the default sorter
 			this.sorter = new CollectionSorter(
 			{
-				collection: this,
-				direction: direction
+				collection: this
 			});
 		}
 
@@ -111,7 +106,18 @@ define(
 		/**
 		 * @var {String}
 		 */
-		directionInitial:
+		comparator:
+		{
+			value: 'id',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * @var {String}
+		 */
+		direction:
 		{
 			value: null,
 			enumerable: true,
@@ -126,7 +132,7 @@ define(
 		 */
 		model:
 		{
-			value: Model,
+			value: null,
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -138,8 +144,8 @@ define(
 		sorter:
 		{
 			value: null,
-			enumerable: true,
-			configurable: true,
+			enumerable: false,
+			configurable: false,
 			writable: true
 		},
 
@@ -258,43 +264,15 @@ define(
 	 */
 	Collection.prototype.sort = function(options)
 	{
-		if (this.models === undefined)
+		if (this.sorter === undefined || this.sorter === null || this.models === undefined || this.models === null || this.models.length === 0 || this.comparator === undefined || this.comparator === null)
 		{
 			return this;
 		}
 
-		if (this.comparator === undefined)
-		{
-			throw new Error('Cannot sort a collection without a comparator definition');
-		}
+		this.sorter.sort();
 
 		options = options || {};
-
-		// Run sort based on type of `comparator`.
-		if (this.comparator instanceof Function)
-		{
-			// sort with one parameter
-			if (this.comparator.length === 1)
-			{
-				this.models = lodash.sortBy(this.models, this.comparator, this);
-			}
-			// sort with 2 parameters callback function
-			else
-			{
-				this.models.sort(this.comparator.bind(this));
-			}
-		}
-		// sort by string (propertyName)
-		else
-		{
-			var self = this;
-			this.models.sort(function(modelA, modelB)
-			{
-				return collator.compareModels(self.comparator, modelA, modelB);
-			});
-		}
-
-		if (!options.silent)
+		if (options.silent === false)
 		{
 			this.trigger('sort', this, options);
 		}
@@ -353,10 +331,15 @@ define(
 	 */
 	Collection.prototype._reset = function()
 	{
-		lodash.each(this.models, function(model)
+		if (this.models !== undefined && this.models !== null)
 		{
-			model.clearFromMemory();
-		});
+			var i = 0;
+			var length = this.models.length;
+			for (i = 0; i < length; i++)
+			{
+				this.models[i].clearFromMemory();
+			}
+		}
 
 		Backbone.Collection.prototype._reset.apply(this, arguments);
 

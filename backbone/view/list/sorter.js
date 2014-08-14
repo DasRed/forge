@@ -165,7 +165,7 @@ define(
 	{
 		event.stop();
 
-		this.setDirection(this.collection.sorter.direction === CollectionSorter.DIRECTION_ASC ? CollectionSorter.DIRECTION_DESC : CollectionSorter.DIRECTION_ASC);
+		this.setDirection(this.collection.direction === CollectionSorter.DIRECTION_ASC ? CollectionSorter.DIRECTION_DESC : CollectionSorter.DIRECTION_ASC);
 
 		return this;
 	};
@@ -218,7 +218,7 @@ define(
 
 		View.prototype.render.call(this,
 		{
-			currentText: this.properties[this.collection.sorter.property]
+			currentText: this.properties[this.collection.comparator]
 		});
 
 		// on entry... no field selection
@@ -256,7 +256,7 @@ define(
 	{
 		this.$el.find('.direction').removeClass(CollectionSorter.DIRECTION_ASC + ' ' + CollectionSorter.DIRECTION_DESC).addClass(direction);
 
-		this.collection.sorter.direction = direction;
+		this.collection.direction = direction;
 
 		return this;
 	};
@@ -272,7 +272,7 @@ define(
 		this.$el.find('.selection').removeClass('show');
 		this.$el.find('.fieldName').html(this.properties[property]);
 
-		this.collection.sorter.property = property;
+		this.collection.comparator = property;
 
 		return this;
 	};

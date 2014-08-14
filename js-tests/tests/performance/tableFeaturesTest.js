@@ -16,11 +16,12 @@ require(
 )
 {
 	var times = {};
-
+	var env = 'excel';
+	//env = 'testing';
 	var testConfigs =
 	{
-		countOfRows: 10, // 100
-		countOfIteration: 1, // 10
+		countOfRows: env === 'excel' ? 100 : 10,
+		countOfIteration: env === 'excel' ? 10 : 1,
 
 		tests:
 		{
@@ -237,8 +238,8 @@ require(
 	{
 		it('should be tested with 1 iteration and 10 rows to compare the average values', function()
 		{
-			expect(testConfigs.countOfIteration).toBe(1);
 			expect(testConfigs.countOfRows).toBe(10);
+			expect(testConfigs.countOfIteration).toBe(1);
 		});
 
 		var profiler = new Profiler(

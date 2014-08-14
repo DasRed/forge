@@ -72,8 +72,8 @@ define(
 		var propertyNameToSort = elementToSort.data('model-sort');
 		if (propertyNameToSort !== undefined)
 		{
-			this.collection.sorter.property = propertyNameToSort;
-			this.collection.sorter.direction = elementToSort.data('model-sorted') || CollectionSorter.DIRECTION_ASC;
+			this.collection.comparator = propertyNameToSort;
+			this.collection.direction = elementToSort.data('model-sorted') || CollectionSorter.DIRECTION_ASC;
 		}
 
 		// show sorting
@@ -236,14 +236,14 @@ define(
 		var columnChanged = false;
 
 		// toggle direction
-		if (this.collection.sorter.property === propertyName)
+		if (this.collection.comparator === propertyName)
 		{
-			this.collection.sorter.direction = this.collection.sorter.direction === CollectionSorter.DIRECTION_ASC ? CollectionSorter.DIRECTION_DESC : CollectionSorter.DIRECTION_ASC;
+			this.collection.direction = this.collection.direction === CollectionSorter.DIRECTION_ASC ? CollectionSorter.DIRECTION_DESC : CollectionSorter.DIRECTION_ASC;
 		}
 		// set new sort column
 		else
 		{
-			this.collection.sorter.property = propertyName;
+			this.collection.comparator = propertyName;
 			columnChanged = true;
 		}
 
@@ -287,13 +287,13 @@ define(
 		// column not changed only change direction
 		if (columnChanged === false)
 		{
-			this.$element.find('.sorted' + this.selectorDataModel).removeClass(CollectionSorter.DIRECTION_ASC + ' ' + CollectionSorter.DIRECTION_DESC).addClass(this.collection.sorter.direction);
+			this.$element.find('.sorted' + this.selectorDataModel).removeClass(CollectionSorter.DIRECTION_ASC + ' ' + CollectionSorter.DIRECTION_DESC).addClass(this.collection.direction);
 			return this;
 		}
 
 		// everything is changing
 		this.$element.find(this.selectorDataModel).removeClass('sorted ' + CollectionSorter.DIRECTION_ASC + ' ' + CollectionSorter.DIRECTION_DESC);
-		this.$element.find(this.selectorDataModel.slice(0, -1) + '=' + this.collection.sorter.property + ']').addClass('sorted ' + this.collection.sorter.direction);
+		this.$element.find(this.selectorDataModel.slice(0, -1) + '=' + this.collection.comparator + ']').addClass('sorted ' + this.collection.direction);
 
 		// find column to highlight in body
 		this.sortedColumnIndex = null;
