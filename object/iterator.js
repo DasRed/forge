@@ -144,7 +144,7 @@ define(
 	 */
 	Iterator.prototype.keys = function()
 	{
-		return lodash.keys(this.data);
+		return Object.keys(this.data);
 	};
 
 	/**

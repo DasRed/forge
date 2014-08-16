@@ -29,7 +29,7 @@ define(
 		/**
 		 * @var {String}
 		 */
-		url: '/app/collection/performance/:count.json'
+		url: 'app/collection/performance/:count.json'
 	});
 
 	return CollectionPerformances;

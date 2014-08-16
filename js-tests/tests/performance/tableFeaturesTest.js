@@ -336,7 +336,7 @@ require(
 				if (timeFirst === null)
 				{
 					timeFirst = timeData;
-					text.push(lodash.reduce(lodash.keys(timeFirst), function(acc, profileName)
+					text.push(lodash.reduce(Object.keys(timeFirst), function(acc, profileName)
 					{
 						return acc.concat(
 						[

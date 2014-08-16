@@ -493,7 +493,7 @@ define(
 	 */
 	Model.prototype.toCSV = function(properties, delimiter, enclosure)
 	{
-		properties = properties || lodash.keys(this.attributes);
+		properties = properties || Object.keys(this.attributes);
 		delimiter = delimiter || ';';
 		enclosure = enclosure || '"';
 

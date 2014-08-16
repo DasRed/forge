@@ -2,12 +2,10 @@
 
 define(
 [
-	'lodash',
 	'jQuery',
 	'cfg!application',
 	'forge/object/base'
 ], function(
-	lodash,
 	jQuery,
 	configApplication,
 	Base
@@ -320,20 +318,14 @@ define(
 			// set timer to test timeouted timers
 			this.timer = setInterval(function()
 			{
-				var idsTimedOut = lodash.reduce(self.profiles, function(acc, data, id)
+				var id = undefined;
+				for (id in self.profiles)
 				{
-					if (data.running === true && self.getTime(id) > self.timeout)
+					if (self.profiles[id].running === true && self.getTime(id) > self.timeout)
 					{
-						acc.push(id);
+						self.stop(id, 'Profiling is timed out. Timeout is ' + self.timeout + ' ms.');
 					}
-
-					return acc;
-				}, []);
-
-				lodash.each(idsTimedOut, function(id)
-				{
-					self.stop(id, 'Profiling is timed out. Timeout is ' + self.timeout + ' ms.');
-				});
+				}
 			}, 1000);
 		}
 
@@ -359,7 +351,7 @@ define(
 	 */
 	Profiler.prototype.stopTimer = function()
 	{
-		if (this.timer !== null && lodash.keys(this.profiles).length == 0)
+		if (this.timer !== null && Object.keys(this.profiles).length == 0)
 		{
 			clearInterval(this.timer);
 			this.timer = null;

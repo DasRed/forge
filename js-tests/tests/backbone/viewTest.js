@@ -45,26 +45,6 @@ require(
 				model = undefined;
 			});
 
-			it('but should never bind to the id attribute', function()
-			{
-				var ViewView = View.extend(
-				{
-					autoModelBindings: true,
-					autoRender: false,
-					model: model
-				});
-
-				new ViewView();
-
-				model.attributes.id = 2;
-				expect(spyOnModelPropertyChange).not.toHaveBeenCalledWith('id', 2, 1);
-				expect(spyOnModelPropertyChange.calls.count()).toBe(0);
-
-				model.attributes.string = 'nuffnuff';
-				expect(spyOnModelPropertyChange).toHaveBeenCalledWith('string', 'nuffnuff', 'nuff');
-				expect(spyOnModelPropertyChange.calls.count()).toBe(1);
-			});
-
 			it('from prototyping', function()
 			{
 				var ViewView = View.extend(
@@ -77,12 +57,12 @@ require(
 				new ViewView();
 
 				model.attributes.id = 2;
-				expect(spyOnModelPropertyChange).not.toHaveBeenCalledWith('id', 2, 1);
-				expect(spyOnModelPropertyChange.calls.count()).toBe(0);
+				expect(spyOnModelPropertyChange).toHaveBeenCalledWith('id', 2, 1);
+				expect(spyOnModelPropertyChange.calls.count()).toBe(1);
 
 				model.attributes.string = 'nuffnuff';
 				expect(spyOnModelPropertyChange).toHaveBeenCalledWith('string', 'nuffnuff', 'nuff');
-				expect(spyOnModelPropertyChange.calls.count()).toBe(1);
+				expect(spyOnModelPropertyChange.calls.count()).toBe(2);
 			});
 
 			it('from initialize', function()
@@ -101,12 +81,12 @@ require(
 				new ViewView();
 
 				model.attributes.id = 2;
-				expect(spyOnModelPropertyChange).not.toHaveBeenCalledWith('id', 2, 1);
-				expect(spyOnModelPropertyChange.calls.count()).toBe(0);
+				expect(spyOnModelPropertyChange).toHaveBeenCalledWith('id', 2, 1);
+				expect(spyOnModelPropertyChange.calls.count()).toBe(1);
 
 				model.attributes.string = 'nuffnuff';
 				expect(spyOnModelPropertyChange).toHaveBeenCalledWith('string', 'nuffnuff', 'nuff');
-				expect(spyOnModelPropertyChange.calls.count()).toBe(1);
+				expect(spyOnModelPropertyChange.calls.count()).toBe(2);
 			});
 		});
 	});

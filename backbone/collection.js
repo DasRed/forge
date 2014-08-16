@@ -363,7 +363,7 @@ define(
 				return acc;
 			}, []).join(delimiter));
 
-			properties = lodash.keys(properties);
+			properties = Object.keys(properties);
 		}
 
 		return this.reduce(function(acc, model)

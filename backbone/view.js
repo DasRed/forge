@@ -968,7 +968,7 @@ define(
 				}
 
 				// only if autoModelBindings === true OR modelBindings contains entries
-				var isInObservation = (this.autoModelBindings === true || lodash.keys(this.modelBindings).length !== 0);
+				var isInObservation = (this.autoModelBindings === true || Object.keys(this.modelBindings).length !== 0);
 
 				// stop previous model observer
 				if (isInObservation === true && this._model instanceof Model)
@@ -985,8 +985,7 @@ define(
 					{
 						// do not track properties of type COLLECTION
 						// do not track properties of type MODEL
-						// do not track id property
-						if (model.attributeTypes[propertyName] !== Model.ATTRIBUTE_TYPE_COLLECTION && model.attributeTypes[propertyName] !== Model.ATTRIBUTE_TYPE_MODEL && model.idAttribute !== propertyName)
+						if (model.attributeTypes[propertyName] !== Model.ATTRIBUTE_TYPE_COLLECTION && model.attributeTypes[propertyName] !== Model.ATTRIBUTE_TYPE_MODEL)
 						{
 							if (createModelPropertyBindings(this, model, propertyName) === true)
 							{
@@ -1476,7 +1475,7 @@ define(
 	View.prototype.stopListening = function(other, event, callback)
 	{
 		// only if autoModelBindings === true OR modelBindings contains entries
-		var isInObservation = (this.autoModelBindings === true || lodash.keys(this.modelBindings).length !== 0);
+		var isInObservation = (this.autoModelBindings === true || Object.keys(this.modelBindings).length !== 0);
 
 		// stop previous model observer
 		if (isInObservation === true && this.model instanceof Model)

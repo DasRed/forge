@@ -46,7 +46,7 @@ define(
 		}
 
 		// validate
-		if ((this.properties instanceof Object) === false || lodash.keys(this.properties).length === 0)
+		if ((this.properties instanceof Object) === false || Object.keys(this.properties).length === 0)
 		{
 			throw new Error('No properties are defined to sort or properties must be instance of Object.');
 		}
