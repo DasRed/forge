@@ -8,6 +8,8 @@ define(
 	Backbone
 )
 {
+	var cache = {};
+
 	/**
 	 * looks for a property in prototype chain
 	 *
@@ -21,11 +23,14 @@ define(
 
 		if (descriptor === undefined)
 		{
-			if (obj.__proto__ == null)
+			try
+			{
+				return getPropertyDescriptor(Object.getPrototypeOf(obj), key);
+			}
+			catch (exception)
 			{
 				return undefined;
 			}
-			return getPropertyDescriptor(obj.__proto__, key);
 		}
 
 		return descriptor;
@@ -34,42 +39,74 @@ define(
 	/**
 	 * extends the Backbone Extends function with predefined Values
 	 *
-	 * @param {Object} protoProps
-	 * @param {Object} staticProps
+	 * @param {Object} prototypeProperties
+	 * @param {Object} staticProperties
 	 * @returns {Object}
 	 */
-	function extend(protoProps, staticProps)
+	function extend(prototypeProperties, staticProperties)
 	{
 		var parent = this;
 		var preDefinedValues = {};
+		var prototypePropertyName = undefined;
+		var prototypePropertyValue = undefined;
+		var descriptor = undefined;
+		var doNormalPredefine = undefined;
+		var parentPredefinedValueByKey = undefined;
+		var cacheObj = undefined;
+
+		if (parent[':uid'] === undefined)
+		{
+			Object.defineProperty(parent, ':uid',
+			{
+				value: lodash.uniqueId('obj'),
+				enumerable: false,
+				configurable: false,
+				writable: false
+			});
+			cache[parent[':uid']] = {};
+		}
+		cacheObj = cache[parent[':uid']];
 
 		// add properties && functions to prototype
-		preDefinedValues = lodash.reduce(protoProps, function(preDefinedValues, value, key)
+		for (prototypePropertyName in prototypeProperties)
 		{
-			var descriptor = getPropertyDescriptor(this.prototype, key);
-
+			if (cacheObj[prototypePropertyName] !== undefined)
+			{
+				descriptor = cacheObj[prototypePropertyName];
+			}
+			else
+			{
+				descriptor = getPropertyDescriptor(parent.prototype, prototypePropertyName);
+				if (descriptor !== undefined)
+				{
+					cacheObj[prototypePropertyName] = descriptor;
+				}
+			}
 			// not defined... can be defined
 			if (descriptor === undefined)
 			{
-				return preDefinedValues;
+				continue;
 			}
 
 			// defined as function not as property... can be defined
 			if (descriptor.value instanceof Function)
 			{
-				return preDefinedValues;
+				continue;
 			}
 
+			prototypePropertyValue = prototypeProperties[prototypePropertyName];
+
 			// set a predefined property
-			var doNormalPredefine = true;
+			doNormalPredefine = true;
 			if ((descriptor.set instanceof Function) === false)
 			{
-				var parentPredefinedValueByKey = this.getPrototypeValue(key);
-				if (parentPredefinedValueByKey !== undefined && lodash.isPlainObject(parentPredefinedValueByKey) === true && lodash.isPlainObject(value) === true)
+				parentPredefinedValueByKey = this.getPrototypeValue(prototypePropertyName);
+				if (parentPredefinedValueByKey !== undefined && lodash.isPlainObject(parentPredefinedValueByKey) === true && lodash.isPlainObject(prototypePropertyValue) === true)
 				{
 					doNormalPredefine = false;
-					lodash.extend(parentPredefinedValueByKey, value);
-					preDefinedValues[key] = {
+					lodash.extend(parentPredefinedValueByKey, prototypePropertyValue);
+					preDefinedValues[prototypePropertyName] =
+					{
 						mode: 'simple',
 						value: parentPredefinedValueByKey
 					};
@@ -79,99 +116,100 @@ define(
 			// overwrite
 			if (doNormalPredefine === true)
 			{
-				preDefinedValues[key] = {
+				preDefinedValues[prototypePropertyName] =
+				{
 					mode: (descriptor.set instanceof Function ? 'setter' : 'simple'),
-					value: value
+					value: prototypePropertyValue
 				};
 			}
 
-			delete protoProps[key];
-
-			return preDefinedValues;
-		}, preDefinedValues, this);
+			delete prototypeProperties[prototypePropertyName];
+		}
 
 		/**
 		 * create own constructor
 		 */
-		protoProps.constructor = function()
+		prototypeProperties.constructor = function()
 		{
 			// define proto props constuctor informations
-			var __protoPropsConstructorInformationsCreated = (this.__protoPropsConstructorInformations === undefined);
-			if (__protoPropsConstructorInformationsCreated === true)
+			var __prototypePropertiesConstructorInformationsCreated = (this.__prototypePropertiesConstructorInformations === undefined);
+			if (__prototypePropertiesConstructorInformationsCreated === true)
 			{
-				this.__protoPropsConstructorInformations =
+				this.__prototypePropertiesConstructorInformations =
 				{
 					level: 0,
 					preDefinedValues: {}
 				};
 			}
-			this.__protoPropsConstructorInformations.level++;
+			this.__prototypePropertiesConstructorInformations.level++;
 
 			// copy options
-			lodash.each(preDefinedValues, function(options, key)
+			var preDefinedValueName = undefined;
+			var options = undefined;
+			var valueIsPlainObject = undefined;
+			for (preDefinedValueName in preDefinedValues)
 			{
+				options = preDefinedValues[preDefinedValueName];
+
 				// property was setted before by a child instance option
-				if (this.__protoPropsConstructorInformations.preDefinedValues[key] !== undefined)
+				if (this.__prototypePropertiesConstructorInformations.preDefinedValues[preDefinedValueName] !== undefined)
 				{
-					return;
+					continue;
 				}
 
-				var valueIsPlainObject = lodash.isPlainObject(options.value);
+				valueIsPlainObject = lodash.isPlainObject(options.value);
 
 				// using setter so make it short because calling a getter can make problems
 				if (options.mode === 'setter')
 				{
-					this[key] = options.value;
-					this.__protoPropsConstructorInformations.preDefinedValues[key] = true;
-					return;
+					this[preDefinedValueName] = options.value;
+					this.__prototypePropertiesConstructorInformations.preDefinedValues[preDefinedValueName] = true;
+					continue;
 				}
 
 				// property is undefined. set it
-				if (this[key] === undefined)
+				if (this[preDefinedValueName] === undefined)
 				{
-					this[key] = options.value;
-					this.__protoPropsConstructorInformations.preDefinedValues[key] = true;
+					this[preDefinedValueName] = options.value;
+					this.__prototypePropertiesConstructorInformations.preDefinedValues[preDefinedValueName] = true;
 				}
 
 				// property is an object an options value is also an object... merge both together
-				else if (lodash.isPlainObject(this[key]) === true && valueIsPlainObject === true)
+				else if (lodash.isPlainObject(this[preDefinedValueName]) === true && valueIsPlainObject === true)
 				{
-					this[key] = lodash.merge({}, options.value, this[key]);
-					// do not remember key in used keys, because objects will be merge from child to parent
+					this[preDefinedValueName] = lodash.merge({}, options.value, this[preDefinedValueName]);
+					// do not remember preDefinedValueName in used preDefinedValueNames, because objects will be merge from child to parent
 				}
 
 				// property is something ... create object by clone
 				else if (valueIsPlainObject === true)
 				{
-					this[key] = lodash.merge({}, options.value);
-					// do not remember key in used keys, because objects will be merge from child to parent
+					this[preDefinedValueName] = lodash.merge({}, options.value);
+					// do not remember preDefinedValueName in used preDefinedValueNames, because objects will be merge from child to parent
 				}
 
 				// simple set
 				else
 				{
-					this[key] = options.value;
-					this.__protoPropsConstructorInformations.preDefinedValues[key] = true;
+					this[preDefinedValueName] = options.value;
+					this.__prototypePropertiesConstructorInformations.preDefinedValues[preDefinedValueName] = true;
 				}
-			}, this);
-
-			// call partent constructor
-			var result = parent.apply(this, arguments);
-
-			// remove temp vars
-			if (__protoPropsConstructorInformationsCreated === true)
-			{
-				delete this.__protoPropsConstructorInformations;
 			}
 
-			// done
-			return result;
+			// call partent constructor
+			parent.apply(this, arguments);
+
+			// remove temp vars
+			if (__prototypePropertiesConstructorInformationsCreated === true)
+			{
+				delete this.__prototypePropertiesConstructorInformations;
+			}
 		};
 
 		// store preDefined Values to find
-		protoProps.constructor.preDefinedValues = preDefinedValues;
+		prototypeProperties.constructor.preDefinedValues = preDefinedValues;
 
-		return Backbone.View.extend.call(parent, protoProps, staticProps);
+		return Backbone.View.extend.call(parent, prototypeProperties, staticProperties);
 	}
 
 	return extend;

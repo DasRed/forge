@@ -42,7 +42,7 @@ define(
 
 		this.cid = lodash.uniqueId('controller');
 
-		this.initialize.apply(this, arguments);
+		this.initialize(options);
 	}
 
 	// prototyping
