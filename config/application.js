@@ -40,5 +40,10 @@ define(
 		}, config);
 	}
 
+	if (config.locale === undefined)
+	{
+		config.locale = config.language.replace('_', '-');
+	}
+
 	return config;
 });
