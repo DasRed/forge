@@ -88,17 +88,25 @@ define(
 	{
 		Backbone.Router.call(this, options);
 
-		var self = this;
-		var defaultConfigRoute = undefined;
-
 		if ((configs instanceof Array) === false)
 		{
 			throw new Error('No config was defined. Please give the router a routing config with new Router(configs, options).');
 		}
 
+		var defaultConfigRoute = undefined;
+		var configsLength = configs.length;
+		var config = undefined;
+		var i = undefined;
+
+		var routesLength = undefined;
+		var route = undefined;
+		var j = undefined;
+		var routeWithoutParameters = undefined;
+
 		// create the routes
-		lodash.each(configs, function(config)
+		for (i = 0; i < configsLength; i++)
 		{
+			config = configs[i];
 			if (config.controller === undefined)
 			{
 				throw new Error('No controller was defined for routing config.');
@@ -109,8 +117,10 @@ define(
 				throw new Error('No routes was defined for routing config.');
 			}
 
-			lodash.each(config.routes, function(route)
+			routesLength = config.routes.length;
+			for (j = 0; j < routesLength; j++)
 			{
+				route = config.routes[j];
 				// convert short
 				if (typeof route === 'string')
 				{
@@ -146,7 +156,7 @@ define(
 				// create parts from route
 				if (route.parts === undefined)
 				{
-					var routeWithoutParameters = route.route.replace(optionalParam, '');
+					routeWithoutParameters = route.route.replace(optionalParam, '');
 					routeWithoutParameters = routeWithoutParameters.replace(namedParam, function(match, optional)
 					{
 						return optional ? match : '';
@@ -165,10 +175,10 @@ define(
 				}
 
 				// define route in router
-				self.route(route.route, route.name, self.handleRouteFromConfig.bind(self, config, route));
+				this.route(route.route, route.name, this.handleRouteFromConfig.bind(this, config, route));
 				console.debug('Route "' + route.name + '" (url://' + route.route + ') created.');
-			});
-		});
+			};
+		}
 
 		// create default
 		this.route('*anything', 'default', this.handleRouteFromConfig.bind(this, defaultConfigRoute.config, defaultConfigRoute.route));
@@ -232,7 +242,7 @@ define(
 			this.controller = null;
 		}
 
-		var parameters = lodash.toArray(arguments);
+		var parameters = Array.prototype.slice.call(arguments);
 
 		// if the last value in parameters undefined or null, remove it. it is an bug from Backbone.Router
 		if (parameters.length > 0 && (parameters[parameters.length] === null || parameters[parameters.length] === undefined))
@@ -240,6 +250,44 @@ define(
 			parameters.pop();
 		}
 
+		// the controller is a string... load it with require js
+		if (typeof config.controller === 'string')
+		{
+			var self = this;
+			console.debug('Loading controller "' + config.controller + '" with requirejs for "' + route.name + '" (url://' + route.route + ').');
+			require(
+			[
+				config.controller
+			], function(
+				controller
+			)
+			{
+				config.controller = controller;
+				self.startController(config, route, parameters);
+			}, function()
+			{
+				console.error('Can not create the controller "' + config.controller + '" for "' + route.name + '" (url://' + route.route + ').');
+			});
+		}
+		// controller is not a string load lets start
+		else
+		{
+			this.startController(config, route, parameters);
+		}
+
+		return this;
+	};
+
+	/**
+	 * starts the controller
+	 *
+	 * @param {Object} config
+	 * @param {Object} route
+	 * @param {Array} parameters
+	 * @returns {Router}
+	 */
+	Router.prototype.startController = function(config, route, parameters)
+	{
 		// create the instance
 		if ((config.controller instanceof Controller) === false)
 		{

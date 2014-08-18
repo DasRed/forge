@@ -138,7 +138,7 @@ require(
 		var dateString = day + '.' + month + '.' + year + ' ' + hours + ':' + minutes + ':' + seconds + '.' + milliseconds;
 
 		// make args to array.
-		var args = lodash.toArray(arguments);
+		var args = Array.prototype.slice.call(arguments);
 		// first in args is warnlevel. must be removed
 		// second in args is wrapped function. must be removed
 		args.shift();

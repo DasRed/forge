@@ -164,7 +164,7 @@ define(
 	Controller.prototype.dispatch = function(config, route, routeParts)
 	{
 		// get all additional parameters
-		var parameters = lodash.toArray(arguments).slice(3);
+		var parameters = Array.prototype.slice.call(arguments, 3);
 
 		// convert to correct type
 		parameters = lodash.map(parameters, function(parameter)

@@ -12,7 +12,7 @@ define(
 	{
 		Function.prototype.bind = function()
 		{
-			var args = lodash.toArray(arguments);
+			var args = Array.prototype.slice.call(arguments);
 			args.unshift(this);
 
 			return lodash.bind.apply(lodash, args);
