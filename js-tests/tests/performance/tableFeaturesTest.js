@@ -17,7 +17,7 @@ require(
 {
 	var times = {};
 	var env = 'excel';
-	env = 'testing';
+//	env = 'testing';
 	var testConfigs =
 	{
 		countOfRows: env === 'excel' ? 100 : 10,

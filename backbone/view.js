@@ -39,7 +39,7 @@ define(
 			{
 				formatter = view.formatterNumber;
 			}
-			else if (model.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_NUMBER)
+			else if (model.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_DATE)
 			{
 				formatter = view.formatterDate;
 			}
