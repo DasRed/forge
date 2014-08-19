@@ -13,23 +13,6 @@ require(
 {
 	var config = configApplication.log;
 
-	/**
-	 * window console does not exists in IE versions smaller then 10
-	 *
-	 * @see http://blogs.technet.com/b/iede/archive/2011/08/23/console-logging-im-internet-explorer-8-9.aspx
-	 */
-	if (window.console === undefined)
-	{
-		window.console =
-		{
-			error: function() {},
-			warn: function() {},
-			info: function() {},
-			log: function() {},
-			debug: function() {}
-		};
-	}
-
 	// log levels
 	console.LEVEL_CRITICAL = 1;
 	console.LEVEL_ALERT = 2;
@@ -39,7 +22,7 @@ require(
 	console.LEVEL_INFO = 6;
 	console.LEVEL_DEBUG = 7;
 
-	var hasColorSupport = (navigator.appName != 'Microsoft Internet Explorer' && navigator.appName != 'Opera');
+	var hasColorSupport = (/Trident/g).test(navigator.userAgent) === false;
 	var hasWhiteSpaceSupport = (navigator.appName != 'Microsoft Internet Explorer');
 
 	var warnText = {};
@@ -247,11 +230,9 @@ require(
 
 			return proceed.apply(this, parameters);
 		}
+
 		// IE8 does not support .apply on the console functions :(
-		else
-		{
-			return proceed(parameters.join(''));
-		}
+		return proceed(parameters.join(''));
 	}
 
 	// Backup
