@@ -24,7 +24,7 @@ define(
 	// Translation in templates
 	lodash.templateSettings.imports.translate = function()
 	{
-		translation.translate.apply(translation, arguments);
+		return translation.translate.apply(translation, arguments);
 	};
 
 	lodash.templateSettings.imports.__ = lodash.templateSettings.imports.translate;

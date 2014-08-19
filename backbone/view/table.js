@@ -66,19 +66,6 @@ define(
 			enumerable: true,
 			configurable: true,
 			writable: true
-		},
-
-		/**
-		 * tag name of list
-		 *
-		 * @var {String}
-		 */
-		tagName:
-		{
-			value: 'table',
-			enumerable: true,
-			configurable: true,
-			writable: true
 		}
 	});
 
@@ -114,6 +101,34 @@ define(
 		return new ViewTableSorter(options);
 	};
 
+	/**
+	 * render function with setting the data type
+	 * @returns {ViewTable}
+	 */
+	ViewTable.prototype.render = function()
+	{
+		ViewList.prototype.render.apply(this, arguments);
+
+		// remap to unique view selector
+		if (this.collection !== null && this.collection !== undefined)
+		{
+			var elementDataModels = this.$el.find(this.selectorDataModel);
+			var elementDataModelsLength = elementDataModels.length;
+			var elementDataModel = undefined;
+			var elementDataModelPropertyName = undefined;
+			var modelAttributeTypes = this.collection.model.getPrototypeValue('attributeTypes');
+			var i = undefined;
+			for (i = 0; i < elementDataModelsLength; i++)
+			{
+				elementDataModel = jQuery(elementDataModels[i]);
+				elementDataModelPropertyName = elementDataModel.attr('data-model');
+
+				elementDataModel.attr('data-type', modelAttributeTypes[elementDataModelPropertyName]);
+			}
+		}
+
+		return this;
+	};
 
 	/**
 	 * renders a sorter view for list with given options

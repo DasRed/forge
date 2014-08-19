@@ -32,8 +32,14 @@ define(
 	 *				// can be the controller constructor or a instance of a controller
 	 *				controller: ControllerTest,
 	 *
+	 *				// rights to test for all routes. if it tests, the event "testRight" will be triggered
+	 *				// if the event THROWs an Error, routing will be aboard
+	 *				// this rights will be merged with every route
+	 *				rights: [],
+	 *
 	 *				// defines all route for this controller. A route entry can be a string or
 	 *				// an object with detailed informations
+	 *				// every entry can also be an string. they will be converted to object
 	 *				routes:
 	 *				[
 	 *					{
@@ -139,6 +145,12 @@ define(
 					parts: undefined
 				});
 
+				if (config.rights !== undefined)
+				{
+					config.rights = [];
+					route.rights = (route.rights || []).concat(config.rights);
+				}
+
 				// define default route
 				if (route.isDefault === true)
 				{
@@ -235,13 +247,6 @@ define(
 			}
 		}
 
-		// remove previous controller
-		if (this.controller !== null && this.controller !== config.controller)
-		{
-			this.controller.remove();
-			this.controller = null;
-		}
-
 		var parameters = Array.prototype.slice.call(arguments);
 
 		// if the last value in parameters undefined or null, remove it. it is an bug from Backbone.Router
@@ -288,7 +293,14 @@ define(
 	 */
 	Router.prototype.startController = function(config, route, parameters)
 	{
-		// create the instance
+		// remove previous controller
+		if (this.controller !== null && this.controller !== config.controller)
+		{
+			this.controller.removeLayout();
+			this.controller = null;
+		}
+
+		// create the instance, if the instance not created
 		if ((config.controller instanceof Controller) === false)
 		{
 			config.controller = new config.controller();

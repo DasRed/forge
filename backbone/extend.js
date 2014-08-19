@@ -209,6 +209,7 @@ define(
 		// store preDefined Values to find
 		prototypeProperties.constructor.preDefinedValues = preDefinedValues;
 
+		// make the Backbone magic
 		return Backbone.View.extend.call(parent, prototypeProperties, staticProperties);
 	}
 

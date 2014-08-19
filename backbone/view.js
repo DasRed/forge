@@ -43,6 +43,14 @@ define(
 			{
 				formatter = view.formatterDate;
 			}
+			else if (model.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_DATETIME)
+			{
+				formatter = view.formatterDateTime;
+			}
+			else if (model.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_TIME)
+			{
+				formatter = view.formatterTime;
+			}
 		}
 
 		// formatter getter not a function
@@ -336,9 +344,9 @@ define(
 		view.modelBindings[propertyName] = bindingOptions;
 
 		// bind property to observer
-		model.observer.on('set:' + propertyName, function(modelAttributes, propertyName, newValue, oldValue)
+		model.observer.on('set:' + propertyName, function(modelAttributes, propertyNameFromCallback, newValue, oldValue)
 		{
-			onModelPropertyChangeHandler(view, modelAttributes, propertyName, newValue, oldValue);
+			onModelPropertyChangeHandler(view, modelAttributes, propertyNameFromCallback, newValue, oldValue);
 		}, view);
 
 		return true;
@@ -655,6 +663,8 @@ define(
 	 */
 	function View(options)
 	{
+		this.selectorDataModel = '[data-model-view-' + lodash.uniqueId() + ']';
+
 		options = options || {};
 
 		// defaults modelBindings object
@@ -724,15 +734,8 @@ define(
 			this.container = jQuery(this.container);
 		}
 
-		// preinit is done!
-		this._preInitialized = true;
-
-		// read set model to view.. in start mode, backbone made strange things with prototype :( and so we have the initial event binding and fetching here
-		if (this.model instanceof Model)
-		{
-			var model = this.model;
-			this.model = model;
-		}
+		// do pre init
+		this.preInitialize(options);
 
 		// parent
 		Backbone.View.apply(this, arguments);
@@ -748,25 +751,25 @@ define(
 	View.prototype = Object.create(Backbone.View.prototype,
 	{
 		/**
-		 * little helper to indicate if all pre-initialized
-		 *
-		 * @var {Boolean}
-		 */
-		_preInitialized:
-		{
-			value: false,
-			enumerable: false,
-			configurable: false,
-			writable: true
-		},
-
-		/**
 		 * A cached jQuery object for the view's element. A handy reference instead of
 		 * re-wrapping the DOM element all the time.
 		 *
 		 * @var {jQuery}
 		 */
 		$el:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * a cached jQuery object for the parent of this.$el
+		 *
+		 * @var {jQuery}
+		 */
+		$elParent:
 		{
 			value: null,
 			enumerable: true,
@@ -961,7 +964,7 @@ define(
 			},
 			set: function(model)
 			{
-				if (this._preInitialized === false)
+				if (this.preInitialized === false)
 				{
 					this._model = model;
 					return;
@@ -1033,18 +1036,29 @@ define(
 		},
 
 		/**
+		 * little helper to indicate if all pre-initialized
+		 *
+		 * @var {Boolean}
+		 */
+		preInitialized:
+		{
+			value: false,
+			enumerable: false,
+			configurable: false,
+			writable: true
+		},
+
+		/**
 		 * returns the selector for data model elements for this view
 		 *
 		 * @returns {String}
 		 */
 		selectorDataModel:
 		{
+			value: null,
 			enumerable: true,
 			configurable: true,
-			get: function()
-			{
-				return '[data-model-view-' + this.cid + ']';
-			}
+			writable: true
 		},
 
 		/**
@@ -1132,6 +1146,44 @@ define(
 			writable: true
 		}
 	});
+
+	/**
+	 * attach the view DOM Nodes
+	 *
+	 * @returns {View}
+	 */
+	View.prototype.attach = function()
+	{
+		if (this.$el.parent().length !== 0)
+		{
+			throw new Error('Can not attach the view to dom, because the view is located in the dom.');
+		}
+		if (this.$elParent.length === 0)
+		{
+			throw new Error('Can not attach the view to dom, because there is no parent element defined.');
+		}
+
+		this.$el.appendTo(this.$elParent);
+
+		return this;
+	};
+
+	/**
+	 * detach the view DOM Nodes but do not destroy it for later use
+	 *
+	 * @returns {View}
+	 */
+	View.prototype.detach = function()
+	{
+		if (this.$el.parent().length === 0)
+		{
+			throw new Error('Can not detach the view to dom, because the view is not located in the dom.');
+		}
+
+		this.$el.detach();
+
+		return this;
+	};
 
 	/**
 	 * formatter for date
@@ -1287,6 +1339,31 @@ define(
 	};
 
 	/**
+	 * initialize before calling backbone constructor
+	 *
+	 * @param options
+	 * @returns {View}
+	 */
+	View.prototype.preInitialize = function(options)
+	{
+		if (this.preInitialized === true)
+		{
+			return this;
+		}
+
+		this.preInitialized = true;
+
+		// read set model to view.. in start mode, backbone made strange things with prototype :( and so we have the initial event binding and fetching here
+		if (this.model instanceof Object)
+		{
+			var modelToInsert = this.model;
+			this.model = modelToInsert;
+		}
+
+		return this;
+	};
+
+	/**
 	 * close this view
 	 *
 	 * @returns {View}
@@ -1335,6 +1412,8 @@ define(
 	 */
 	View.prototype.render = function(data)
 	{
+		Backbone.View.prototype.render.call(this);
+
 		if (data === undefined)
 		{
 			data = {};
@@ -1345,6 +1424,8 @@ define(
 		{
 			this.container.empty().append(this.$el);
 		}
+
+		this.$elParent = this.$el.parent();
 
 		// add class name
 		if (this.className !== null)
@@ -1401,11 +1482,19 @@ define(
 		var elementDataModelsLength = elementDataModels.length;
 		var elementDataModelSelector = this.selectorDataModel.slice(1, -1);
 		var elementDataModel = undefined;
+		var elementDataModelPropertyName = undefined;
+		var modelAttributeTypes = this.model !== undefined && this.model !== null ? this.model.attributeTypes : undefined;
 		var i = undefined;
 		for (i = 0; i < elementDataModelsLength; i++)
 		{
 			elementDataModel = jQuery(elementDataModels[i]);
 			elementDataModel.attr(elementDataModelSelector, elementDataModel.data('model'));
+
+			if (modelAttributeTypes !== undefined)
+			{
+				elementDataModelPropertyName = elementDataModel.attr('data-model');
+				elementDataModel.attr('data-type', modelAttributeTypes[elementDataModelPropertyName]);
+			}
 		}
 
 		// create observing of inputs for observed modelBindings

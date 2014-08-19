@@ -5,6 +5,7 @@ define(
 	'require',
 	'lodash',
 	'jQuery',
+	'forge/cache/backbone/collection/instance',
 	'forge/queue/timeout',
 	'forge/backbone/compatibility',
 	'forge/backbone/collection',
@@ -17,6 +18,7 @@ define(
 	require,
 	lodash,
 	jQuery,
+	cacheBackboneCollection,
 	QueueTimeout,
 	compatibility,
 	Collection,
@@ -38,39 +40,8 @@ define(
 	 */
 	function ViewList(options)
 	{
-		options = options || {};
-
-		// take collectionParameters from options
-		if (options.collectionParameters !== undefined)
-		{
-			this.collectionParameters = lodash.extend({}, this.collectionParameters || {}, options.collectionParameters || {});
-			delete options.collectionParameters;
-
-			if (this.collection instanceof Collection)
-			{
-				lodash.each(this.collectionParameters, function(value, key)
-				{
-					this[key] = value;
-				}, this.collection);
-			}
-		}
-
-		// take collection from options
-		if (options.collection !== undefined)
-		{
-			this.collection = options.collection;
-			delete options.collection;
-		}
-
-		// take viewEntry from options
-		if (options.viewEntry !== undefined)
-		{
-			this.viewEntry = options.viewEntry;
-			delete options.viewEntry;
-		}
-
-		// init
 		this.viewEntries = {};
+
 		View.apply(this, arguments);
 
 		// validate
@@ -116,15 +87,15 @@ define(
 			},
 			set: function(collection)
 			{
+				if (this.preInitialized === false)
+				{
+					this._collection = collection;
+					return;
+				}
+
 				if (collection === null || collection === undefined)
 				{
 					throw new Error('Collection can not be undefined for a view list');
-				}
-
-				// nothing to do
-				if (this._collection === collection)
-				{
-					return;
 				}
 
 				// remove old events
@@ -136,7 +107,14 @@ define(
 				// get the instance
 				if ((collection instanceof Collection) === false)
 				{
-					collection = new collection(undefined, this.collectionParameters);
+					if (this.collectionCachingEnabled === true)
+					{
+						collection = cacheBackboneCollection.getInstance(collection, this.collectionParameters, undefined);
+					}
+					else
+					{
+						collection = new collection(undefined, this.collectionParameters);
+					}
 				}
 
 				// add events
@@ -155,6 +133,18 @@ define(
 
 				this._collection = collection;
 			}
+		},
+
+		/**
+		 * cache collections and try to find them in cache. if not they will be stored in cache
+		 * @var {Boolean}
+		 */
+		collectionCachingEnabled:
+		{
+			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
 		},
 
 		/**
@@ -190,7 +180,7 @@ define(
 		 */
 		collectionParameters:
 		{
-			value: undefined,
+			value: null,
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -204,7 +194,7 @@ define(
 		 */
 		filterContainer:
 		{
-			value: '.filterContainer',
+			value: '> .bar > .filterContainer',
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -344,19 +334,6 @@ define(
 		sorterOptions:
 		{
 			value: null,
-			enumerable: true,
-			configurable: true,
-			writable: true
-		},
-
-		/**
-		 * tag name of list
-		 *
-		 * @var {String}
-		 */
-		tagName:
-		{
-			value: 'ul',
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -796,6 +773,26 @@ define(
 				this.renderQueue.add(id, this.appendEntryToIndex.bind(this, model, index));
 			}
 		}, this);
+
+		return this;
+	};
+
+	/**
+	 * initialize before calling backbone constructor
+	 *
+	 * @param options
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.preInitialize = function(options)
+	{
+		View.prototype.preInitialize.call(this, options);
+
+		// read set model to view.. in start mode, backbone made strange things with prototype :( and so we have the initial event binding and fetching here
+		if (this.collection instanceof Object)
+		{
+			var collectionToInsert = this.collection;
+			this.collection = collectionToInsert;
+		}
 
 		return this;
 	};

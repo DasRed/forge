@@ -44,6 +44,19 @@ define(
 			throw new Error('For a table sorter must be the view property a instance of ViewTable!');
 		}
 
+		// copy options from view
+		this.selectorDataModel = this.view.selectorDataModel;
+		this.collection = this.view.collection;
+		// find element
+		if (this.view.$el.is(this.selector) === true)
+		{
+			this.$element = this.view.$el.find(this.selector);
+		}
+		else
+		{
+			this.$element = this.view.$el.find(this.selector);
+		}
+
 		// validate
 		if ((this.collection instanceof Collection) === false)
 		{
@@ -54,19 +67,38 @@ define(
 		this.$element.addClass('sortable');
 
 		// bind sort
-		lodash.each(this.$element.find('[data-model-sort]'), function(element)
+		var elementToSort = undefined;
+		var elementsSort = this.$element.find('[data-model-sort]');
+		var elementsSortLength = elementsSort.length;
+		var propertyNameToSort = undefined;
+		var i = undefined;
+
+		// sorting is defined by template with data-model-sort attribute
+		if (elementsSortLength !== 0)
 		{
-			element = jQuery(element);
-			var propertyName = element.data('model-sort');
+			for (i = 0; i < elementsSortLength; i++)
+			{
+				elementToSort = jQuery(elementsSort[i]);
+				elementToSort.on('click', this.onClick.bind(this, elementToSort.data('model-sort')));
+			}
+		}
 
-			element.attr(this.selectorDataModel.slice(1, -1), propertyName);
-
-			element.on('click', this.onClick.bind(this, propertyName));
-		}, this);
+		// sorting is not defined by template with data-model-sort attribute. sort all columns with this.selectorDataModel
+		else
+		{
+			elementsSort = this.$element.find(this.selectorDataModel);
+			elementsSortLength = elementsSort.length;
+			for (i = 0; i < elementsSortLength; i++)
+			{
+				elementToSort = jQuery(elementsSort[i]);
+				propertyNameToSort = elementToSort.data('model');
+				elementToSort.attr('data-model-sort', propertyNameToSort).on('click', this.onClick.bind(this, propertyNameToSort));
+			}
+		}
 
 		// set sort by html
-		var elementToSort = this.$element.find('[data-model-sorted]');
-		var propertyNameToSort = elementToSort.data('model-sort');
+		elementToSort = this.$element.find('[data-model-sorted]');
+		propertyNameToSort = elementToSort.data('model-sort');
 		if (propertyNameToSort !== undefined)
 		{
 			this.collection.comparator = propertyNameToSort;
@@ -79,6 +111,7 @@ define(
 		// events
 		this.collection.on('add', this.showSortedProperty.bind(this, true), this);
 		this.collection.on('reset', this.showSortedProperty.bind(this, true), this);
+		this.collection.on('sort', this.showSortedProperty.bind(this, true), this);
 		this.view.on('renderEntry', this.updateSortedColumn, this);
 	}
 
@@ -105,12 +138,10 @@ define(
 		 */
 		collection:
 		{
+			value: null,
 			enumerable: true,
 			configurable: true,
-			get: function()
-			{
-				return this.view.collection;
-			}
+			writable: true
 		},
 
 		/**
@@ -118,24 +149,10 @@ define(
 		 */
 		$element:
 		{
+			value: null,
 			enumerable: true,
 			configurable: true,
-			get: function()
-			{
-				if (this._element === undefined)
-				{
-					if (this.view.$el.is(this.selector) === true)
-					{
-						this._element = this.view.$el.find(this.selector);
-					}
-					else
-					{
-						this._element = this.view.$el.find(this.selector);
-					}
-				}
-
-				return this._element;
-			}
+			writable: true
 		},
 
 		/**
@@ -175,21 +192,6 @@ define(
 			enumerable: true,
 			configurable: true,
 			writable: true
-		},
-
-		/**
-		 * returns the selector for data model elements for this view
-		 *
-		 * @returns {String}
-		 */
-		selectorDataModel:
-		{
-			enumerable: true,
-			configurable: true,
-			get: function()
-			{
-				return '[data-model-view-' + this.cid + ']';
-			}
 		},
 
 		/**
@@ -335,7 +337,7 @@ define(
 		}
 
 		// footer
-		var selectorPrefix = this.selectorFooter + ' tr ';
+		selectorPrefix = this.selectorFooter + ' tr ';
 
 		// only on one entry
 		if (viewListEntry !== undefined)

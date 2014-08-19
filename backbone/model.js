@@ -66,6 +66,8 @@ define(
 	Model.ATTRIBUTE_TYPE_STRING = 'string';
 	Model.ATTRIBUTE_TYPE_BOOLEAN = 'boolean';
 	Model.ATTRIBUTE_TYPE_DATE = 'date';
+	Model.ATTRIBUTE_TYPE_DATETIME = 'datetime';
+	Model.ATTRIBUTE_TYPE_TIME = 'time';
 	Model.ATTRIBUTE_TYPE_COLLECTION = 'collection';
 	Model.ATTRIBUTE_TYPE_MODEL = 'model';
 
@@ -380,7 +382,7 @@ define(
 			}
 
 			// convert to date
-			else if (attributeType === Model.ATTRIBUTE_TYPE_DATE)
+			else if (attributeType === Model.ATTRIBUTE_TYPE_DATE || attributeType === Model.ATTRIBUTE_TYPE_DATETIME || attributeType === Model.ATTRIBUTE_TYPE_TIME)
 			{
 				if ((value instanceof Date) === false)
 				{

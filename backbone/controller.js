@@ -37,6 +37,8 @@ define(
 	 */
 	function Controller(options)
 	{
+		this.layoutCache = {};
+
 		options = options || {};
 		lodash.extend(this, options);
 
@@ -48,19 +50,6 @@ define(
 	// prototyping
 	Controller.prototype = Object.create(Backbone.Events,
 	{
-		/**
-		 * removes the layout before the action is called
-		 *
-		 * @var {Boolean}
-		 */
-		autoLayoutRemove:
-		{
-			value: true,
-			enumerable: true,
-			configurable: true,
-			writable: true
-		},
-
 		/**
 		 * @var {String}
 		 */
@@ -97,23 +86,9 @@ define(
 		},
 
 		/**
-		 * default element for the default view
-		 * @var {String}
+		 * @var {Object}
 		 */
-		layoutContainer:
-		{
-			value: '#content',
-			enumerable: true,
-			configurable: true,
-			writable: true
-		},
-
-		/**
-		 * default element for the default view
-		 *
-		 * @var {String}
-		 */
-		layoutElement:
+		layoutCache:
 		{
 			value: null,
 			enumerable: true,
@@ -122,13 +97,13 @@ define(
 		},
 
 		/**
-		 * instance of the default view for this controller.
+		 * enableds layout caching
 		 *
-		 * @var {View}
+		 * @var {Boolean}
 		 */
-		layoutInstance:
+		layoutCachingEnabled:
 		{
-			value: null,
+			value: true,
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -229,46 +204,54 @@ define(
 			throw new Error('Action method "' + actionMethod + '" can not be called on controller for route "' + route.name + '" (url://' + route.route + ').');
 		}
 
-		console.debug('dispatching the route "' + route.name + '" (url://' + route.route + ') to method "' + actionMethod + '".');
-
 		// auto layout remove?
-		if (this.autoLayoutRemove === true)
+		this.removeLayout();
+
+		// create a hash for actionMethod and parameters
+		var hash = actionMethod + '/' + parameters.join('/');
+
+		// take layout from cache
+		var layout = undefined;
+
+		// caching enabled?
+		if (this.layoutCachingEnabled === true)
 		{
-			this.removeLayout();
+			this.layoutCache[hash];
 		}
 
-		// call action
-		this[actionMethod].apply(this, parameters);
+		// layout from cache?
+		if (layout !== undefined)
+		{
+			console.debug('dispatching the route "' + route.name + '" (url://' + route.route + ') from cache for method "' + actionMethod + '(' + parameters.join(', ') + ')".');
+			layout.attach();
+		}
+		// create the layout and put it into the cache
+		else
+		{
+			console.debug('dispatching the route "' + route.name + '" (url://' + route.route + ') to method "' + actionMethod + '(' + parameters.join(', ') + ')".');
+
+			// call action and retrieve layout instance
+			layout = this[actionMethod].apply(this, parameters);
+			if ((layout instanceof View) === false)
+			{
+				throw new Error('Action method "' + actionMethod + '" must return a instance of View!');
+			}
+
+			// remove from cache if view completely removed
+			layout.on('remove', function()
+			{
+				console.debug('removing layout from cache for the route "' + route.name + '" (url://' + route.route + ') to method "' + actionMethod + '".');
+				delete this.layoutCache[hash];
+			}, this);
+
+			// store in cache
+			this.layoutCache[hash] = layout;
+		}
+
+		// store current layout
+		this.layout = layout;
 
 		return this;
-	};
-
-	/**
-	 * returns the layout
-	 *
-	 * @param {Object} additionalOptions
-	 * @returns {View}
-	 */
-	Controller.prototype.getLayout = function(additionalOptions)
-	{
-		if (this.layoutInstance === null)
-		{
-			// create the view
-			var layout = this.layout;
-
-			var options = lodash.extend(
-			{
-				autoRender: false,
-				container: this.layoutContainer,
-				el: this.layoutElement
-			}, additionalOptions || {});
-
-			this.layoutInstance = new layout(options);
-
-			this.layoutInstance.render();
-		}
-
-		return this.layoutInstance;
 	};
 
 	/**
@@ -276,13 +259,7 @@ define(
 	 */
 	Controller.prototype.indexAction = function()
 	{
-		if (this.layout === null)
-		{
-			throw new Error('The index action of a controller must be overwritten or define a default layout!');
-		}
-
-		// create the view
-		this.getLayout();
+		throw new Error('The index action of a controller must be overwritten!');
 
 		return this;
 	};
@@ -305,6 +282,13 @@ define(
 	 */
 	Controller.prototype.remove = function()
 	{
+		var hash = undefined;
+		for (hash in this.layoutCache)
+		{
+			this.layoutCache[hash].off(undefined, undefined, this).remove();
+			delete this.layoutCache[hash];
+		}
+
 		this.removeLayout().stopListening();
 
 		return this;
@@ -317,24 +301,11 @@ define(
 	 */
 	Controller.prototype.removeLayout = function()
 	{
-		if (this.layoutInstance instanceof View)
+		if (this.layout instanceof View)
 		{
-			this.layoutInstance.remove();
-			this.layoutInstance = null;
+			this.layout.detach();
+			this.layout = null;
 		}
-
-		return this;
-	};
-
-	/**
-	 * setting layout
-	 *
-	 * @param {View} layout
-	 * @returns {Controller}
-	 */
-	Controller.prototype.setLayout = function(layout)
-	{
-		this.removeLayout().layoutInstance = layout;
 
 		return this;
 	};

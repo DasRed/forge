@@ -302,6 +302,29 @@ define(
 			{
 				result = collator.compare(valueA, valueB);
 			}
+			// compare time
+			else if (modelA.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_TIME && modelB.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_TIME)
+			{
+				var valueATime = valueA.getHours() * 60 * 60 * 1000;
+				valueATime += valueA.getMinutes() *  60 * 1000;
+				valueATime += valueA.getSeconds() *  1000;
+				valueATime += valueA.getMilliseconds();
+
+				var valueBTime = valueB.getHours() * 60 * 60 * 1000;
+				valueBTime += valueB.getMinutes() *  60 * 1000;
+				valueBTime += valueB.getSeconds() *  1000;
+				valueBTime += valueB.getMilliseconds();
+
+				// use direct value compare
+				if (valueATime < valueBTime)
+				{
+					result = -1;
+				}
+				else if (valueATime > valueBTime)
+				{
+					result = 1;
+				}
+			}
 			// use direct value compare
 			else if (valueA < valueB)
 			{
@@ -322,7 +345,7 @@ define(
 		});
 
 		options = options || {};
-		if (options.silent === false)
+		if (options.silent === undefined || options.silent === false)
 		{
 			this.trigger('sort', this, options);
 		}
