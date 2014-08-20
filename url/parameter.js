@@ -9,6 +9,7 @@ define(
 )
 {
 	var parametersRegExp = /\((.*?)\)|(\(\?)?:\w+/g;
+	var parametersOptionalReplaceRegExp = /^[^A-Za-z0-9\-\_]+|[^A-Za-z0-9\-\_]+$/g;
 
 	/**
 	 * @param {String} url
@@ -40,19 +41,22 @@ define(
 						var parameterOptions =
 						{
 							name: null,
-							optional: false
+							optional: false,
+							regExp: null
 						};
 
 						// optional
 						if (parameter.substr(0, 1) == '(')
 						{
 							parameterOptions.optional = true;
-							parameterOptions.name = parameter.substr(3, parameter.length - 4);
+							parameterOptions.name = parameter.replace(parametersOptionalReplaceRegExp, '');
+							parameterOptions.regExp = new RegExp('\\((.*?)\\:' + parameterOptions.name + '(.*?)\\)', 'g');
 						}
 						// none optional
 						else
 						{
 							parameterOptions.name = parameter.substr(1);
+							parameterOptions.regExp = new RegExp('\\:' + parameterOptions.name, 'g');
 						}
 						return parameterOptions;
 					});
@@ -142,12 +146,12 @@ define(
 				if (value === undefined || value === null)
 				{
 					// removing
-					return url.replace('(/:' + parameterOptions.name + ')', '');
+					return url.replace(parameterOptions.regExp, '');
 				}
 
 				// with value
 				// replace parameter with value
-				return url.replace('(/:' + parameterOptions.name + ')', '/' + valueEscaped);
+				return url.replace(parameterOptions.regExp, '$1' + valueEscaped + '$2');
 			}
 
 			// required paramter but not setted
@@ -157,7 +161,7 @@ define(
 			}
 
 			// replacing value
-			return url.replace(':' + parameterOptions.name, valueEscaped);
+			return url.replace(parameterOptions.regExp, valueEscaped);
 		}, this.url || '', this);
 	};
 
