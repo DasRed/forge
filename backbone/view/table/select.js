@@ -30,5 +30,18 @@ define(
 	// mixin of ViewTable
 	lodash.extend(ViewTableSelect.prototype, ViewTable.prototype);
 
+	/**
+	 * render function with setting the data type
+	 * @returns {ViewTableSelect}
+	 */
+	ViewTableSelect.prototype.render = function()
+	{
+		ViewListSelect.prototype.render.apply(this, arguments);
+
+		this.renderTable();
+
+		return this;
+	};
+
 	return compatibility(ViewTableSelect);
 });

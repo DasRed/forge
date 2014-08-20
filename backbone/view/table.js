@@ -109,6 +109,18 @@ define(
 	{
 		ViewList.prototype.render.apply(this, arguments);
 
+		this.renderTable();
+
+		return this;
+	};
+
+	/**
+	 * update the elements with data-type by model attribute type
+	 *
+	 * @returns {ViewTable}
+	 */
+	ViewTable.prototype.renderTable = function()
+	{
 		// remap to unique view selector
 		if (this.collection !== null && this.collection !== undefined)
 		{

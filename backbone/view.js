@@ -1478,6 +1478,31 @@ define(
 		}
 
 		// remap to unique view selector
+		this.renderRemapViewSelector();
+
+		// create observing of inputs for observed modelBindings
+		if (this.autoModelUpdate === true)
+		{
+			var self = this;
+			this.$el.find(this.selectorDataModel + ':input').on('change.model', function(event)
+			{
+				onHTMLElementPropertyChangeHandler(event, self);
+			});
+		}
+
+		// fill in the model data into template
+		updateModelPropertiesToHtml(this);
+
+		return this;
+	};
+
+	/**
+	 * remap to unique view selector
+	 *
+	 * @returns {View}
+	 */
+	View.prototype.renderRemapViewSelector = function()
+	{
 		var elementDataModels = this.$el.find('[data-model]');
 		var elementDataModelsLength = elementDataModels.length;
 		var elementDataModelSelector = this.selectorDataModel.slice(1, -1);
@@ -1496,19 +1521,6 @@ define(
 				elementDataModel.attr('data-type', modelAttributeTypes[elementDataModelPropertyName]);
 			}
 		}
-
-		// create observing of inputs for observed modelBindings
-		if (this.autoModelUpdate === true)
-		{
-			var self = this;
-			this.$el.find(this.selectorDataModel + ':input').on('change.model', function(event)
-			{
-				onHTMLElementPropertyChangeHandler(event, self);
-			});
-		}
-
-		// fill in the model data into template
-		updateModelPropertiesToHtml(this);
 
 		return this;
 	};

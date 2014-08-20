@@ -63,5 +63,33 @@ define(
 		return this;
 	};
 
+	/**
+	 * remap to unique view selector
+	 *
+	 * @returns {ViewListEntry}
+	 */
+	ViewListEntry.prototype.renderRemapViewSelector = function()
+	{
+		View.prototype.renderRemapViewSelector.call(this);
+
+		var elementDataModels = this.$el.find(this.selectorDataModel + '[data-type]:not(td)');
+		var elementDataModelsLength = elementDataModels.length;
+		var elementDataModel = undefined;
+		var elementDataModelDataType = undefined;
+		var i = undefined;
+		for (i = 0; i < elementDataModelsLength; i++)
+		{
+			elementDataModel = jQuery(elementDataModels[i]);
+			elementDataModelDataType = elementDataModel.attr('data-type');
+
+			if (elementDataModelDataType !== undefined)
+			{
+				elementDataModel.closest('td').attr('data-type', elementDataModelDataType);
+			}
+		}
+
+		return this;
+	};
+
 	return compatibility(ViewListEntry);
 });
