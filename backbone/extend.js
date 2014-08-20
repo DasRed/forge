@@ -50,7 +50,6 @@ define(
 		var prototypePropertyName = undefined;
 		var prototypePropertyValue = undefined;
 		var descriptor = undefined;
-		var doNormalPredefine = undefined;
 		var parentPredefinedValueByKey = undefined;
 		var cacheObj = undefined;
 
@@ -96,34 +95,28 @@ define(
 
 			prototypePropertyValue = prototypeProperties[prototypePropertyName];
 
-			// set a predefined property
-			doNormalPredefine = true;
+			// the parent property has not a setter
 			if ((descriptor.set instanceof Function) === false)
 			{
 				parentPredefinedValueByKey = this.getPrototypeValue(prototypePropertyName);
+				// parent value and child value are objects.
 				if (parentPredefinedValueByKey !== undefined && lodash.isPlainObject(parentPredefinedValueByKey) === true && lodash.isPlainObject(prototypePropertyValue) === true)
 				{
-					doNormalPredefine = false;
-					lodash.extend(parentPredefinedValueByKey, prototypePropertyValue);
-					preDefinedValues[prototypePropertyName] =
-					{
-						mode: 'simple',
-						value: parentPredefinedValueByKey
-					};
+					prototypeProperties[prototypePropertyName] = lodash.extend({}, parentPredefinedValueByKey, prototypePropertyValue);
 				}
 			}
-
-			// overwrite
-			if (doNormalPredefine === true)
+			// the parent property has a setter
+			else
 			{
 				preDefinedValues[prototypePropertyName] =
 				{
-					mode: (descriptor.set instanceof Function ? 'setter' : 'simple'),
+					mode: 'setter',
 					value: prototypePropertyValue
 				};
+				// with a setter the property will be removed and will be setted if the obj will be instanciated
+				delete prototypeProperties[prototypePropertyName];
 			}
-
-			delete prototypeProperties[prototypePropertyName];
+			// anything else is valid
 		}
 
 		/**
@@ -146,7 +139,6 @@ define(
 			// copy options
 			var preDefinedValueName = undefined;
 			var options = undefined;
-			var valueIsPlainObject = undefined;
 			for (preDefinedValueName in preDefinedValues)
 			{
 				options = preDefinedValues[preDefinedValueName];
@@ -157,46 +149,15 @@ define(
 					continue;
 				}
 
-				valueIsPlainObject = lodash.isPlainObject(options.value);
-
 				// using setter so make it short because calling a getter can make problems
 				if (options.mode === 'setter')
-				{
-					this[preDefinedValueName] = options.value;
-					this.__prototypePropertiesConstructorInformations.preDefinedValues[preDefinedValueName] = true;
-					continue;
-				}
-
-				// property is undefined. set it
-				if (this[preDefinedValueName] === undefined)
-				{
-					this[preDefinedValueName] = options.value;
-					this.__prototypePropertiesConstructorInformations.preDefinedValues[preDefinedValueName] = true;
-				}
-
-				// property is an object an options value is also an object... merge both together
-				else if (lodash.isPlainObject(this[preDefinedValueName]) === true && valueIsPlainObject === true)
-				{
-					this[preDefinedValueName] = lodash.merge({}, options.value, this[preDefinedValueName]);
-					// do not remember preDefinedValueName in used preDefinedValueNames, because objects will be merge from child to parent
-				}
-
-				// property is something ... create object by clone
-				else if (valueIsPlainObject === true)
-				{
-					this[preDefinedValueName] = lodash.merge({}, options.value);
-					// do not remember preDefinedValueName in used preDefinedValueNames, because objects will be merge from child to parent
-				}
-
-				// simple set
-				else
 				{
 					this[preDefinedValueName] = options.value;
 					this.__prototypePropertiesConstructorInformations.preDefinedValues[preDefinedValueName] = true;
 				}
 			}
 
-			// call partent constructor
+			// call parent constructor
 			parent.apply(this, arguments);
 
 			// remove temp vars

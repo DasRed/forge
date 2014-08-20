@@ -24,6 +24,10 @@ define(
 		 */
 		ObjectConstructor.getPrototypeValue = function(propertyName)
 		{
+			if (this.prototype[propertyName] !== undefined && this.prototype[propertyName] !== null)
+			{
+				return this.prototype[propertyName];
+			}
 			if (ObjectConstructor.prototype[propertyName] !== undefined && ObjectConstructor.prototype[propertyName] !== null)
 			{
 				return ObjectConstructor.prototype[propertyName];
