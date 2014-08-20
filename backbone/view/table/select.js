@@ -38,7 +38,7 @@ define(
 	{
 		ViewListSelect.prototype.render.apply(this, arguments);
 
-		this.renderTable();
+		this.updateDataAttributes();
 
 		return this;
 	};

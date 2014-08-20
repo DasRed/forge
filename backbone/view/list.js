@@ -235,11 +235,17 @@ define(
 		 */
 		renderQueue:
 		{
+			enumerable: true,
+			configurable: true,
 			get: function()
 			{
 				if (this._renderQueue === undefined)
 				{
-					this._renderQueue = new QueueTimeout();
+					this._renderQueue = new QueueTimeout(
+					{
+						delay: 10,
+						timeout: 750
+					});
 				}
 
 				return this._renderQueue;
@@ -921,6 +927,8 @@ define(
 	{
 		// render each entry
 		this.collection.each(this.renderEntry, this);
+
+		return this;
 	};
 
 	/**

@@ -109,35 +109,7 @@ define(
 	{
 		ViewList.prototype.render.apply(this, arguments);
 
-		this.renderTable();
-
-		return this;
-	};
-
-	/**
-	 * update the elements with data-type by model attribute type
-	 *
-	 * @returns {ViewTable}
-	 */
-	ViewTable.prototype.renderTable = function()
-	{
-		// remap to unique view selector
-		if (this.collection !== null && this.collection !== undefined)
-		{
-			var elementDataModels = this.$el.find(this.selectorDataModel);
-			var elementDataModelsLength = elementDataModels.length;
-			var elementDataModel = undefined;
-			var elementDataModelPropertyName = undefined;
-			var modelAttributeTypes = this.collection.model.getPrototypeValue('attributeTypes');
-			var i = undefined;
-			for (i = 0; i < elementDataModelsLength; i++)
-			{
-				elementDataModel = jQuery(elementDataModels[i]);
-				elementDataModelPropertyName = elementDataModel.attr('data-model');
-
-				elementDataModel.attr('data-type', modelAttributeTypes[elementDataModelPropertyName]);
-			}
-		}
+		this.updateDataAttributes();
 
 		return this;
 	};
@@ -164,6 +136,34 @@ define(
 
 		// create the view
 		this.viewSorter = this.createViewSorter(options);
+
+		return this;
+	};
+
+	/**
+	 * update the elements with data-type by model attribute type
+	 *
+	 * @returns {ViewTable}
+	 */
+	ViewTable.prototype.updateDataAttributes = function()
+	{
+		// remap to unique view selector
+		if (this.collection !== null && this.collection !== undefined)
+		{
+			var elementDataModels = this.$el.find(this.selectorDataModel);
+			var elementDataModelsLength = elementDataModels.length;
+			var elementDataModel = undefined;
+			var elementDataModelPropertyName = undefined;
+			var modelAttributeTypes = this.collection.model.getPrototypeValue('attributeTypes');
+			var i = undefined;
+			for (i = 0; i < elementDataModelsLength; i++)
+			{
+				elementDataModel = jQuery(elementDataModels[i]);
+				elementDataModelPropertyName = elementDataModel.attr('data-model');
+
+				elementDataModel.attr('data-type', modelAttributeTypes[elementDataModelPropertyName]);
+			}
+		}
 
 		return this;
 	};
