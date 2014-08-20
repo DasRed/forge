@@ -103,16 +103,16 @@ define(
 		{
 			if (argument instanceof Array)
 			{
-				args[index] = lodash.reduce(argument, function(acc, value, index)
+				args[index] = lodash.reduce(argument, function(acc, value, indexOfArray)
 				{
 					// out of range... unknown parameter
-					if (this.parameters.length - 1 < index)
+					if (this.parameters.length - 1 < indexOfArray)
 					{
 						return acc;
 					}
 
 					// key value list
-					acc[this.parameters[index].name] = value;
+					acc[this.parameters[indexOfArray].name] = value;
 
 					return acc;
 				}, {}, this);
@@ -122,14 +122,14 @@ define(
 		// collect values from object
 		var values = lodash.reduce(this.parameters, function(acc, parameterOptions)
 		{
-			return lodash.reduce(args, function(acc, argument)
+			return lodash.reduce(args, function(accArguments, argument)
 			{
 				if (argument[parameterOptions.name] !== undefined)
 				{
-					acc[parameterOptions.name] = argument[parameterOptions.name];
+					accArguments[parameterOptions.name] = argument[parameterOptions.name];
 				}
 
-				return acc;
+				return accArguments;
 			}, acc);
 		}, {});
 
@@ -137,7 +137,7 @@ define(
 		{
 			// get the value
 			var value = values[parameterOptions.name];
-			var valueEscaped = window.encodeURIComponent(value);
+			var valueEscaped = window.encodeURI(value);
 
 			// optional parameter
 			if (parameterOptions.optional === true)

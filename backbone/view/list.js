@@ -109,7 +109,7 @@ define(
 				{
 					if (this.collectionCachingEnabled === true)
 					{
-						collection = cacheBackboneCollection.getInstance(collection, this.collectionParameters, undefined);
+						collection = cacheBackboneCollection.getInstance(collection, this.collectionParameters);
 					}
 					else
 					{

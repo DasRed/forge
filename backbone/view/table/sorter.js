@@ -79,7 +79,10 @@ define(
 			for (i = 0; i < elementsSortLength; i++)
 			{
 				elementToSort = jQuery(elementsSort[i]);
-				elementToSort.on('click', this.onClick.bind(this, elementToSort.data('model-sort')));
+				if (elementToSort.data('model-sortable') !== false)
+				{
+					elementToSort.on('click', this.onClick.bind(this, elementToSort.data('model-sort')));
+				}
 			}
 		}
 
@@ -91,8 +94,11 @@ define(
 			for (i = 0; i < elementsSortLength; i++)
 			{
 				elementToSort = jQuery(elementsSort[i]);
-				propertyNameToSort = elementToSort.data('model');
-				elementToSort.attr('data-model-sort', propertyNameToSort).on('click', this.onClick.bind(this, propertyNameToSort));
+				if (elementToSort.data('model-sortable') !== false)
+				{
+					propertyNameToSort = elementToSort.data('model');
+					elementToSort.attr('data-model-sort', propertyNameToSort).on('click', this.onClick.bind(this, propertyNameToSort));
+				}
 			}
 		}
 
