@@ -691,6 +691,20 @@ define(
 			this.templates = {};
 		}
 
+		// bind events
+		if (options.on !== undefined)
+		{
+			this.on(options.on);
+			delete options.on;
+		}
+
+		// bind events
+		if (options.once !== undefined)
+		{
+			this.once(options.once);
+			delete options.once;
+		}
+
 		// copy options
 		var key = undefined;
 		for (key in options)

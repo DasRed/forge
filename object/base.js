@@ -60,14 +60,21 @@ define([], function()
 			delete options.on;
 		}
 
-		// copy options
-		for (var key in options)
+		// bind events
+		if (options.once !== undefined)
 		{
-			if (key === 'events')
+			this.once(options.once);
+			delete options.once;
+		}
+
+		// copy options
+		for (var optionName in options)
+		{
+			if (optionName === 'events')
 			{
 				continue;
 			}
-			this[key] = options[key];
+			this[optionName] = options[optionName];
 		}
 	}
 
