@@ -14,6 +14,11 @@ define(
 	var ViewPerformanceList = ViewListSelect.extend(
 	{
 		/**
+		 * @var {Boolean}
+		 */
+		autoCustomize: false,
+
+		/**
 		 * @var {Function}
 		 */
 		template: templatePerformanceList,
