@@ -31,14 +31,24 @@ define(
 	lodash.extend(ViewTableSelect.prototype, ViewTable.prototype);
 
 	/**
+	 * returns the container for selectable
+	 *
+	 * @returns {jQuery}
+	 */
+	ViewTableSelect.prototype.getElementContainterSelectable = function()
+	{
+		return this.getElementContainerEntry().closest('table');
+	};
+
+	/**
 	 * render function with setting the data type
 	 * @returns {ViewTableSelect}
 	 */
-	ViewTableSelect.prototype.render = function()
+	ViewTableSelect.prototype.renderRequirementsFinished = function()
 	{
-		ViewListSelect.prototype.render.apply(this, arguments);
+		ViewListSelect.prototype.renderRequirementsFinished.apply(this, arguments);
 
-		this.updateDataAttributes();
+		this.renderTable();
 
 		return this;
 	};

@@ -22,6 +22,8 @@ define(
 	 *
 	 * @event {void} fetching({Collection} collection)
 	 * @event {void} fetched({Collection} collection)
+	 * @event {void} sort:comparator:changed({Collection} collection, {String} comparatorNew, {String} comparatorOld)
+	 * @event {void} sort:direction:changed({Collection} collection, {String} directionNew, {String} directionOld)
 	 * @param {Array} models
 	 * @param {Object} options
 	 */
@@ -87,9 +89,11 @@ define(
 			{
 				if (this._comparator !== comparator)
 				{
+					var comparatorOld = this._comparator;
 					this._comparator = comparator;
 					if (this.cid !== null && this.cid !== undefined)
 					{
+						this.trigger('sort:comparator:changed', this, comparator, comparatorOld);
 						this.sort();
 					}
 				}
@@ -140,9 +144,11 @@ define(
 			{
 				if (this._direction !== direction)
 				{
+					var directionOld = this._direction;
 					this._direction = direction;
 					if (this.cid !== null && this.cid !== undefined)
 					{
+						this.trigger('sort:direction:changed', this, direction, directionOld);
 						this.sort();
 					}
 				}
@@ -262,6 +268,54 @@ define(
 		this.trigger('fetching', this);
 
 		Backbone.Collection.prototype.fetch.call(this, options);
+
+		return this;
+	};
+
+	/**
+	 * save method for the whole colleciton
+	 *
+	 * @param {Object} options
+	 * @returns {Collection}
+	 */
+	Collection.prototype.save = function(options)
+	{
+		options = options || {};
+
+		if (options.parse === undefined)
+		{
+			options.parse = true;
+		}
+
+		var self = this;
+		var successCallback = options.success;
+		var completeCallback = options.complete;
+
+		options.success = function(resp)
+		{
+			var method = options.reset ? 'reset' : 'set';
+			self[method](resp, options);
+			if (successCallback instanceof Function)
+			{
+				successCallback(self, resp, options);
+			}
+			self.trigger('sync', self, resp, options);
+		};
+
+		options.complete = function(jqXHR, textStatus)
+		{
+			var result = undefined;
+			if (completeCallback instanceof Function)
+			{
+				result = completeCallback.call(self, jqXHR, textStatus);
+			}
+
+			self.trigger('saved', self);
+
+			return result;
+		};
+
+		this.sync('update', this, options);
 
 		return this;
 	};

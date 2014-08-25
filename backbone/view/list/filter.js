@@ -4,7 +4,6 @@ define(
 [
 	'require',
 	'lodash',
-	'jQuery',
 	'forge/backbone/compatibility',
 	'forge/backbone/collection',
 	'forge/backbone/view',
@@ -13,7 +12,6 @@ define(
 ], function(
 	require,
 	lodash,
-	jQuery,
 	compatibility,
 	Collection,
 	View,
@@ -154,6 +152,10 @@ define(
 	/**
 	 * filters
 	 *
+	 * @note this parameters comes with the event but are not used
+	 * @param {ViewList} viewList
+	 * @param {ViewListEntry} viewListEntry
+	 * @param {Model} model
 	 * @returns {ViewListFilter}
 	 */
 	ViewListFilter.prototype.filter = function()
@@ -165,9 +167,14 @@ define(
 		}
 
 		var regexp = new RegExp(this.current, 'i');
-		this.collection.each(function(model)
+		var collectionLength = this.collection.length;
+		var collectionModel = undefined;
+		var i = undefined;
+		var result = undefined;
+		for (i = 0; i < collectionLength; i++)
 		{
-			var result = lodash.find(this.properties, function(propertyActive, propertyName)
+			collectionModel = this.collection.models[i];
+			result = lodash.find(this.properties, function(propertyActive, propertyName)
 			{
 				if (propertyActive === false)
 				{
@@ -175,14 +182,14 @@ define(
 				}
 
 				return regexp.test(String(this[propertyName]));
-			}, model.attributes);
+			}, collectionModel.attributes);
 
 			// model does not match... hide view
 			if (result === undefined)
 			{
-				this.containerList.find('[data-model-cid="' + model.cid + '"]').addClass('filtered');
+				this.containerList.find('[data-model-cid="' + collectionModel.cid + '"]').addClass('filtered');
 			}
-		}, this);
+		}
 
 		return this;
 	};
@@ -216,8 +223,6 @@ define(
 	 */
 	ViewListFilter.prototype.onClickClear = function(event)
 	{
-		event.stop();
-
 		this.current = '';
 		this.$el.find('input').val(this.current);
 
@@ -233,8 +238,6 @@ define(
 	 */
 	ViewListFilter.prototype.onKeyUpInput = function(event)
 	{
-		event.stop();
-
 		this.current = this.$el.find('input').val();
 		this.filter();
 

@@ -156,7 +156,12 @@ define(
 
 		if (text === undefined)
 		{
-			text = defaults !== undefined ? defaults : key;
+
+			if (defaults === undefined)
+			{
+				return '{' + key + '}';
+			}
+			text = defaults;
 		}
 
 		// parameter replacemant

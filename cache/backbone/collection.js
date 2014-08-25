@@ -2,11 +2,9 @@
 
 define(
 [
-	'lodash',
 	'forge/cache',
 	'forge/backbone/collection'
 ], function(
-	lodash,
 	Cache,
 	Collection
 )

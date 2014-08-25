@@ -3,7 +3,9 @@
 define(
 [
 	'jQuery'
-], function(jQuery)
+], function(
+	jQuery
+)
 {
 	jQuery.extend(jQuery.Event.prototype,
 	{

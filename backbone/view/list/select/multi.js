@@ -346,29 +346,29 @@ define(
 	};
 
 	/**
-	 * render
-	 *
 	 * @returns {ViewListSelectMulti}
 	 */
-	ViewListSelectMulti.prototype.render = function()
+	ViewListSelectMulti.prototype.renderMarkSelected = function()
 	{
-		ViewList.prototype.render.apply(this, arguments);
-
-		if (this.selectable === true)
-		{
-			this.getElementContainerEntry().addClass('selectable');
-		}
-
 		this.onSelectedChange();
 
 		return this;
 	};
 
 	/**
+	 * renderRequirementsFinished
+	 *
 	 * @returns {ViewListSelectMulti}
 	 */
-	ViewListSelectMulti.prototype.renderMarkSelected = function()
+	ViewListSelectMulti.prototype.renderRequirementsFinished = function()
 	{
+		ViewList.prototype.renderRequirementsFinished.apply(this, arguments);
+
+		if (this.selectable === true)
+		{
+			this.getElementContainterSelectable().addClass('selectable');
+		}
+
 		this.onSelectedChange();
 
 		return this;

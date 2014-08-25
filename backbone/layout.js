@@ -3,12 +3,10 @@
 define(
 [
 	'lodash',
-	'jQuery',
 	'forge/backbone/compatibility',
 	'forge/backbone/view'
 ], function(
 	lodash,
-	jQuery,
 	compatibility,
 	View
 )

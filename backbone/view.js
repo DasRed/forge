@@ -3,11 +3,13 @@
 define(
 [
 	'lodash',
+	'jQuery',
 	'backbone',
 	'forge/backbone/compatibility',
 	'forge/backbone/model'
 ], function(
 	lodash,
+	jQuery,
 	Backbone,
 	compatibility,
 	Model
@@ -191,7 +193,7 @@ define(
 	 */
 	function createSelectorForPropertyChange(view, propertyName, selector)
 	{
-		var selectorDataModel = view.selectorDataModel.slice(0, -1) + '="' + propertyName + '"]';
+		var selectorDataModel = '[' + view.selectorDataModelAttributeName + '="' + propertyName + '"]';
 		var selectors = selector.split(',');
 		var selectorsLength = selectors.length;
 		var result  =
@@ -447,9 +449,6 @@ define(
 			return;
 		}
 
-		// stop event, we can update the model
-		event.stop();
-
 		// get the value from property
 		var newValue = undefined;
 
@@ -663,7 +662,8 @@ define(
 	 */
 	function View(options)
 	{
-		this.selectorDataModel = '[data-model-view-' + lodash.uniqueId() + ']';
+		this.selectorDataModelAttributeName = 'data-model-view-' + lodash.uniqueId();
+		this.selectorDataModel = '[' + this.selectorDataModelAttributeName + ']';
 
 		options = options || {};
 
@@ -1068,6 +1068,19 @@ define(
 		 * @returns {String}
 		 */
 		selectorDataModel:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * returns the attribute name for selector data model
+		 *
+		 * @returns {String}
+		 */
+		selectorDataModelAttributeName:
 		{
 			value: null,
 			enumerable: true,
@@ -1519,15 +1532,14 @@ define(
 	{
 		var elementDataModels = this.$el.find('[data-model]');
 		var elementDataModelsLength = elementDataModels.length;
-		var elementDataModelSelector = this.selectorDataModel.slice(1, -1);
 		var elementDataModel = undefined;
 		var elementDataModelPropertyName = undefined;
 		var modelAttributeTypes = this.model !== undefined && this.model !== null ? this.model.attributeTypes : undefined;
 		var i = undefined;
 		for (i = 0; i < elementDataModelsLength; i++)
 		{
-			elementDataModel = jQuery(elementDataModels[i]);
-			elementDataModel.attr(elementDataModelSelector, elementDataModel.data('model'));
+			elementDataModel = elementDataModels.eq(i);
+			elementDataModel.attr(this.selectorDataModelAttributeName, elementDataModel.data('model'));
 
 			if (modelAttributeTypes !== undefined)
 			{

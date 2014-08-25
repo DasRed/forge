@@ -178,11 +178,9 @@ define(
 					console.debug('Handled ' + (lengthBefore - this.length) + ' entries. Delaying the next ' + this.length + ' entries.');
 					return this.pause();
 				}
-				else
-				{
-					console.debug('Handled ' + (lengthBefore - this.length) + ' entries.');
-					return this;
-				}
+
+				console.debug('Handled ' + (lengthBefore - this.length) + ' entries.');
+				return this;
 			}
 		}
 

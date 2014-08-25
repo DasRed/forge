@@ -8,7 +8,8 @@ define(
 	'forge/backbone/collection',
 	'forge/backbone/view',
 	'forge/backbone/view/list',
-	'forge/backbone/view/table'
+	'forge/backbone/view/table',
+	'tpl!forge/backbone/view/table/sorter/template/sorterHandle',
 ], function(
 	lodash,
 	jQuery,
@@ -16,7 +17,8 @@ define(
 	Collection,
 	View,
 	ViewList,
-	ViewTable
+	ViewTable,
+	tplViewTableSorterTemplateSorterHandle
 )
 {
 	/**
@@ -45,6 +47,7 @@ define(
 		}
 
 		// copy options from view
+		this.selectorDataModelAttributeName = this.view.selectorDataModelAttributeName;
 		this.selectorDataModel = this.view.selectorDataModel;
 		this.collection = this.view.collection;
 		// find element
@@ -64,7 +67,7 @@ define(
 		}
 
 		// set element container that is it sortable
-		this.$element.addClass('sortable');
+		this.$element.closest('table').addClass('sortable');
 
 		// bind sort
 		var elementToSort = undefined;
@@ -78,10 +81,12 @@ define(
 		{
 			for (i = 0; i < elementsSortLength; i++)
 			{
-				elementToSort = jQuery(elementsSort[i]);
+				elementToSort = elementsSort.eq(i);
 				if (elementToSort.data('model-sortable') !== false)
 				{
-					elementToSort.on('click', this.onClick.bind(this, elementToSort.data('model-sort')));
+					elementToSort
+						.append(tplViewTableSorterTemplateSorterHandle)
+						.on('click', this.onClick.bind(this, elementToSort.data('model-sort')));
 				}
 			}
 		}
@@ -93,23 +98,42 @@ define(
 			elementsSortLength = elementsSort.length;
 			for (i = 0; i < elementsSortLength; i++)
 			{
-				elementToSort = jQuery(elementsSort[i]);
+				elementToSort = elementsSort.eq(i);
 				if (elementToSort.data('model-sortable') !== false)
 				{
 					propertyNameToSort = elementToSort.data('model');
-					elementToSort.attr('data-model-sort', propertyNameToSort).on('click', this.onClick.bind(this, propertyNameToSort));
+					elementToSort
+						.attr('data-model-sort', propertyNameToSort)
+						.append(tplViewTableSorterTemplateSorterHandle)
+						.on('click', this.onClick.bind(this, propertyNameToSort));
 				}
 			}
 		}
 
-		// set sort by html
-		elementToSort = this.$element.find('[data-model-sorted]');
-		propertyNameToSort = elementToSort.data('model-sort');
-		if (propertyNameToSort !== undefined)
+		var propertyNameToSort = undefined;
+		var directionToSort = undefined;
+
+		// take sorting informations from options
+		if (options.propertyNameToSort !== undefined)
 		{
-			this.collection.comparator = propertyNameToSort;
-			this.collection.direction = elementToSort.data('model-sorted') || Collection.DIRECTION_ASC;
+			propertyNameToSort = options.propertyNameToSort;
 		}
+		if (options.directionToSort !== undefined)
+		{
+			directionToSort = options.directionToSort;
+		}
+
+		// set sort by html
+		if (propertyNameToSort === undefined || directionToSort === undefined)
+		{
+			elementToSort = this.$element.find('[data-model-sorted]');
+			propertyNameToSort = propertyNameToSort || elementToSort.data('model-sort');
+			directionToSort = directionToSort || elementToSort.data('model-sorted');
+		}
+
+		// set founded values for sorting
+		this.collection.comparator = propertyNameToSort || this.collection.comparator;
+		this.collection.direction = directionToSort || this.collection.direction || Collection.DIRECTION_ASC;
 
 		// show sorting
 		this.showSortedProperty(true);
@@ -228,25 +252,35 @@ define(
 	/**
 	 * on click to sort or to toggle the direction
 	 *
-	 * @param {String} propertyName
+	 * @param {String} propertyNameNew
 	 * @param {jQuery.Event} event
 	 * @returns {ViewTableSorter}
 	 */
-	ViewTableSorter.prototype.onClick = function(propertyName, event)
+	ViewTableSorter.prototype.onClick = function(propertyNameNew, event)
 	{
-		event.stop();
+		var eventTarget = jQuery(event.target);
+
+		if (eventTarget.is('th[data-model-sort], .sorterHandle') === false)
+		{
+			return this;
+		}
 
 		var columnChanged = false;
 
+		var propertyNameOld = this.collection.comparator;
+		var directionOld = this.collection.direction;
+		var directionNew = directionOld;
+
 		// toggle direction
-		if (this.collection.comparator === propertyName)
+		if (propertyNameOld === propertyNameNew)
 		{
-			this.collection.direction = this.collection.direction === Collection.DIRECTION_ASC ? Collection.DIRECTION_DESC : Collection.DIRECTION_ASC;
+			directionNew = directionOld === Collection.DIRECTION_ASC ? Collection.DIRECTION_DESC : Collection.DIRECTION_ASC;
+			this.collection.direction = directionNew;
 		}
 		// set new sort column
 		else
 		{
-			this.collection.comparator = propertyName;
+			this.collection.comparator = propertyNameNew;
 			columnChanged = true;
 		}
 
@@ -296,7 +330,7 @@ define(
 
 		// everything is changing
 		this.$element.find(this.selectorDataModel).removeClass('sorted ' + Collection.DIRECTION_ASC + ' ' + Collection.DIRECTION_DESC);
-		this.$element.find(this.selectorDataModel.slice(0, -1) + '=' + this.collection.comparator + ']').addClass('sorted ' + this.collection.direction);
+		this.$element.find('[' + this.selectorDataModelAttributeName + '=' + this.collection.comparator + ']').addClass('sorted ' + this.collection.direction);
 
 		// find column to highlight in body
 		this.sortedColumnIndex = null;

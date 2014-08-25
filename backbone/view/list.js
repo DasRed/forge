@@ -125,12 +125,6 @@ define(
 				collection.on('fetching', this.showLoadingScreen, this);
 				collection.on('fetched', this.hideLoadingScreen, this);
 
-				// fetch the data
-				if (this.autoFetch === true && collection.length == 0)
-				{
-					collection.fetch();
-				}
-
 				this._collection = collection;
 			}
 		},
@@ -665,8 +659,6 @@ define(
 	 */
 	ViewList.prototype.onClickAll = function(event)
 	{
-		event.stop();
-
 		this.collection.limit = null;
 
 		return this;
@@ -678,8 +670,6 @@ define(
 	 */
 	ViewList.prototype.onClickDownloadCsv = function(event)
 	{
-		event.stop();
-
 		var element = document.createElement('a');
 		element.href = URL.createObjectURL(new Blob(
 		[
@@ -700,8 +690,6 @@ define(
 	 */
 	ViewList.prototype.onClickReload = function(event)
 	{
-		event.stop();
-
 		this.collection.fetch(
 		{
 			reset: true
@@ -906,14 +894,8 @@ define(
 			this.hideLoadingScreen().showLoadingScreen();
 		}
 
-		// render each entry
-		this.renderEntries();
-
-		// render the filter
-		this.renderFilter();
-
-		// render the sorter
-		this.renderSorter();
+		// render some requirements
+		this.renderRequirements();
 
 		return this;
 	};
@@ -925,9 +907,16 @@ define(
 	 */
 	ViewList.prototype.renderEntries = function()
 	{
-		// render each entry
-		this.collection.each(this.renderEntry, this);
-
+		// fetch the data
+		if (this.autoFetch === true && this.collection.length == 0)
+		{
+			this.collection.fetch();
+		}
+		else
+		{
+			// render each entry
+			this.collection.each(this.renderEntry, this);
+		}
 		return this;
 	};
 
@@ -1032,6 +1021,33 @@ define(
 
 		// create the view
 		this.viewFilter = this.createViewFilter(options);
+
+		return this;
+	};
+
+	/**
+	 * will be called after render to do some stuff before the rest will be rendered
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.renderRequirements = function()
+	{
+		return this.renderRequirementsFinished();
+	};
+
+	/**
+	 * will be called after rendering the requirements
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.renderRequirementsFinished = function()
+	{
+		// render each entry
+		this.renderEntries();
+
+		// render the filter
+		this.renderFilter();
+
+		// render the sorter
+		this.renderSorter();
 
 		return this;
 	};

@@ -158,8 +158,6 @@ define(
 	 */
 	ViewListSorter.prototype.onClickDirection = function(event)
 	{
-		event.stop();
-
 		this.setDirection(this.collection.direction === Collection.DIRECTION_ASC ? Collection.DIRECTION_DESC : Collection.DIRECTION_ASC);
 
 		return this;
@@ -172,8 +170,6 @@ define(
 	 */
 	ViewListSorter.prototype.onClickSelection = function(event)
 	{
-		event.stop();
-
 		this.setProperty(jQuery(event.target).data('property'));
 
 		return this;
@@ -186,8 +182,6 @@ define(
 	 */
 	ViewListSorter.prototype.onClickSelector = function(event)
 	{
-		event.stop();
-
 		if (this.isOpen === true)
 		{
 			this.isOpen = false;
@@ -232,7 +226,7 @@ define(
 
 					if (element.hasClass('selectLink') === false)
 					{
-						event.stop();
+						return;
 					}
 
 					self.isOpen = false;

@@ -137,6 +137,16 @@ define(
 	});
 
 	/**
+	 * returns the container for selectable
+	 *
+	 * @returns {jQuery}
+	 */
+	ViewListSelect.prototype.getElementContainterSelectable = function()
+	{
+		return this.getElementContainerEntry();
+	};
+
+	/**
 	 * returns the view instance
 	 *
 	 * @param {Model} model
@@ -277,30 +287,6 @@ define(
 	};
 
 	/**
-	 * render
-	 *
-	 * @returns {ViewListSelect}
-	 */
-	ViewListSelect.prototype.render = function()
-	{
-		ViewList.prototype.render.apply(this, arguments);
-
-		if (this.selectable === true)
-		{
-			this.getElementContainerEntry().addClass('selectable');
-		}
-
-		if (this.autoSelect === true && this.selected === undefined && this.collection.length > 0)
-		{
-			this.selected = this.collection.models[0];
-		}
-
-		this.renderMarkSelected();
-
-		return this;
-	};
-
-	/**
 	 * @returns {ViewListSelect}
 	 */
 	ViewListSelect.prototype.renderMarkSelected = function()
@@ -309,6 +295,30 @@ define(
 		{
 			this.getViewEntryByModel(this.selected).markAsSelected();
 		}
+
+		return this;
+	};
+
+	/**
+	 * renderRequirementsFinished
+	 *
+	 * @returns {ViewListSelect}
+	 */
+	ViewListSelect.prototype.renderRequirementsFinished = function()
+	{
+		ViewList.prototype.renderRequirementsFinished.apply(this, arguments);
+
+		if (this.selectable === true)
+		{
+			this.getElementContainterSelectable().addClass('selectable');
+		}
+
+		if (this.autoSelect === true && this.selected === undefined && this.collection.length > 0)
+		{
+			this.selected = this.collection.models[0];
+		}
+
+		this.renderMarkSelected();
 
 		return this;
 	};

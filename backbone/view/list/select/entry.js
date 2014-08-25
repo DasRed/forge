@@ -107,8 +107,6 @@ define(
 				return this;
 		}
 
-		event.stop();
-
 		return this.triggerSelect();
 	};
 

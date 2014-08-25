@@ -79,7 +79,7 @@ define(
 		var i = undefined;
 		for (i = 0; i < elementDataModelsLength; i++)
 		{
-			elementDataModel = jQuery(elementDataModels[i]);
+			elementDataModel = elementDataModels.eq(i);
 			elementDataModelDataType = elementDataModel.attr('data-type');
 
 			if (elementDataModelDataType !== undefined)

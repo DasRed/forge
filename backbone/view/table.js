@@ -5,18 +5,22 @@ define(
 	'forge/backbone/compatibility',
 	'forge/backbone/view/list',
 	'forge/backbone/view/table/filter',
-	'forge/backbone/view/table/sorter'
+	'forge/backbone/view/table/sorter',
+	'forge/backbone/view/table/customizer'
 ], function(
 	lodash,
 	compatibility,
 	ViewList,
 	ViewTableFilter,
-	ViewTableSorter
+	ViewTableSorter,
+	ViewTableCustomizer
 )
 {
 	/**
 	 * table of view
 	 *
+	 * @event {void} sorter:create:before({ViewTable} viewTable, {Object} viewTableSorterOptions) will be triggered directly before the sorter will be created
+	 * @event {void} sorter:create:after({ViewTable} viewTable, {ViewTableSorter} viewTableSorter) will be triggered directly after the sorter was created
 	 * @param {Object} options
 	 */
 	function ViewTable(options)
@@ -27,6 +31,61 @@ define(
 	// prototype
 	ViewTable.prototype = Object.create(ViewList.prototype,
 	{
+		/**
+		 * defines that ViewTableCustomizer automatically should be instanciated
+		 *
+		 * @var {Object}
+		 */
+		autoCustomize:
+		{
+			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * defines some options for the ViewTableCustomizer
+		 * the options will be mapped 1:1 to ViewTableCustomizer
+		 *
+		 * @var {Object}
+		 */
+		customizerOptions:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * defines url prefox for the ViewTableCustomizer
+		 *
+		 * @var {Object}
+		 */
+		customizerUrlPrefix:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * defines the global unique name. this is required,
+		 * 	- if property autoCustomize is true or
+		 * 	- if property autoCustomize is false and property customizerOptions is an object
+		 *
+		 * @var {String}
+		 */
+		name:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
 		/**
 		 * css selector for the container which gets all entries append if this is null or undefined
 		 * this.$el will be taken
@@ -56,6 +115,7 @@ define(
 
 		/**
 		 * object of sorter options. if sorterOptions is null, no filter will be rendered
+		 * this will be deligated to the ViewTableCustomizer
 		 *
 		 * @see ViewListSorter
 		 * @var {Object}
@@ -66,8 +126,37 @@ define(
 			enumerable: true,
 			configurable: true,
 			writable: true
+		},
+
+		/**
+		 * a view for customizing
+		 *
+		 * @var {ViewListCustomizer}
+		 */
+		viewCustomizer:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
 		}
 	});
+
+	/**
+	 * creates the customizer view
+	 *
+	 * @param {Object} options
+	 * @returns {ViewTableCustomizer}
+	 */
+	ViewTable.prototype.createViewCustomizer = function(options)
+	{
+		if (ViewTableCustomizer === undefined)
+		{
+			ViewTableCustomizer = require('forge/backbone/view/table/customizer');
+		}
+
+		return new ViewTableCustomizer(options);
+	};
 
 	/**
 	 * creates the filter view
@@ -98,18 +187,110 @@ define(
 			ViewTableSorter = require('forge/backbone/view/table/sorter');
 		}
 
-		return new ViewTableSorter(options);
+		// trigger 'sorter:create:before' to inform all, that a sorter will be created
+		this.trigger('sorter:create:before', this, options);
+
+		var sorter = new ViewTableSorter(options);
+
+		// trigger 'sorter:create:after' to inform all, that a sorter was created
+		this.trigger('sorter:create:after', this, sorter);
+
+		return sorter;
 	};
 
 	/**
-	 * render function with setting the data type
+	 * remove
+	 *
 	 * @returns {ViewTable}
 	 */
-	ViewTable.prototype.render = function()
+	ViewTable.prototype.remove = function()
 	{
-		ViewList.prototype.render.apply(this, arguments);
+		this.removeCustomizer();
 
-		this.updateDataAttributes();
+		ViewList.prototype.remove.call(this);
+
+		return this;
+	};
+
+	/**
+	 * remove a customizer view
+	 *
+	 * @returns {ViewTable}
+	 */
+	ViewTable.prototype.removeCustomizer = function()
+	{
+		if (this.viewCustomizer !== null && this.viewCustomizer !== undefined)
+		{
+			this.viewCustomizer.off(undefined, undefined, this);
+			this.viewCustomizer.remove();
+			this.viewCustomizer = null;
+		}
+
+		return this;
+	};
+
+	/**
+	 * renders the customizer
+	 * @returns {ViewTable}
+	 */
+	ViewTable.prototype.renderCustomizer = function()
+	{
+		if (this.autoCustomize === false && (this.customizerOptions instanceof Object) === false)
+		{
+			return this;
+		}
+
+		console.debug('creating customizer for table "' + this.name + '".');
+		// options
+		var self = this;
+		var options = lodash.extend(
+		{
+			autoRender: true,
+			viewTable: this,
+			urlPrefix: this.customizerUrlPrefix,
+			sorterOptions: this.sorterOptions,
+			once:
+			{
+				columnsFetched: function(viewCustomizer)
+				{
+					self.viewCustomizer = viewCustomizer;
+					self.renderRequirementsFinished();
+				}
+			}
+		}, this.customizerOptions || {});
+
+		// create the view
+		this.viewCustomizer = this.createViewCustomizer(options);
+
+		return this;
+	};
+
+	/**
+	 * if a customizer should be used, then the table must wait for the customizer load to columns config
+	 * @returns {ViewTable}
+	 */
+	ViewTable.prototype.renderRequirements = function()
+	{
+		if (this.autoCustomize === false && (this.customizerOptions instanceof Object) === false)
+		{
+			return ViewList.prototype.renderRequirements.call(this);
+		}
+
+		this.renderCustomizer();
+
+		return this;
+	};
+
+	/**
+	 * render some requirements
+	 *
+	 * @returns {ViewTable}
+	 */
+	ViewTable.prototype.renderRequirementsFinished = function()
+	{
+		ViewList.prototype.renderRequirementsFinished.apply(this, arguments);
+
+		this.renderTable();
 
 		return this;
 	};
@@ -117,6 +298,7 @@ define(
 	/**
 	 * renders a sorter view for list with given options
 	 * if not options defined no sorter will be rendered
+	 * this sorter will only be rendered if no customizer is defined
 	 *
 	 * @returns {ViewTable}
 	 */
@@ -141,6 +323,18 @@ define(
 	};
 
 	/**
+	 * render some table specific stuff
+	 *
+	 * @returns {ViewTable}
+	 */
+	ViewTable.prototype.renderTable = function()
+	{
+		this.updateDataAttributes();
+
+		return this;
+	};
+
+	/**
 	 * update the elements with data-type by model attribute type
 	 *
 	 * @returns {ViewTable}
@@ -158,7 +352,7 @@ define(
 			var i = undefined;
 			for (i = 0; i < elementDataModelsLength; i++)
 			{
-				elementDataModel = jQuery(elementDataModels[i]);
+				elementDataModel = elementDataModels.eq(i);
 				elementDataModelPropertyName = elementDataModel.attr('data-model');
 
 				elementDataModel.attr('data-type', modelAttributeTypes[elementDataModelPropertyName]);

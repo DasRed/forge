@@ -2,13 +2,11 @@
 define(
 [
 	'lodash',
-	'jQuery',
 	'backbone',
 	'forge/backbone/compatibility',
 	'forge/backbone/controller'
 ], function(
 	lodash,
-	jQuery,
 	Backbone,
 	compatibility,
 	Controller

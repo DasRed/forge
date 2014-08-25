@@ -30,5 +30,19 @@ define(
 	// mixin of ViewTableSelect
 	lodash.extend(ViewTableSelectMulti.prototype, ViewTableSelect.prototype);
 
+	/**
+	 * render some requirements
+	 *
+	 * @returns {ViewTableSelectMulti}
+	 */
+	ViewTableSelectMulti.prototype.renderRequirementsFinished = function()
+	{
+		ViewListSelectMulti.prototype.renderRequirementsFinished.apply(this, arguments);
+
+		this.renderTable();
+
+		return this;
+	};
+
 	return compatibility(ViewTableSelectMulti);
 });

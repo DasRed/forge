@@ -1,0 +1,18 @@
+<ul class="visibilitySelector">
+	<% view.collectionColumns.each(function(modelColumn) { %>
+		<li>
+			<label
+				for="table_<%=view.viewTable.name %>_<%=modelColumn.attributes.name %>"
+				data-customizer-property="<%=modelColumn.attributes.name %>"
+			>
+				<%=__('tableCustomizer.table_' + view.viewTable.name + '_' + modelColumn.attributes.name) %>
+			</label>
+			<input
+				id="table_<%=view.viewTable.name %>_<%=modelColumn.attributes.name %>"
+				type="checkbox"
+				data-customizer-property="<%=modelColumn.attributes.name %>"
+				<% if (modelColumn.attributes.visible === true) {%>checked="checked"<%} %>
+			>
+		</li>
+	<% }); %>
+</ul>
