@@ -18,7 +18,7 @@ define(
 		throwError: false
 	})).config,
 	{
-		language: configApplication.language
+		locale: configApplication.locale
 	});
 
 	// Translation in templates

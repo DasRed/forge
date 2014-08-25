@@ -19,7 +19,7 @@ define(
 
 		options = options || {};
 
-		this.language = options.language !== undefined ? options.language : this.language;
+		this.locale = options.locale !== undefined ? options.locale : this.locale;
 		this.regexpParameters = options.regexpParameters !== undefined ? options.regexpParameters : this.regexpParameters;
 		this.regexpTranslations = options.regexpTranslations !== undefined ? options.regexpTranslations : this.regexpTranslations;
 
@@ -30,13 +30,13 @@ define(
 	Translation.prototype = Object.create(Object.prototype,
 	{
 		/**
-		 * current defined language
+		 * current defined locale
 		 *
 		 * @var {String}
 		 */
-		language:
+		locale:
 		{
-			value: 'en_GB',
+			value: 'en-GB',
 			enumerable: false,
 			configurable: false,
 			writable: true
@@ -69,7 +69,7 @@ define(
 		},
 
 		/**
-		 * translation for the current language
+		 * translation for the current locale
 		 *
 		 * @var {Object}
 		 */
@@ -79,11 +79,11 @@ define(
 			configurable: false,
 			get: function()
 			{
-				if (this.translations[this.language] === undefined)
+				if (this.translations[this.locale] === undefined)
 				{
 					return {};
 				}
-				return this.translations[this.language];
+				return this.translations[this.locale];
 			}
 		},
 
@@ -114,18 +114,22 @@ define(
 	 */
 	Translation.prototype.setTranslations = function(translations)
 	{
-		for (var language in translations)
+		var locale = undefined;
+		var fileName = undefined;
+		var trKey = undefined;
+
+		for (locale in translations)
 		{
-			if (this.translations[language] === undefined)
+			if (this.translations[locale] === undefined)
 			{
-				this.translations[language] = {};
+				this.translations[locale] = {};
 			}
 
-			for (var fileName in translations[language])
+			for (fileName in translations[locale])
 			{
-				for (var trKey in translations[language][fileName])
+				for (trKey in translations[locale][fileName])
 				{
-					this.translations[language][fileName + '.' + trKey] = translations[language][fileName][trKey];
+					this.translations[locale][fileName + '.' + trKey] = translations[locale][fileName][trKey];
 				}
 			}
 		}

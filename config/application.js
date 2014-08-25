@@ -25,7 +25,7 @@ define(
 	{
 		config = lodash.merge(
 		{
-			language: 'en_GB',
+			locale: 'en-GB',
 			log:
 			{
 				level: 4,
@@ -38,11 +38,6 @@ define(
 				serverUrl: 'log/profiling'
 			}
 		}, config);
-	}
-
-	if (config.locale === undefined)
-	{
-		config.locale = config.language.replace('_', '-');
 	}
 
 	return config;
