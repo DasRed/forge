@@ -30,7 +30,7 @@ define(
 		/**
 		 * @var {String}
 		 */
-		url: '(:urlPrefix/)tableCustomize/:tableName',
+		url: '(:urlPrefix/)table-customize/:tableName',
 
 		/**
 		 * defines a url Prefix to send to sever

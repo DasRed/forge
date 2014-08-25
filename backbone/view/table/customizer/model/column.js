@@ -45,7 +45,7 @@ define(
 		/**
 		 * @var {String}
 		 */
-		urlRoot: '(:urlPrefix/)tableCustomize/:tableName',
+		urlRoot: '(:urlPrefix/)table-customize/:tableName',
 
 		/**
 		 * @param {Object} attributes
