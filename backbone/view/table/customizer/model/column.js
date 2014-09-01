@@ -13,7 +13,10 @@ define(
 		 */
 		attributeTypes:
 		{
-			name: Model.ATTRIBUTE_TYPE_STRING,
+			id: Model.ATTRIBUTE_TYPE_NUMBER,
+			user_id: Model.ATTRIBUTE_TYPE_NUMBER,
+			table: Model.ATTRIBUTE_TYPE_STRING,
+			column: Model.ATTRIBUTE_TYPE_STRING,
 			positionOriginal: Model.ATTRIBUTE_TYPE_NUMBER,
 			positionCurrent: Model.ATTRIBUTE_TYPE_NUMBER,
 			positionRelative: Model.ATTRIBUTE_TYPE_NUMBER,
@@ -25,27 +28,7 @@ define(
 		/**
 		 * @var {String}
 		 */
-		idAttribute: 'name',
-
-		/**
-		 * the name for the table and can be used in the url root
-		 *
-		 * @var {String}
-		 */
-		tableName: null,
-
-		/**
-		 * defines a url Prefix to send to sever
-		 * this is optional
-		 *
-		 * @var {String}
-		 */
-		urlPrefix: null,
-
-		/**
-		 * @var {String}
-		 */
-		urlRoot: '(:urlPrefix/)table-customize/:tableName',
+		idAttribute: 'column',
 
 		/**
 		 * @param {Object} attributes
@@ -89,6 +72,9 @@ define(
 			return result;
 		}
 	});
+
+	ViewTableCustomizerModelColumn.DIRECTION_ASC = 'asc';
+	ViewTableCustomizerModelColumn.DIRECTION_DESC = 'desc';
 
 	return ViewTableCustomizerModelColumn;
 });

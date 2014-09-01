@@ -137,7 +137,7 @@ define(
 					{
 						collectionColumns = cacheBackboneCollection.getInstance(collectionColumns,
 						{
-							tableName: this.viewTable.name,
+							table: this.viewTable.name,
 							urlPrefix: this.urlPrefix
 						});
 					}
@@ -145,7 +145,7 @@ define(
 					{
 						collectionColumns = new collectionColumns(undefined,
 						{
-							tableName: this.viewTable.name,
+							table: this.viewTable.name,
 							urlPrefix: this.urlPrefix
 						});
 					}
@@ -399,7 +399,8 @@ define(
 			{
 				this.collectionColumns.add(
 				{
-					name: elementColumnName,
+					table: this.viewTable.name,
+					column: elementColumnName,
 					positionOriginal: i,
 					positionCurrent: i,
 					positionRelative: 0,
@@ -571,7 +572,7 @@ define(
 		{
 			// then remap the options for default sort
 			var modelForSorting = this.collectionColumns.getModelForSorting();
-			viewTableSorterOptions.propertyNameToSort = modelForSorting !== undefined ? modelForSorting.attributes.name : undefined;
+			viewTableSorterOptions.propertyNameToSort = modelForSorting !== undefined ? modelForSorting.attributes.column : undefined;
 			viewTableSorterOptions.directionToSort = modelForSorting !== undefined ? modelForSorting.attributes.sortDirection : undefined;
 		}, this);
 

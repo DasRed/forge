@@ -25,12 +25,12 @@ define(
 		 *
 		 * @var {String}
 		 */
-		tableName: null,
+		table: null,
 
 		/**
 		 * @var {String}
 		 */
-		url: '(:urlPrefix/)table-customize/:tableName',
+		url: '(:urlPrefix/)tableCustomize/:table',
 
 		/**
 		 * defines a url Prefix to send to sever
