@@ -141,7 +141,7 @@ define(
 	 *
 	 * @returns {jQuery}
 	 */
-	ViewListSelect.prototype.getElementContainterSelectable = function()
+	ViewListSelect.prototype.getElementContainerSelectable = function()
 	{
 		return this.getElementContainerEntry();
 	};
@@ -310,7 +310,7 @@ define(
 
 		if (this.selectable === true)
 		{
-			this.getElementContainterSelectable().addClass('selectable');
+			this.getElementContainerSelectable().addClass('selectable');
 		}
 
 		if (this.autoSelect === true && this.selected === undefined && this.collection.length > 0)

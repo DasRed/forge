@@ -184,6 +184,11 @@ define(
 
 		lodash.each(this.configs, function(config, key)
 		{
+			if (config === null)
+			{
+				return;
+			}
+			
 			if (lodash.isPlainObject(config) === false)
 			{
 				throw new Error('A layout config must be a plain object.');
@@ -254,6 +259,25 @@ define(
 		{
 			// options
 			var options = null;
+
+			// test for rights
+			if (config.rights !== undefined && config.rights !== null)
+			{
+				try
+				{
+					var rights = config.rights;
+					if (typeof rights === 'string')
+					{
+						rights = [rights];
+					}
+					this.trigger('testRight', this, rights);
+				}
+				catch (exception)
+				{
+					return this;
+				}
+			}
+
 
 			// options are function... call the function
 			if (config.options instanceof Function)

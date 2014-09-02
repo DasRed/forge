@@ -267,9 +267,6 @@ define(
 			{
 				config.controller = controller;
 				self.startController(config, route, parameters);
-			}, function()
-			{
-				console.error('Can not create the controller "' + config.controller + '" for "' + route.name + '" (url://' + route.route + ').');
 			});
 		}
 		// controller is not a string load lets start

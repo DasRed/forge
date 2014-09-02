@@ -30,16 +30,29 @@ define(
 	 */
 	CacheBackboneCollection.prototype.getInstance = function(collection, parameters, models)
 	{
-		var hash = this.createHash(collection.getPrototypeValue('url'), parameters);
-
-		var result = this.get(hash);
+		var result = this.findInstance(collection, parameters);
 		if (result === null)
 		{
+			var hash = this.createHash(collection.getPrototypeValue('url'), parameters);
 			result = new collection(models, parameters);
 			this.add(hash, result);
 		}
 
 		return result;
+	};
+
+	/**
+	 * search the instance in cache if not found, NULL will be returned
+	 *
+	 * @param {Collection} collection
+	 * @param {Object} parameters
+	 * @returns {Collection}
+	 */
+	CacheBackboneCollection.prototype.findInstance = function(collection, parameters)
+	{
+		var hash = this.createHash(collection.getPrototypeValue('url'), parameters);
+
+		return this.get(hash);
 	};
 
 	return CacheBackboneCollection;

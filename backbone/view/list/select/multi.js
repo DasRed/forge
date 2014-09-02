@@ -122,6 +122,16 @@ define(
 	});
 
 	/**
+	 * returns the container for selectable
+	 *
+	 * @returns {jQuery}
+	 */
+	ViewListSelectMulti.prototype.getElementContainerSelectable = function()
+	{
+		return this.getElementContainerEntry();
+	};
+
+	/**
 	 * returns the view instance
 	 *
 	 * @param {Model} model
@@ -366,7 +376,7 @@ define(
 
 		if (this.selectable === true)
 		{
-			this.getElementContainterSelectable().addClass('selectable');
+			this.getElementContainerSelectable().addClass('selectable');
 		}
 
 		this.onSelectedChange();

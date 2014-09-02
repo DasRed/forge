@@ -57,12 +57,6 @@ define(
 			throw new Error('No collection is defined to sort or collection must be instance of Collection.');
 		}
 
-		// translate properties text
-		this.properties = lodash.mapValues(this.properties, function(propertyText)
-		{
-			return this.translate(propertyText);
-		}, this);
-
 		// direction
 		if (options.direction !== undefined)
 		{

@@ -128,9 +128,23 @@ define(
 
 				if (this._observer === undefined)
 				{
+					var properties = {};
+					var propertyName = undefined;
+					var propertyType = undefined;
+					for (propertyName in this.attributeTypes)
+					{
+						propertyType = this.attributeTypes[propertyName];
+						if (propertyType === Model.ATTRIBUTE_TYPE_COLLECTION || propertyType === Model.ATTRIBUTE_TYPE_MODEL)
+						{
+							continue;
+						}
+						properties[propertyName] = true;
+					}
+
 					this._observer = new ObjectObserver(this.attributes,
 					{
-						autoObserve: false
+						autoObserve: false,
+						properties: properties
 					});
 				}
 

@@ -35,7 +35,7 @@ define(
 	 *
 	 * @returns {jQuery}
 	 */
-	ViewTableSelect.prototype.getElementContainterSelectable = function()
+	ViewTableSelect.prototype.getElementContainerSelectable = function()
 	{
 		return this.getElementContainerEntry().closest('table');
 	};

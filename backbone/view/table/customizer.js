@@ -630,7 +630,10 @@ define(
 			}
 		}
 
-		this.elementVisibilitySelector.remove();
+		if (this.elementVisibilitySelector !== undefined && this.elementVisibilitySelector !== null)
+		{
+			this.elementVisibilitySelector.remove();
+		}
 		this.elementVisibilitySelector = null;
 
 		jQuery(document).off('click', this.removeVisibilitySelector);

@@ -230,7 +230,7 @@ define(
 		property.isFunction = this.object[propertyName] instanceof Function;
 
 		// property is Enumerable
-		property.isEnumerable = property.descriptor !== undefined ? property.descriptor.enumerable : false;
+		property.isEnumerable = property.descriptor !== undefined ? property.descriptor.enumerable : true;
 
 		// init value for property
 		property.value = undefined;

@@ -493,7 +493,7 @@ define(
 		view.showSaving(element);
 
 		// set the new value to model and set or save
-		this.model[methodToSet](propertyName, newValue,
+		view.model[methodToSet](propertyName, newValue,
 		{
 			complete: function()
 			{
