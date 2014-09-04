@@ -25,6 +25,7 @@ define(
 	{
 		config = lodash.merge(
 		{
+			currency: 'EUR',
 			locale: 'en-GB',
 			log:
 			{
