@@ -232,6 +232,12 @@ define(
 
 			// call action and retrieve layout instance
 			layout = this[actionMethod].apply(this, parameters);
+			
+			if (layout === undefined || layout === null)
+			{
+				return this;
+			}
+			
 			if ((layout instanceof View) === false)
 			{
 				throw new Error('Action method "' + actionMethod + '" must return a instance of View!');
