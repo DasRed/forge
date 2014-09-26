@@ -480,6 +480,7 @@ define(
 
 		// format the value
 		newValue = formatModelProperty(view, propertyName, newValue, 'set');
+		var oldValue = view.model.attributes[propertyName];
 
 		// set it
 		var methodToSet = 'set';
@@ -500,19 +501,22 @@ define(
 				var propertyNameUcFirst = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
 
 				// trigger event for property
-				view.trigger('htmlPropertyChange:' + propertyNameUcFirst, view, view.model, propertyName, newValue);
+				view.trigger('htmlPropertyChange:' + propertyNameUcFirst, newValue, oldValue);
 
 				// method for property
 				if (view['onHTMLPropertyChange' + propertyNameUcFirst] instanceof Function)
 				{
-					view['onHTMLPropertyChange' + propertyNameUcFirst](newValue);
+					view['onHTMLPropertyChange' + propertyNameUcFirst](newValue, oldValue);
 				}
 
 				// trigger event
-				view.trigger('htmlPropertyChange', view, view.model, propertyName, newValue);
+				view.trigger('htmlPropertyChange', view, view.model, propertyName, newValue, oldValue);
 
-				// method for property
-				view.onHTMLPropertyChange(propertyName, newValue);
+				// method for
+				if (view.onHTMLPropertyChange instanceof Function)
+				{
+					view.onHTMLPropertyChange(view, view.model, propertyName, newValue, oldValue);
+				}
 
 				view.hideSaving();
 			}
@@ -649,14 +653,14 @@ define(
 	 *
 	 * @event {void} remove({View} view)
 	 * @event {void} modelPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue, {Mixed} oldValue)
-	 * @event {void} modelPropertyChange[:PROPERTYNAME]({View} view, {Model} model, {String} propertyName, {Mixed} newValue, {Mixed} oldValue)
+	 * @event {void} modelPropertyChange[:PROPERTYNAME]({Mixed} newValue, {Mixed} oldValue)
 	 * @eventMethodObject onModelPropertyChange({String} propertyName, {Mixed} newValue, {Mixed} oldValue)
 	 * @eventMethodObject onModelPropertyChange[:PROPERTYNAME]({Mixed} newValue, {Mixed} oldValue)
 	 *
-	 * @event {void} htmlPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue)
-	 * @event {void} htmlPropertyChange[:PROPERTYNAME]({View} view, {Model} model, {String} propertyName, {Mixed} newValue)
-	 * @eventMethodObject onHTMLPropertyChange({String} propertyName, {Mixed} newValue)
-	 * @eventMethodObject onHTMLPropertyChange[:PROPERTYNAME]({Mixed} newValue)
+	 * @event {void} htmlPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue, {Mixed} oldValue)
+	 * @event {void} htmlPropertyChange[:PROPERTYNAME]({Mixed} newValue, {Mixed} oldValue)
+	 * @eventMethodObject onHTMLPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue, {Mixed} oldValue)
+	 * @eventMethodObject onHTMLPropertyChange[:PROPERTYNAME]({Mixed} newValue, {Mixed} oldValue)
 	 *
 	 * @param {Object} options
 	 */
@@ -1338,18 +1342,6 @@ define(
 
 		element.append(html);
 
-		return this;
-	};
-
-	/**
-	 * on html property change
-	 *
-	 * @param {String} propertyName
-	 * @param {Mixed} newValue
-	 * @returns {View}
-	 */
-	View.prototype.onHTMLPropertyChange = function(propertyName, newValue)
-	{
 		return this;
 	};
 
