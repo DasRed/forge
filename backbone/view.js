@@ -65,13 +65,41 @@ define(
 	}
 
 	/**
+	 * returns a set formatter for boolean
+	 *
+	 * @param {Mixed} value
+	 * @returns {Boolean}
+	 */
+	function formatterDataTypeBoolean(value)
+	{
+		return !!value;
+	}
+
+	/**
+	 * returns a set formatter for numbers
+	 *
+	 * @param {Mixed} value
+	 * @returns {Number}
+	 */
+	function formatterDataTypeNumber(value)
+	{
+		if (typeof value === 'number')
+		{
+			return value;
+		}
+		return Number(value);
+	}
+
+	/**
 	 * returns a set formatter
 	 *
 	 * @param {View} view
+	 * @param {Model} model
+	 * @param {String} propertyName
 	 * @param {String}|{Function} setOption
 	 * @returns {Function}
 	 */
-	function getFormatterFunctionSet(view, setOption)
+	function getFormatterFunctionSet(view, model, propertyName, setOption)
 	{
 		var formatter = setOption;
 
@@ -79,6 +107,19 @@ define(
 		if (typeof formatter === 'string')
 		{
 			formatter = view[formatter];
+		}
+
+		// formatter getter is a string, use function from this
+		if ((formatter instanceof Function) === false)
+		{
+			if (model.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_NUMBER)
+			{
+				formatter = formatterDataTypeNumber;
+			}
+			else if (model.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_BOOLEAN)
+			{
+				formatter = formatterDataTypeBoolean;
+			}
 		}
 
 		// formatter getter not a function
@@ -333,7 +374,7 @@ define(
 
 		// formatter
 		bindingOptions.formatter.get = getFormatterFunctionGet(view, model, propertyName, bindingOptions.formatter.get);
-		bindingOptions.formatter.set = getFormatterFunctionSet(view, bindingOptions.formatter.set);
+		bindingOptions.formatter.set = getFormatterFunctionSet(view, model, propertyName, bindingOptions.formatter.set);
 
 		// in the options is an selector define. find HTMLElement and update the html with the new value
 		if (bindingOptions.selector !== undefined)
@@ -423,7 +464,7 @@ define(
 	 * @param {jQuery.Event} event
 	 * @param {View} view
 	 */
-	function onHTMLElementPropertyChangeHandler(event, view)
+	function onHtmlElementPropertyChangeHandler(event, view)
 	{
 		// find element and property
 		var element = jQuery(event.target);
@@ -504,18 +545,18 @@ define(
 				view.trigger('htmlPropertyChange:' + propertyNameUcFirst, newValue, oldValue);
 
 				// method for property
-				if (view['onHTMLPropertyChange' + propertyNameUcFirst] instanceof Function)
+				if (view['onHtmlPropertyChange' + propertyNameUcFirst] instanceof Function)
 				{
-					view['onHTMLPropertyChange' + propertyNameUcFirst](newValue, oldValue);
+					view['onHtmlPropertyChange' + propertyNameUcFirst](newValue, oldValue);
 				}
 
 				// trigger event
 				view.trigger('htmlPropertyChange', view, view.model, propertyName, newValue, oldValue);
 
 				// method for
-				if (view.onHTMLPropertyChange instanceof Function)
+				if (view.onHtmlPropertyChange instanceof Function)
 				{
-					view.onHTMLPropertyChange(view, view.model, propertyName, newValue, oldValue);
+					view.onHtmlPropertyChange(view, view.model, propertyName, newValue, oldValue);
 				}
 
 				view.hideSaving();
@@ -659,8 +700,8 @@ define(
 	 *
 	 * @event {void} htmlPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue, {Mixed} oldValue)
 	 * @event {void} htmlPropertyChange[:PROPERTYNAME]({Mixed} newValue, {Mixed} oldValue)
-	 * @eventMethodObject onHTMLPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue, {Mixed} oldValue)
-	 * @eventMethodObject onHTMLPropertyChange[:PROPERTYNAME]({Mixed} newValue, {Mixed} oldValue)
+	 * @eventMethodObject onHtmlPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue, {Mixed} oldValue)
+	 * @eventMethodObject onHtmlPropertyChange[:PROPERTYNAME]({Mixed} newValue, {Mixed} oldValue)
 	 *
 	 * @param {Object} options
 	 */
@@ -1505,7 +1546,7 @@ define(
 			var self = this;
 			this.$el.find(this.selectorDataModel + ':input').on('change.model', function(event)
 			{
-				onHTMLElementPropertyChangeHandler(event, self);
+				onHtmlElementPropertyChangeHandler(event, self);
 			});
 		}
 

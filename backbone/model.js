@@ -60,6 +60,8 @@ define(
 		}
 
 		Backbone.Model.call(this, attributes, options);
+
+		this.attributesPrevious = lodash.clone(attributes) || null;
 	}
 
 	Model.ATTRIBUTE_TYPE_NUMBER = 'number';
@@ -80,6 +82,19 @@ define(
 		 * @var {Object}
 		 */
 		attributeTypes:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * attributes as loaded or saved
+		 *
+		 * @var {Object}
+		 */
+		attributesPrevious:
 		{
 			value: null,
 			enumerable: true,
@@ -295,6 +310,38 @@ define(
 	};
 
 	/**
+	 * fetch
+	 *
+	 * @param {Object} options
+	 * @returns {Model}
+	 */
+	Model.prototype.fetch = function(options)
+	{
+		var success = undefined;
+
+		options = options || {};
+		options.wait = options.wait !== undefined ? options.wait : this.waitDefault;
+
+		if (options.wait === true)
+		{
+			success = options.success;
+			options.success = function(model, resp, optionsSuccess)
+			{
+				this.attributesPrevious = null;
+				if (success) success(model, resp, optionsSuccess);
+			};
+		}
+		else
+		{
+			this.attributesPrevious = null;
+		}
+
+		Backbone.Model.prototype.fetch.call(this, options);
+
+		return this;
+	};
+
+	/**
 	 * parsing of the attributes
 	 *
 	 * @param {Object} attributes
@@ -435,6 +482,31 @@ define(
 	};
 
 	/**
+	 * restores model attributes values, if changes was made and not saved
+	 *
+	 * @returns {Model}
+	 */
+	Model.prototype.restore = function()
+	{
+		var previousAttributes = this.previousAttributes();
+		var propertyName = null;
+
+		for (propertyName in this.attributesPrevious)
+		{
+			if (this.attributes[propertyName] !== this.attributesPrevious[propertyName])
+			{
+				this.set(propertyName, this.attributesPrevious[propertyName]);
+			}
+		}
+
+		this.changed = null;
+		this._previousAttributes = undefined;
+		this.attributesPrevious = null;
+
+		return this;
+	};
+
+	/**
 	 * save with default wait
 	 *
 	 * @param {Object}|{String} key
@@ -444,15 +516,31 @@ define(
 	 */
 	Model.prototype.save = function(key, val, options)
 	{
+		var success = undefined;
+		var optionsObject = undefined;
+
 		if (key == null || typeof key === 'object')
 		{
-			val = val || {};
-			val.wait = val.wait !== undefined ? val.wait : this.waitDefault;
+			optionsObject = val = val || {};
 		}
 		else
 		{
-			options = options || {};
-			options.wait = options.wait !== undefined ? options.wait : this.waitDefault;
+			optionsObject = options = options || {};
+		}
+
+		optionsObject.wait = optionsObject.wait !== undefined ? optionsObject.wait : this.waitDefault;
+		if (optionsObject.wait === true)
+		{
+			success = optionsObject.success;
+			optionsObject.success = function(model, resp, optionsSuccess)
+			{
+				this.attributesPrevious = null;
+				if (success) success(model, resp, optionsSuccess);
+			};
+		}
+		else
+		{
+			this.attributesPrevious = null;
 		}
 
 		Backbone.Model.prototype.save.call(this, key, val, options);
@@ -484,6 +572,13 @@ define(
 			complete = options.complete;
 		}
 
+		// store original values
+		if (this.attributesPrevious === null)
+		{
+			this.attributesPrevious = lodash.clone(this.attributes);
+		}
+
+		// call original set
 		Backbone.Model.prototype.set.apply(this, arguments);
 
 		if (success instanceof Function && options.xhr === undefined)
@@ -588,7 +683,7 @@ define(
 		var attributes = Backbone.Model.prototype.toJSON.apply(this, arguments);
 
 		// type conversion
-		attributes = lodash.reduce(this.attributeTypes, function(attributes, propertyType, propertyName)
+		attributes = lodash.reduce(this.attributeTypes, function(acc, propertyType, propertyName)
 		{
 			// convert back for JSON
 			switch (propertyType)
@@ -599,7 +694,7 @@ define(
 					{
 						throw new Error('The model property "' + propertyName + '" must be an instance of Collection to use the attribute type "collection" on the attribute "' + propertyName + '".');
 					}
-					attributes[propertyName] = this[propertyName].toJSON(options);
+					acc[propertyName] = this[propertyName].toJSON(options);
 					break;
 
 				// write to a model property direct on the model
@@ -608,11 +703,11 @@ define(
 					{
 						throw new Error('The model property "' + propertyName + '" must be an instance of Model to use the attribute type "model" on the attribute "' + propertyName + '".');
 					}
-					attributes[propertyName] = this[propertyName].toJSON(options);
+					acc[propertyName] = this[propertyName].toJSON(options);
 					break;
 			}
 
-			return attributes;
+			return acc;
 		}, attributes, this);
 
 		return attributes;
