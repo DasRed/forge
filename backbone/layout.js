@@ -74,6 +74,7 @@ define(
 		 *			autoCreate: {Boolean} true
 		 *			autoRender: {Boolean} true
 		 *			options: {Object}|{Function} {},
+		 *			renderDelay: {Number} 0 delay in milliseconds to render if autoRender = true
 		 *			validateRender: {Function}
 		 * 		}
 		 */
@@ -188,7 +189,7 @@ define(
 			{
 				return;
 			}
-			
+
 			if (lodash.isPlainObject(config) === false)
 			{
 				throw new Error('A layout config must be a plain object.');
@@ -203,13 +204,22 @@ define(
 				autoCreate: true,
 				autoRender: true,
 				options: {},
+				renderDelay: 0,
 				validateRender: lodash.noop
 			});
 
 			// only on autoCreate
 			if (config.autoCreate === true)
 			{
-				this.renderView(key);
+				if (config.renderDelay === 0)
+				{
+					this.renderView(key);
+				}
+				else
+				{
+					console.debug('render layout config view "' + key + '" delayed');
+					lodash.delay(this.renderView.bind(this, key), config.renderDelay);
+				}
 			}
 		}, this);
 
@@ -228,6 +238,8 @@ define(
 	{
 		// remove previous view
 		this.removeView(key);
+
+		console.debug('render layout config view "' + key + '".');
 
 		// validate
 		if (this.configs[key] === undefined)

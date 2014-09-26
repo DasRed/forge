@@ -109,7 +109,7 @@ define(
 	 */
 	function propertyChangeHandlerInputWithValue(view, elements, newValue, newValueFormatted)
 	{
-		if (elements.is('[type=number]') === true)
+		if (elements.is('[type=number]') === true || elements.is('select') === true)
 		{
 			elements.val(newValue);
 		}
