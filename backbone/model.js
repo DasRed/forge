@@ -317,6 +317,7 @@ define(
 	 */
 	Model.prototype.fetch = function(options)
 	{
+		var self = this;
 		var success = undefined;
 
 		options = options || {};
@@ -327,8 +328,11 @@ define(
 			success = options.success;
 			options.success = function(model, resp, optionsSuccess)
 			{
-				this.attributesPrevious = null;
-				if (success) success(model, resp, optionsSuccess);
+				self.attributesPrevious = null;
+				if (success)
+				{
+					success(model, resp, optionsSuccess);
+				}
 			};
 		}
 		else
@@ -516,6 +520,7 @@ define(
 	 */
 	Model.prototype.save = function(key, val, options)
 	{
+		var self = this;
 		var success = undefined;
 		var optionsObject = undefined;
 
@@ -534,8 +539,11 @@ define(
 			success = optionsObject.success;
 			optionsObject.success = function(model, resp, optionsSuccess)
 			{
-				this.attributesPrevious = null;
-				if (success) success(model, resp, optionsSuccess);
+				self.attributesPrevious = null;
+				if (success)
+				{
+					success(model, resp, optionsSuccess);
+				}
 			};
 		}
 		else

@@ -147,6 +147,11 @@ define(
 	 */
 	Translation.prototype.translate = function(key, parameters, defaults)
 	{
+		if (key === undefined || key === null)
+		{
+			return key;
+		}
+			
 		if (key.charAt(0) === '{')
 		{
 			key = key.slice(1);
