@@ -2,15 +2,15 @@
 	<% view.collectionColumns.each(function(modelColumn) { %>
 		<li>
 			<label
-				for="table_<%=view.viewTable.name %>_<%=modelColumn.attributes.column %>"
-				data-customizer-property="<%=modelColumn.attributes.column %>"
+				for="table_${view.viewTable.name}_${modelColumn.attributes.column}"
+				data-customizer-property="${modelColumn.attributes.column}"
 			>
 				<%=__('tableCustomizer.table_' + view.viewTable.name + '_' + modelColumn.attributes.column) %>
 			</label>
 			<input
-				id="table_<%=view.viewTable.name %>_<%=modelColumn.attributes.column %>"
+				id="table_${view.viewTable.name}_${modelColumn.attributes.column}"
 				type="checkbox"
-				data-customizer-property="<%=modelColumn.attributes.column %>"
+				data-customizer-property="${modelColumn.attributes.column}"
 				<% if (modelColumn.attributes.visible === true) {%>checked="checked"<%} %>
 			>
 		</li>
