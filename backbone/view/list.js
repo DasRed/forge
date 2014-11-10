@@ -29,9 +29,6 @@ define(
 	ViewListSorter
 )
 {
-	// Cached regex to split keys for `delegate`.
-	var delegateEventSplitter = /^(\S+)\s*(.*)$/;
-
 	/**
 	 * list of view
 	 *
@@ -419,45 +416,6 @@ define(
 			writable: true
 		}
 	});
-
-	/**
-	 * appends more delegated events without removing previous added events
-	 *
-	 * @param {Object} options
-	 * @returns {ViewList}
-	 */
-	ViewList.prototype.appendDelegateEvents = function(events)
-	{
-		for (var key in events)
-		{
-			var method = events[key];
-			if ((method instanceof Function) === false)
-			{
-				method = this[events[key]];
-			}
-			if ((method instanceof Function) === false)
-			{
-				continue;
-			}
-
-			var match = key.match(delegateEventSplitter);
-			var eventName = match[1];
-			var selector = match[2];
-
-			method = method.bind(this);
-			eventName += '.delegateEvents' + this.cid;
-			if (selector === '')
-			{
-				this.$el.on(eventName, method);
-			}
-			else
-			{
-				this.$el.on(eventName, selector, method);
-			}
-		}
-
-		return this;
-	};
 
 	/**
 	 * reorder an entry to an index
