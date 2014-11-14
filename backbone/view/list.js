@@ -232,15 +232,49 @@ define(
 			{
 				if (this._renderQueue === undefined)
 				{
-					this._renderQueue = new QueueTimeout(
-					{
-						delay: 10,
-						timeout: 750
-					});
+					this._renderQueue = new QueueTimeout(this.renderQueueOptions);
+					this._renderQueue.enabled = this.renderQueueEnabled;
 				}
 
 				return this._renderQueue;
 			}
+		},
+
+		/**
+		 * render queue is enabled or not
+		 *
+		 * @var {Boolean}
+		 */
+		renderQueueEnabled:
+		{
+			enumerable: true,
+			configurable: true,
+			get: function()
+			{
+				return this._renderQueueEnabled || true;
+			},
+			set: function(value)
+			{
+				this._renderQueueEnabled = !!value;
+				this.renderQueue.enabled = this._renderQueueEnabled;
+			}
+		},
+
+		/**
+		 * options for the render queue
+		 *
+		 * @var {Object}
+		 */
+		renderQueueOptions:
+		{
+			value:
+			{
+				delay: 10,
+				timeout: 750
+			},
+			enumerable: true,
+			configurable: true,
+			writable: true
 		},
 
 		/**
@@ -719,10 +753,17 @@ define(
 	{
 		this.collection.each(function(model, index)
 		{
-			var id = model.cid + '-sort';
-			if (this.renderQueue.exists(id) === false)
+			if (this.renderQueueEnabled === true)
 			{
-				this.renderQueue.add(id, this.appendEntryToIndex.bind(this, model, index));
+				var id = model.cid + '-sort';
+				if (this.renderQueue.exists(id) === false)
+				{
+					this.renderQueue.add(id, this.appendEntryToIndex.bind(this, model, index));
+				}
+			}
+			else
+			{
+				this.appendEntryToIndex(model, index);
 			}
 		}, this);
 
@@ -890,22 +931,43 @@ define(
 		var id = model.cid;
 
 		// nothing to do
-		if (this.viewEntries[id] !== undefined || this.renderQueue.exists(id) === true)
+		if (this.viewEntries[id] !== undefined || (this.renderQueueEnabled === true && this.renderQueue.exists(id) === true))
 		{
 			return this;
 		}
 
-		var self = this;
-		this.renderQueue.add(id, function()
+		// render with queue
+		if (this.renderQueueEnabled === true)
 		{
-			// create the view and remember. note: auto render is on
-			self.viewEntries[id] = self.getViewInstance(model);
-
-			// append to index
-			self.appendEntryToIndex(model, index);
-		});
+			this.renderQueue.add(id, this.renderEntryNow.bind(this, model, index));
+		}
+		// render without queue
+		else
+		{
+			this.renderEntryNow(model, index);
+		}
 
 		return this;
+	};
+
+	/**
+	 * renders an entry now without any queue
+	 *
+	 * @param {Model} model
+	 * @param {Number} index
+	 * @returns {ViewListEntry}
+	 */
+	ViewList.prototype.renderEntryNow = function(model, index)
+	{
+		var id = model.cid;
+
+		// create the view and remember. note: auto render is on
+		this.viewEntries[id] = this.getViewInstance(model);
+
+		// append to index
+		this.appendEntryToIndex(model, index);
+
+		return this.viewEntries[id];
 	};
 
 	/**
