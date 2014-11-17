@@ -16,6 +16,12 @@ define(
 )
 {
 	var collator = undefined;
+	var setOptions =
+	{
+		add: true,
+		remove: true,
+		merge: true
+	};
 
 	/**
 	 * Collection for Models
@@ -156,6 +162,32 @@ define(
 		},
 
 		/**
+		 * option fetch silent
+		 *
+		 * @var {Boolean}
+		 */
+		fetchSilentDefault:
+		{
+			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * collection is currently fetching
+		 *
+		 * @var {Boolean}
+		 */
+		isFetching:
+		{
+			value: false,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * default model for data
 		 *
 		 * @var {Model}
@@ -213,6 +245,28 @@ define(
 	});
 
 	/**
+	 * reset of collection with full model destroy
+	 *
+	 * @returns {Collection}
+	 */
+	Collection.prototype._reset = function()
+	{
+		if (this.models !== undefined && this.models !== null)
+		{
+			var i = 0;
+			var length = this.models.length;
+			for (i = 0; i < length; i++)
+			{
+				this.models[i].clearFromMemory();
+			}
+		}
+
+		Backbone.Collection.prototype._reset.apply(this, arguments);
+
+		return this;
+	};
+
+	/**
 	 * create with default wait
 	 *
 	 * @param {Model} key
@@ -248,7 +302,18 @@ define(
 	 */
 	Collection.prototype.fetch = function(options)
 	{
+		if (this.isFetching === true)
+		{
+			console.warn('Collection is currenty in fetching. Abort new fetch.');
+			return this;
+		}
+		this.isFetching = true;
+
 		options = options || {};
+		if (options.silent === undefined)
+		{
+			options.silent = this.fetchSilentDefault;
+		}
 
 		var self = this;
 		var completeCallback = options.complete;
@@ -260,6 +325,7 @@ define(
 				result = completeCallback.call(self, jqXHR, textStatus);
 			}
 
+			this.isFetching = false;
 			self.trigger('fetched', self);
 
 			return result;
@@ -318,6 +384,192 @@ define(
 		this.sync('update', this, options);
 
 		return this;
+	};
+
+	/**
+	 * improved Backbone.Collection.set function... taken from Backbone.Collection and improved some code parts
+	 *
+	 * @param {Array} models
+	 * @param {Object} options
+	 * @returns {Array}
+	 */
+	Collection.prototype.set = function(models, options)
+	{
+		// nothing to do
+		if (models === null || models === undefined)
+		{
+			return models;
+		}
+
+		// just only array
+		if ((models instanceof Array) === false)
+		{
+			if (models instanceof Object)
+			{
+				models = [models];
+			}
+			else
+			{
+				throw new Error('Models must be an instance of array');
+			}
+		}
+
+		options = lodash.defaults({}, options, setOptions);
+		if (options.parse)
+		{
+			models = this.parse(models, options);
+		}
+
+		var i = undefined;
+		var l = undefined;
+		var id = undefined;
+		var model = undefined;
+		var attrs = undefined;
+		var existing = undefined;
+		var sort = undefined;
+		var at = options.at;
+		var targetModel = this.model;
+		var sortable = this.comparator && (at == null) && options.sort !== false;
+		var sortAttr = _.isString(this.comparator) ? this.comparator : null;
+		var toAdd = [];
+		var toRemove = [];
+		var modelMap = {};
+		var add = options.add;
+		var merge = options.merge;
+		var remove = options.remove;
+		var order = !sortable && add && remove ? [] : false;
+		var modelIsNew = false;
+		var collectionLength = this.length;
+
+		// Turn bare objects into model references, and prevent invalid models
+		// from being added.
+		for (i = 0, l = models.length; i < l; i++)
+		{
+			attrs = models[i] || {};
+			if (attrs instanceof Backbone.Model)
+			{
+				id = model = attrs;
+			}
+			else
+			{
+				id = attrs[targetModel.prototype.idAttribute || 'id'];
+			}
+
+			// If a duplicate is found, prevent it from being added and
+			// optionally merge it into the existing model.
+			if (collectionLength !== 0 && (existing = this.get(id)))
+			{
+				if (remove)
+				{
+					modelMap[existing.cid] = true;
+				}
+				if (merge)
+				{
+					attrs = attrs === model ? model.attributes : attrs;
+					if (options.parse)
+					{
+						attrs = existing.parse(attrs, options);
+					}
+					existing.set(attrs, options);
+					if (sortable && !sort && existing.hasChanged(sortAttr))
+					{
+						sort = true;
+					}
+				}
+				models[i] = existing;
+				modelIsNew = false;
+				model = existing || model;
+			}
+			// If this is a new, valid model, push it to the `toAdd` list.
+			else if (add)
+			{
+				model = models[i] = this._prepareModel(attrs, options);
+				if (!model)
+				{
+					continue;
+				}
+				modelIsNew = true;
+				toAdd.push(model);
+				this._addReference(model, options);
+			}
+
+			// Do not add multiple models with the same `id`.
+			if (order && (modelIsNew || !modelMap[model.id]))
+			{
+				order.push(model);
+			}
+			modelMap[model.id] = true;
+		}
+
+		// Remove nonexistent models if appropriate.
+		if (remove)
+		{
+			for (i = 0, l = collectionLength; i < l; ++i)
+			{
+				if (!modelMap[(model = this.models[i]).cid])
+				{
+					toRemove.push(model);
+				}
+			}
+			if (toRemove.length)
+			{
+				this.remove(toRemove, options);
+			}
+		}
+
+		// See if sorting is needed, update `length` and splice in new models.
+		if (toAdd.length || (order && order.length))
+		{
+			if (sortable)
+			{
+				sort = true;
+			}
+			this.length += toAdd.length;
+			if (at != null)
+			{
+				for (i = 0, l = toAdd.length; i < l; i++)
+				{
+					this.models.splice(at + i, 0, toAdd[i]);
+				}
+			}
+			else
+			{
+				if (order)
+				{
+					this.models.length = 0;
+				}
+				var orderedModels = order || toAdd;
+				for (i = 0, l = orderedModels.length; i < l; i++)
+				{
+					this.models.push(orderedModels[i]);
+				}
+			}
+		}
+
+		// Silently sort the collection if appropriate.
+		if (sort)
+		{
+			this.sort(
+			{
+				silent: true
+			});
+		}
+
+		// Unless silenced, it's time to fire all appropriate add/sort events.
+		if (!options.silent)
+		{
+			for (i = 0, l = toAdd.length; i < l; i++)
+			{
+				(model = toAdd[i]).trigger('add', model, this, options);
+			}
+			if (sort || (order && order.length))
+			{
+				this.trigger('sort', this, options);
+			}
+		}
+
+		// Return the added (or merged) model (or models).
+		return models;
 	};
 
 	/**
@@ -449,28 +701,6 @@ define(
 
 			return acc;
 		}, rows).join('\n');
-	};
-
-	/**
-	 * reset of collection with full model destroy
-	 *
-	 * @returns {Collection}
-	 */
-	Collection.prototype._reset = function()
-	{
-		if (this.models !== undefined && this.models !== null)
-		{
-			var i = 0;
-			var length = this.models.length;
-			for (i = 0; i < length; i++)
-			{
-				this.models[i].clearFromMemory();
-			}
-		}
-
-		Backbone.Collection.prototype._reset.apply(this, arguments);
-
-		return this;
 	};
 
 	return compatibility(Collection);

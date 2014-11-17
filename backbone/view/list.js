@@ -6,27 +6,27 @@ define(
 	'lodash',
 	'jQuery',
 	'forge/cache/backbone/collection/instance',
-	'forge/queue/timeout',
 	'forge/backbone/compatibility',
 	'forge/backbone/collection',
 	'forge/backbone/model',
 	'forge/backbone/view',
 	'forge/backbone/view/list/entry',
 	'forge/backbone/view/list/filter',
-	'forge/backbone/view/list/sorter'
+	'forge/backbone/view/list/sorter',
+	'forge/backbone/view/list/endless/scroll'
 ], function(
 	require,
 	lodash,
 	jQuery,
 	cacheBackboneCollection,
-	QueueTimeout,
 	compatibility,
 	Collection,
 	Model,
 	View,
 	ViewListEntry,
 	ViewListFilter,
-	ViewListSorter
+	ViewListSorter,
+	ViewListEndlessScroll
 )
 {
 	/**
@@ -119,8 +119,8 @@ define(
 				collection.on('remove', this.onCollectionRemove, this);
 				collection.on('reset', this.onCollectionReset, this);
 				collection.on('sort', this.onCollectionSort, this);
-				collection.on('fetching', this.showLoadingScreen, this);
-				collection.on('fetched', this.hideLoadingScreen, this);
+				collection.on('fetching', this.onCollectionFetching, this);
+				collection.on('fetched', this.onCollectionFetched, this);
 
 				this._collection = collection;
 			}
@@ -178,6 +178,29 @@ define(
 		},
 
 		/**
+		 * @var {ViewListEndlessScroll}
+		 */
+		endlessScroll:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * enables the endless scroller. can only be defined in constructor
+		 * @var {Boolean}
+		 */
+		endlessScrollEnabled:
+		{
+			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * string of filter container for filterOptions
 		 *
 		 * @see ViewListFilter
@@ -214,64 +237,6 @@ define(
 		filterProperties:
 		{
 			value: null,
-			enumerable: true,
-			configurable: true,
-			writable: true
-		},
-
-		/**
-		 * queue for rendering
-		 *
-		 * @returns {QueueTimeout}
-		 */
-		renderQueue:
-		{
-			enumerable: true,
-			configurable: true,
-			get: function()
-			{
-				if (this._renderQueue === undefined)
-				{
-					this._renderQueue = new QueueTimeout(this.renderQueueOptions);
-					this._renderQueue.enabled = this.renderQueueEnabled;
-				}
-
-				return this._renderQueue;
-			}
-		},
-
-		/**
-		 * render queue is enabled or not
-		 *
-		 * @var {Boolean}
-		 */
-		renderQueueEnabled:
-		{
-			enumerable: true,
-			configurable: true,
-			get: function()
-			{
-				return this._renderQueueEnabled || true;
-			},
-			set: function(value)
-			{
-				this._renderQueueEnabled = !!value;
-				this.renderQueue.enabled = this._renderQueueEnabled;
-			}
-		},
-
-		/**
-		 * options for the render queue
-		 *
-		 * @var {Object}
-		 */
-		renderQueueOptions:
-		{
-			value:
-			{
-				delay: 10,
-				timeout: 750
-			},
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -545,19 +510,33 @@ define(
 			return undefined;
 		}
 
+		// loading screen container is defined
 		if (this.selectorLoading !== null && this.selectorLoading !== undefined)
 		{
 			elementParent = this.$el.find(this.selectorLoading);
 		}
 
+		// not found or not defined with selector start on this $el. maybe this.$el is the selector for loading element
 		if ((elementParent === null || elementParent.length === 0) && this.$el.is(this.selectorLoading) === true)
 		{
 			elementParent = this.$el;
 		}
 
+		// not found or not defined take the container
 		if (elementParent === null || elementParent.length === 0)
 		{
 			elementParent = this.getElementContainerEntry(false) || this.$el;
+		}
+
+		// try to find element with height and not elements with UL
+		var elementParentPrev = elementParent;
+		while ((elementParent.height() === 0 || elementParent.is('ul') === true) && elementParent.get(0) !== window && elementParent.get(0) !== document)
+		{
+			elementParent = elementParent.parent();
+		}
+		if (elementParent.get(0) === window || elementParent.get(0) === document)
+		{
+			elementParent = elementParentPrev;
 		}
 
 		return elementParent;
@@ -568,7 +547,7 @@ define(
 	 *
 	 * @param {Model} model
 	 * @param {Boolean} throwError Default is TRUE
-	 * @returns {View}
+	 * @returns {ViewListEntry}
 	 */
 	ViewList.prototype.getViewEntryByModel = function(model, throwError)
 	{
@@ -601,7 +580,7 @@ define(
 	 *
 	 * @param {Model} model
 	 * @param {Object} options
-	 * @returns {View}
+	 * @returns {ViewListEntry}
 	 */
 	ViewList.prototype.getViewInstance = function(model, options)
 	{
@@ -700,7 +679,37 @@ define(
 	 */
 	ViewList.prototype.onCollectionAdd = function(model, collection, options)
 	{
-		this.renderEntry(model, collection.indexOf(model));
+		if (collection.isFetching === false)
+		{
+			this.renderEntry(model, collection.indexOf(model));
+		}
+
+		return this;
+	};
+
+	/**
+	 * collection has all data fetched, added and sorted
+	 *
+	 * @param {Collection} collection
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.onCollectionFetched = function(collection)
+	{
+		this.renderEntries();
+		this.hideLoadingScreen();
+
+		return this;
+	};
+
+	/**
+	 * collection starts fetching
+	 *
+	 * @param {Collection} collection
+	 * @returns {ViewList}
+	 */
+	ViewList.prototype.onCollectionFetching = function(collection)
+	{
+		this.showLoadingScreen();
 
 		return this;
 	};
@@ -751,21 +760,10 @@ define(
 	 */
 	ViewList.prototype.onCollectionSort = function(collection, options)
 	{
-		this.collection.each(function(model, index)
+		if (collection.isFetching === false)
 		{
-			if (this.renderQueueEnabled === true)
-			{
-				var id = model.cid + '-sort';
-				if (this.renderQueue.exists(id) === false)
-				{
-					this.renderQueue.add(id, this.appendEntryToIndex.bind(this, model, index));
-				}
-			}
-			else
-			{
-				this.appendEntryToIndex(model, index);
-			}
-		}, this);
+			this.renderEntries();
+		}
 
 		return this;
 	};
@@ -787,6 +785,14 @@ define(
 			this.collection = collectionToInsert;
 		}
 
+		// endless scroller enabled?
+		if (this.endlessScrollEnabled === true)
+		{
+			this.endlessScroll = new ViewListEndlessScroll(
+			{
+				viewList: this
+			});
+		}
 		return this;
 	};
 
@@ -916,6 +922,7 @@ define(
 			// render each entry
 			this.collection.each(this.renderEntry, this);
 		}
+
 		return this;
 	};
 
@@ -928,46 +935,16 @@ define(
 	 */
 	ViewList.prototype.renderEntry = function(model, index)
 	{
-		var id = model.cid;
-
-		// nothing to do
-		if (this.viewEntries[id] !== undefined || (this.renderQueueEnabled === true && this.renderQueue.exists(id) === true))
+		// not rendered... render it
+		if (this.getViewEntryByModel(model, false) === undefined)
 		{
-			return this;
+			this.viewEntries[model.cid] = this.getViewInstance(model);
 		}
-
-		// render with queue
-		if (this.renderQueueEnabled === true)
-		{
-			this.renderQueue.add(id, this.renderEntryNow.bind(this, model, index));
-		}
-		// render without queue
-		else
-		{
-			this.renderEntryNow(model, index);
-		}
-
-		return this;
-	};
-
-	/**
-	 * renders an entry now without any queue
-	 *
-	 * @param {Model} model
-	 * @param {Number} index
-	 * @returns {ViewListEntry}
-	 */
-	ViewList.prototype.renderEntryNow = function(model, index)
-	{
-		var id = model.cid;
-
-		// create the view and remember. note: auto render is on
-		this.viewEntries[id] = this.getViewInstance(model);
 
 		// append to index
 		this.appendEntryToIndex(model, index);
 
-		return this.viewEntries[id];
+		return this;
 	};
 
 	/**

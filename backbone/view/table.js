@@ -101,19 +101,6 @@ define(
 		},
 
 		/**
-		 * css selector for the container for loading element
-		 *
-		 * @var {String}
-		 */
-		selectorLoading:
-		{
-			value: 'table',
-			enumerable: true,
-			configurable: true,
-			writable: true
-		},
-
-		/**
 		 * object of sorter options. if sorterOptions is null, no filter will be rendered
 		 * this will be deligated to the ViewTableCustomizer
 		 *
@@ -196,6 +183,50 @@ define(
 		this.trigger('sorter:create:after', this, sorter);
 
 		return sorter;
+	};
+
+	/**
+	 * returns the parent element for loading
+	 *
+	 * @param {Boolean} throwError default TRUE
+	 * @returns {jQuery}
+	 */
+	ViewTable.prototype.getElementContainerLoading = function(throwError)
+	{
+		var elementParent = null;
+		if (this.$el === null)
+		{
+			return undefined;
+		}
+
+		// loading screen container is defined
+		if (this.selectorLoading !== null && this.selectorLoading !== undefined)
+		{
+			elementParent = this.$el.find(this.selectorLoading);
+		}
+
+		// not found or not defined with selector start on this $el. maybe this.$el is the selector for loading element
+		if ((elementParent === null || elementParent.length === 0) && this.$el.is(this.selectorLoading) === true)
+		{
+			elementParent = this.$el;
+		}
+
+		// not found or not defined find next scrolling element
+		if (elementParent === null || elementParent.length === 0)
+		{
+			elementParent = this.$el.parents().filter(function()
+			{
+				return jQuery(this).css('overflow-y') !== 'visible';
+			}).first();
+		}
+
+		// not found or not defined take the container
+		if (elementParent === null || elementParent.length === 0)
+		{
+			elementParent = this.getElementContainerEntry(false) || this.$el;
+		}
+
+		return elementParent;
 	};
 
 	/**

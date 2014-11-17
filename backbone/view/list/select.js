@@ -287,13 +287,36 @@ define(
 	};
 
 	/**
+	 * renders an entry
+	 *
+	 * @param {Model} model
+	 * @param {Number} index
+	 * @returns {ViewListSelect}
+	 */
+	ViewListSelect.prototype.renderEntry = function(model, index)
+	{
+		ViewList.prototype.renderEntry.apply(this, arguments);
+
+		if (this.selected === model)
+		{
+			this.renderMarkSelected();
+		}
+
+		return this;
+	};
+
+	/**
 	 * @returns {ViewListSelect}
 	 */
 	ViewListSelect.prototype.renderMarkSelected = function()
 	{
 		if (this.selected !== undefined)
 		{
-			this.getViewEntryByModel(this.selected).markAsSelected();
+			var view = this.getViewEntryByModel(this.selected, false);
+			if (view instanceof ViewListSelectEntry)
+			{
+				view.markAsSelected();
+			}
 		}
 
 		return this;

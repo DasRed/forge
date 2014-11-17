@@ -297,14 +297,13 @@ require(
 						});
 						timeData.viewCreate += profiler.getTime('viewCreate', true);
 
-						// disable the render queue
-						view.renderQueue.enabled = false;
-
-						view.renderQueue.add = function(key, entry)
+						var renderEntryOriginal = view.renderEntry;
+						view.renderEntry = function()
 						{
 							profiler.start('row');
-							entry.apply(this, [this]);
+							var result = renderEntryOriginal.apply(this, arguments);
 							timeData.row += profiler.getTime('row', true);
+							return result;
 						};
 
 						// render

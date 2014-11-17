@@ -185,20 +185,10 @@ define(
 			return this;
 		}
 
-		var id = model.cid;
-		var idMark = id + 'markViewModel';
-
-		// nothing to do
-		if (this.renderQueue.exists(idMark) === true)
+		var view = this.getViewEntryByModel(model, false);
+		if (view instanceof ViewListSelectEntry)
 		{
-			return this;
-		}
-
-		var self = this;
-		this.renderQueue.add(idMark, function()
-		{
-			var view = self.getViewEntryByModel(model);
-			if (self.selected.get(model.id) !== undefined)
+			if (this.selected.get(model.id) !== undefined)
 			{
 				view.markAsSelected();
 			}
@@ -206,7 +196,7 @@ define(
 			{
 				view.markAsUnselected();
 			}
-		});
+		}
 
 		return this;
 	};
@@ -352,6 +342,22 @@ define(
 	 */
 	ViewListSelectMulti.prototype.onRemove = function(modelSelectionsRemoved, modelCollection)
 	{
+		return this;
+	};
+
+	/**
+	 * renders an entry
+	 *
+	 * @param {Model} model
+	 * @param {Number} index
+	 * @returns {ViewListSelectMulti}
+	 */
+	ViewListSelectMulti.prototype.renderEntry = function(model, index)
+	{
+		ViewList.prototype.renderEntry.apply(this, arguments);
+
+		this.markViewModel(model);
+
 		return this;
 	};
 
