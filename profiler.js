@@ -127,6 +127,27 @@ define(
 	};
 
 	/**
+	 * create the id
+	 *
+	 * @param {String} id
+	 * @returns {Profiler}
+	 */
+	Profiler.prototype.create = function(id)
+	{
+		if (this.profiles[id] === undefined)
+		{
+			this.profiles[id] =
+			{
+				date: null,
+				running: false,
+				totalTime: 0
+			};
+		}
+
+		return this;
+	};
+
+	/**
 	 * retrieves the current time without stopping
 	 *
 	 * @param {String} id
@@ -279,21 +300,10 @@ define(
 	 */
 	Profiler.prototype.start = function(id, message)
 	{
-		if (this.profiles[id] === undefined)
-		{
-			this.profiles[id] =
-			{
-				date: new Date(),
-				running: true,
-				totalTime: 0
-			};
-		}
-		else
-		{
-			this.pause(id);
-			this.profiles[id].date = new Date();
-			this.profiles[id].running = true;
-		}
+		this.create(id);
+
+		this.profiles[id].date = new Date();
+		this.profiles[id].running = true;
 
 		this.startTimer();
 

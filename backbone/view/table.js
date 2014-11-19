@@ -1,6 +1,7 @@
 'use strict';
 define(
 [
+	'jQuery',
 	'lodash',
 	'forge/backbone/compatibility',
 	'forge/backbone/view/list',
@@ -8,6 +9,7 @@ define(
 	'forge/backbone/view/table/sorter',
 	'forge/backbone/view/table/customizer'
 ], function(
+	jQuery,
 	lodash,
 	compatibility,
 	ViewList,
@@ -39,6 +41,19 @@ define(
 		autoCustomize:
 		{
 			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * this is the css class name for hover over column and to define the colors
+		 *
+		 * @var {String}
+		 */
+		classNameColumnHover:
+		{
+			value: 'hoverColumn',
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -297,11 +312,42 @@ define(
 	};
 
 	/**
+	 * makes hover for columns
+	 *
+	 * @returns {ViewTable}
+	 */
+	ViewTable.prototype.renderHoverColumn = function()
+	{
+		var self = this;
+		var elementTable = this.$el.find('table');
+
+		// bind to every th and td to set hover class
+		elementTable.delegate('th, td', 'mouseover mouseout', function(event)
+		{
+			var index = jQuery(this).index() + 1;
+
+			var elementCells = elementTable.find('tr th:nth-child(' + index + '), tr td:nth-child(' + index + ')');
+			if (event.type == 'mouseover')
+			{
+				elementCells.addClass(self.classNameColumnHover);
+			}
+			else
+			{
+				elementCells.removeClass(self.classNameColumnHover);
+			}
+		});
+
+		return this;
+	};
+
+	/**
 	 * if a customizer should be used, then the table must wait for the customizer load to columns config
 	 * @returns {ViewTable}
 	 */
 	ViewTable.prototype.renderRequirements = function()
 	{
+		this.renderHoverColumn();
+
 		if (this.autoCustomize === false && (this.customizerOptions instanceof Object) === false)
 		{
 			return ViewList.prototype.renderRequirements.call(this);
