@@ -391,17 +391,17 @@ require(
 		{
 			var validMaxAvgValues =
 			{
-				'none features':							{fetch: 12,		viewCreate: 2,		render: 40,		row: 3		},
-				'all features':								{fetch: 3,		viewCreate: 2,		render: 127,	row: 11		},
-				'table/entry.autoModelBindings = true':		{fetch: 15,		viewCreate: 2,		render: 127,	row: 15		},
-				'table/entry.autoModelSave = true':			{fetch: 3,		viewCreate: 2,		render: 25,		row: 3		},
-				'table/entry.autoModelUpdate = true':		{fetch: 5,		viewCreate: 2,		render: 25,		row: 3		},
-				'table/entry.autoTemplatesAppend = true':	{fetch: 5,		viewCreate: 2,		render: 20,		row: 3		},
-				'table.autoModelBindings = true':			{fetch: 5,		viewCreate: 2,		render: 20,		row: 3		},
-				'table.autoModelSave = true':				{fetch: 3,		viewCreate: 2,		render: 20,		row: 3		},
-				'table.autoModelUpdate = true':				{fetch: 5,		viewCreate: 2,		render: 20,		row: 3		},
-				'table.autoTemplatesAppend = true':			{fetch: 3,		viewCreate: 2,		render: 20,		row: 3		},
-				'table.sorterOptions = true':				{fetch: 5,		viewCreate: 2,		render: 20,		row: 3		}
+				'none features':							{fetch: 12,		viewCreate: 9,		render: 40,		row: 3		},
+				'all features':								{fetch: 9,		viewCreate: 9,		render: 127,	row: 11		},
+				'table/entry.autoModelBindings = true':		{fetch: 15,		viewCreate: 9,		render: 127,	row: 15		},
+				'table/entry.autoModelSave = true':			{fetch: 9,		viewCreate: 9,		render: 25,		row: 3		},
+				'table/entry.autoModelUpdate = true':		{fetch: 9,		viewCreate: 9,		render: 25,		row: 3		},
+				'table/entry.autoTemplatesAppend = true':	{fetch: 9,		viewCreate: 9,		render: 20,		row: 3		},
+				'table.autoModelBindings = true':			{fetch: 9,		viewCreate: 9,		render: 20,		row: 3		},
+				'table.autoModelSave = true':				{fetch: 9,		viewCreate: 9,		render: 20,		row: 3		},
+				'table.autoModelUpdate = true':				{fetch: 9,		viewCreate: 9,		render: 20,		row: 3		},
+				'table.autoTemplatesAppend = true':			{fetch: 9,		viewCreate: 9,		render: 20,		row: 3		},
+				'table.sorterOptions = true':				{fetch: 9,		viewCreate: 9,		render: 20,		row: 3		}
 
 //				'none features':							{fetch: 12,		viewCreate: 2,		render: 17,		row: 3		},
 //				'all features':								{fetch: 3,		viewCreate: 2,		render: 114,	row: 11		},
