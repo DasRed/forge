@@ -325,7 +325,7 @@ define(
 				result = completeCallback.call(self, jqXHR, textStatus);
 			}
 
-			this.isFetching = false;
+			self.isFetching = false;
 			self.trigger('fetched', self);
 
 			return result;

@@ -307,6 +307,10 @@ define(
 			return ViewList.prototype.renderRequirements.call(this);
 		}
 
+		// render the sorter
+		this.renderSorter();
+
+		// render customizer
 		this.renderCustomizer();
 
 		return this;

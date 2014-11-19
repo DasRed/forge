@@ -23,17 +23,53 @@ define(
 )
 {
 	/**
+	 * collect all elements in a tr and reorder an entry to an index
+	 *
+	 * @param {jQuery} elementDataModels
+	 * @param {ViewTableCustomizer} viewCustomizer
+	 * @param {jQuery} elementParent
+	 */
+	function updateElements(elementDataModels, viewCustomizer, elementParent)
+	{
+		var elementColumnsLength = elementDataModels.length;
+		var elementColumn = undefined;
+		var positionOriginal = undefined;
+
+		var i = undefined;
+		for (i = 0; i < elementColumnsLength; i++)
+		{
+			elementColumn = elementDataModels.eq(i);
+
+			// set original position
+			positionOriginal = elementColumn.attr('data-customizer-position-original');
+			if (positionOriginal === undefined)
+			{
+				positionOriginal = i;
+				elementColumn.attr('data-customizer-position-original', positionOriginal);
+			}
+
+			updateElementToCorrectPositionAndVisibility(viewCustomizer, elementParent, elementColumn, positionOriginal);
+		}
+	}
+
+	/**
 	 * reorder an entry to an index if the entry is not an td or th, then the closest th or td parent will be taken
 	 *
 	 * @param {ViewTableCustomizer} viewCustomizer
-	 * @param {View} viewOfElementToAppend
 	 * @param {jQuery} elementParent
 	 * @param {jQuery} elementToAppend
+	 * @param {Number} positionOriginal
 	 */
-	function updateElementToCorrectPositionAndVisibility(viewCustomizer, viewOfElementToAppend, elementParent, elementToAppend)
+	function updateElementToCorrectPositionAndVisibility(viewCustomizer, elementParent, elementToAppend, positionOriginal)
 	{
-		var elementColumnName = elementToAppend.attr(viewOfElementToAppend.selectorDataModelAttributeName);
-		var modelColumn = viewCustomizer.collectionColumns.get(elementColumnName);
+		var modelColumn = viewCustomizer.collectionColumns.find(function(modelColumnToTest)
+		{
+			return modelColumnToTest.attributes.positionOriginal == positionOriginal;
+		});
+		if (modelColumn === undefined)
+		{
+			return;
+		}
 
 		if (elementToAppend.is('td') === false && elementToAppend.is('th') === false)
 		{
@@ -697,14 +733,7 @@ define(
 	 */
 	ViewTableCustomizer.prototype.updateEntry = function(viewTable, viewTableEntry)
 	{
-		var elementDataModels = viewTableEntry.$el.find(viewTableEntry.selectorDataModel);
-		var elementColumnsLength = elementDataModels.length;
-
-		var i = undefined;
-		for (i = 0; i < elementColumnsLength; i++)
-		{
-			updateElementToCorrectPositionAndVisibility(this, viewTableEntry, viewTableEntry.$el, elementDataModels.eq(i));
-		}
+		updateElements(viewTableEntry.$el.find('td'), this, viewTableEntry.$el);
 
 		return this;
 	};
@@ -716,20 +745,7 @@ define(
 	 */
 	ViewTableCustomizer.prototype.updateHead = function()
 	{
-		var elementColumnsLength = this.elementTableTheadTrColumns.length;
-		var elementColumn = undefined;
-
-		// update the table headers
-		var i = undefined;
-		for (i = 0; i < elementColumnsLength; i++)
-		{
-			elementColumn = this.elementTableTheadTrColumns.eq(i);
-			if (elementColumn.is(this.viewTable.selectorDataModel) === false)
-			{
-				continue;
-			}
-			updateElementToCorrectPositionAndVisibility(this, this.viewTable, this.elementTableTheadTr, elementColumn);
-		}
+		updateElements(this.elementTableTheadTrColumns, this, this.elementTableTheadTr);
 
 		return this;
 	};

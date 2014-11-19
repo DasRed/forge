@@ -82,6 +82,7 @@ define(
 			for (i = 0; i < elementsSortLength; i++)
 			{
 				elementToSort = elementsSort.eq(i);
+				elementToSort.attr('data-sorter-position', i);
 				if (elementToSort.data('model-sortable') !== false)
 				{
 					elementToSort
@@ -99,6 +100,8 @@ define(
 			for (i = 0; i < elementsSortLength; i++)
 			{
 				elementToSort = elementsSort.eq(i);
+				elementToSort.attr('data-sorter-position', i);
+
 				if (elementToSort.data('model-sortable') !== false)
 				{
 					propertyNameToSort = elementToSort.data('model');
@@ -142,7 +145,7 @@ define(
 		this.collection.on('add', this.showSortedProperty.bind(this, true), this);
 		this.collection.on('reset', this.showSortedProperty.bind(this, true), this);
 		this.collection.on('sort', this.showSortedProperty.bind(this, true), this);
-		this.view.on('renderEntry', this.updateSortedColumn, this);
+		this.view.on('renderEntry', this.renderEntry, this);
 	}
 
 	// prototype
@@ -314,6 +317,35 @@ define(
 	};
 
 	/**
+	 * render entry
+	 *
+	 * @param {ViewTable} viewTable,
+	 * @param {ViewListEntry} viewTableEntry
+	 * @param {Model} model
+	 * @returns {ViewTableSorter}
+	 */
+	ViewTableSorter.prototype.renderEntry = function(viewTable, viewTableEntry, model)
+	{
+		var elementDataModels = viewTableEntry.$el.find('td');
+		var elementColumnsLength = elementDataModels.length;
+		var elementColumn = undefined;
+		var positionOriginal = undefined;
+
+		var i = undefined;
+		for (i = 0; i < elementColumnsLength; i++)
+		{
+			elementColumn = elementDataModels.eq(i);
+			positionOriginal = elementColumn.attr('data-sorter-position');
+			if (positionOriginal === undefined)
+			{
+				elementColumn.attr('data-sorter-position', i);
+			}
+		}
+
+		return this.updateSortedColumn(viewTable, viewTableEntry, model);
+	};
+
+	/**
 	 * set sorting in view
 	 *
 	 * @param {Boolean} columnChanged
@@ -336,9 +368,10 @@ define(
 		this.sortedColumnIndex = null;
 		lodash.find(this.$element.find('th'), function(element, index)
 		{
-			if (jQuery(element).hasClass('sorted') === true)
+			element = jQuery(element);
+			if (element.hasClass('sorted') === true)
 			{
-				this.sortedColumnIndex = index;
+				this.sortedColumnIndex = element.attr('data-sorter-position');
 				return true;
 			}
 		}, this);
@@ -352,11 +385,11 @@ define(
 	 * updates sorted column index
 	 *
 	 * @param {ViewTable} viewTable,
-	 * @param {ViewListEntry} viewListEntry
+	 * @param {ViewListEntry} viewTableEntry
 	 * @param {Model} model
 	 * @returns {ViewTableSorter}
 	 */
-	ViewTableSorter.prototype.updateSortedColumn = function(viewTable, viewListEntry, model)
+	ViewTableSorter.prototype.updateSortedColumn = function(viewTable, viewTableEntry, model)
 	{
 		var viewToHandle = this.view;
 
@@ -364,32 +397,32 @@ define(
 		var selectorPrefix = this.selectorBody + ' tr ';
 
 		// only on one entry
-		if (viewListEntry !== undefined)
+		if (viewTableEntry !== undefined)
 		{
-			viewToHandle = viewListEntry;
+			viewToHandle = viewTableEntry;
 			selectorPrefix = '';
 		}
 
 		viewToHandle.$el.find(selectorPrefix + 'td.sorted').removeClass('sorted');
 		if (this.sortedColumnIndex !== null)
 		{
-			viewToHandle.$el.find(selectorPrefix + 'td:nth-child(' + (this.sortedColumnIndex + 1) + ')').addClass('sorted');
+			viewToHandle.$el.find(selectorPrefix + 'td[data-sorter-position="' + this.sortedColumnIndex + '"]').addClass('sorted');
 		}
 
 		// footer
 		selectorPrefix = this.selectorFooter + ' tr ';
 
 		// only on one entry
-		if (viewListEntry !== undefined)
+		if (viewTableEntry !== undefined)
 		{
-			viewToHandle = viewListEntry;
+			viewToHandle = viewTableEntry;
 			selectorPrefix = '';
 		}
 
 		viewToHandle.$el.find(selectorPrefix + 'th.sorted').removeClass('sorted');
 		if (this.sortedColumnIndex !== null)
 		{
-			viewToHandle.$el.find(selectorPrefix + 'th:nth-child(' + (this.sortedColumnIndex + 1) + ')').addClass('sorted');
+			viewToHandle.$el.find(selectorPrefix + 'th[data-sorter-position="' + this.sortedColumnIndex + '"]').addClass('sorted');
 		}
 
 		return this;
