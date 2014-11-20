@@ -127,13 +127,55 @@ define(
 	 */
 	function ViewTableCustomizer(options)
 	{
+		// this function will be used as callback function... so prebind it to this
 		this.removeVisibilitySelector = this.removeVisibilitySelector.bind(this);
+
 		View.apply(this, arguments);
 	}
 
 	// prototype
 	ViewTableCustomizer.prototype = Object.create(View.prototype,
 	{
+
+		/**
+		 * drag handle css class name
+		 *
+		 * @var {String}
+		 */
+		classNameDragHandle:
+		{
+			value: 'dragHandle',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * visibility handle css class name
+		 *
+		 * @var {String}
+		 */
+		classNameVisibilityHandle:
+		{
+			value: 'visibilityHandle',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * visibility selector css class name
+		 *
+		 * @var {String}
+		 */
+		classNameVisibilitySelector:
+		{
+			value: 'visibilitySelector',
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
 		/**
 		 * collection of columns
 		 *
@@ -292,6 +334,19 @@ define(
 			enumerable: true,
 			configurable: true,
 			writable: true
+		},
+
+		/**
+		 * use the visibility handle as drag handle
+		 *
+		 * @var {Boolean}
+		 */
+		useVisibilityHandleAsDragHandle:
+		{
+			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
 		}
 	});
 
@@ -304,10 +359,10 @@ define(
 		// bind drag and drop
 		this.elementTable.dragtable(
 		{
-			dragHandle:'.dragHandle',
+			dragHandle: '.' + this.classNameDragHandle,
 			revert: 300,
 			tolerance: 'intersect',
-
+			clickDelay: 250,
 			persistState: this.onDragFinished.bind(this)
 		});
 
@@ -566,6 +621,7 @@ define(
 	{
 		View.prototype.preInitialize.call(this, options);
 
+		// validation
 		if (this.viewTable === null || this.viewTable === undefined)
 		{
 			throw new Error('The property "viewTable" for a ViewTableCustomizer can not be undefined or null.');
@@ -574,6 +630,12 @@ define(
 		if (this.viewTable.name === null || this.viewTable.name === undefined || this.viewTable.name === '')
 		{
 			throw new Error('The property "viewTable.name" for a ViewTableCustomizer can not be undefined, empty or null.');
+		}
+
+		// should we use the visibility handle also as drag handle?
+		if (this.useVisibilityHandleAsDragHandle === true)
+		{
+			this.classNameDragHandle = this.classNameVisibilityHandle;
 		}
 
 		// bind to view Table for renderEntry
@@ -594,14 +656,19 @@ define(
 		// set element container that is it customizable
 		this.elementTableThead.closest('table').addClass('customizable');
 
-		this.elementTableTheadTr.find('th' + this.viewTable.selectorDataModel)
-			// inject visibility handle to Columns
-			.append(tplViewTableCustomizerTemplateVisibilityHandle)
+		var elementTableTheadTrTh = this.elementTableTheadTr.find('th' + this.viewTable.selectorDataModel);
+		// inject visibility handle to Columns
+		elementTableTheadTrTh.append(tplViewTableCustomizerTemplateVisibilityHandle);
+
+		// should we use a own symbole as drag handle?
+		if (this.useVisibilityHandleAsDragHandle === false)
+		{
 			// inject drag handle to Columns
-			.append(tplViewTableCustomizerTemplateDragHandle);
+			elementTableTheadTrTh.append(tplViewTableCustomizerTemplateDragHandle);
+		}
 
 		// bind to handler
-		this.elementTableTheadTr.find('th' + this.viewTable.selectorDataModel + ' .visibilityHandle').on('click', this.onClickVisibilityHandle.bind(this));
+		this.elementTableTheadTr.find('th' + this.viewTable.selectorDataModel + ' .' + this.classNameVisibilityHandle).on('click', this.onClickVisibilityHandle.bind(this));
 
 		// listen to view table if the view table will be create a view table sorter
 		this.viewTable.once('sorter:create:before', function(viewTable, viewTableSorterOptions)
@@ -659,7 +726,7 @@ define(
 		if (event !== undefined)
 		{
 			var element = jQuery(event.target);
-			if (element.hasClass('visibilityHandle') === true || element.hasClass('visibilitySelector') === true || element.closest('.visibilitySelector').length !== 0)
+			if (element.hasClass(this.classNameVisibilityHandle) === true || element.hasClass(this.classNameVisibilitySelector) === true || element.closest('.' + this.classNameVisibilitySelector).length !== 0)
 			{
 				//do nothing;
 				return this;
