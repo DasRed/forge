@@ -26,13 +26,13 @@ require(
 	var hasWhiteSpaceSupport = (navigator.appName != 'Microsoft Internet Explorer');
 
 	var warnText = {};
-	warnText[console.LEVEL_CRITICAL] = 'critical';
-	warnText[console.LEVEL_ALERT] = 'alert';
-	warnText[console.LEVEL_ERROR] = 'error';
-	warnText[console.LEVEL_WARN] = 'warn ';
-	warnText[console.LEVEL_NOTICE] = 'notice ';
-	warnText[console.LEVEL_INFO] = 'info ';
-	warnText[console.LEVEL_DEBUG] = 'debug';
+	warnText[console.LEVEL_CRITICAL]	= 'critical';
+	warnText[console.LEVEL_ALERT]		= 'alert   ';
+	warnText[console.LEVEL_ERROR]		= 'error   ';
+	warnText[console.LEVEL_WARN]		= 'warn    ';
+	warnText[console.LEVEL_NOTICE]		= 'notice  ';
+	warnText[console.LEVEL_INFO]		= 'info    ';
+	warnText[console.LEVEL_DEBUG]		= 'debug   ';
 
 	/**
 	 * colors
