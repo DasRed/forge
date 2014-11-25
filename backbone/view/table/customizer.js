@@ -35,6 +35,11 @@ define(
 		var elementColumn = undefined;
 		var positionOriginal = undefined;
 
+		if (elementParent.is('tr') === false)
+		{
+			elementParent = elementParent.find('tr');
+		}
+
 		var i = undefined;
 		for (i = 0; i < elementColumnsLength; i++)
 		{
@@ -800,7 +805,19 @@ define(
 	 */
 	ViewTableCustomizer.prototype.updateEntry = function(viewTable, viewTableEntry)
 	{
-		updateElements(viewTableEntry.$el.find('td'), this, viewTableEntry.$el);
+		if (viewTableEntry.$el.is('tr') === true)
+		{
+			updateElements(viewTableEntry.$el.find('td'), this, viewTableEntry.$el);
+			return this;
+		}
+
+		var elements = viewTableEntry.$el.find('tr');
+		var length = elements.length;
+		var i = 0;
+		for (i = 0; i < length; i++)
+		{
+			updateElements(elements.eq(i).find('td'), this, elements.eq(i));
+		}
 
 		return this;
 	};

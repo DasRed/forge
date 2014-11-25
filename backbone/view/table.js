@@ -318,6 +318,11 @@ define(
 	 */
 	ViewTable.prototype.renderHoverColumn = function()
 	{
+		if (this.classNameColumnHover === null || this.classNameColumnHover === undefined)
+		{
+			return this;
+		}
+
 		var self = this;
 		var elementTable = this.$el.find('table');
 

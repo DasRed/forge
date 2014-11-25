@@ -104,13 +104,23 @@ define(
 				// get the instance
 				if ((collection instanceof Collection) === false)
 				{
+					var collectionParameters = undefined;
+					if (this.collectionParameters instanceof Function)
+					{
+						collectionParameters = this.collectionParameters();
+					}
+					else if (this.collectionParameters instanceof Object)
+					{
+						collectionParameters = this.collectionParameters;
+					}
+
 					if (this.collectionCachingEnabled === true)
 					{
-						collection = cacheBackboneCollection.getInstance(collection, this.collectionParameters);
+						collection = cacheBackboneCollection.getInstance(collection, collectionParameters);
 					}
 					else
 					{
-						collection = new collection(undefined, this.collectionParameters);
+						collection = new collection(undefined, collectionParameters);
 					}
 				}
 
@@ -165,9 +175,10 @@ define(
 		},
 
 		/**
-		 * automatic fetching of collection
+		 * defines some collection parameters for instanciation
+		 * can be an object or a function
 		 *
-		 * @var {Boolean}
+		 * @var {Object}|{Function}
 		 */
 		collectionParameters:
 		{
@@ -193,6 +204,19 @@ define(
 		 * @var {Boolean}
 		 */
 		endlessScrollEnabled:
+		{
+			value: true,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * enables/disables auto filter rendering
+		 *
+		 * @var {Boolean}
+		 */
+		filterEnabled:
 		{
 			value: true,
 			enumerable: true,
@@ -955,6 +979,11 @@ define(
 	 */
 	ViewList.prototype.renderFilter = function()
 	{
+		if (this.filterEnabled === false)
+		{
+			return this;
+		}
+
 		var filterOptions = lodash.extend({}, this.filterOptions || {});
 
 		// shorthand for filter container

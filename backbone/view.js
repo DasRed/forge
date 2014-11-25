@@ -1180,6 +1180,19 @@ define(
 		},
 
 		/**
+		 * template should be append and not replace the content of this.el
+		 *
+		 * @var {Boolean}
+		 */
+		templateAppend:
+		{
+			value: false,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * some template date which will be taken to render
 		 *
 		 * @var {Object}
@@ -1561,8 +1574,19 @@ define(
 			view: this
 		}, dataTemplate, dataModelFormatted, data);
 
-		// set the html
-		this.html(this.template(dataComplete));
+		// get the html from template
+		var templateAsHtml = this.template(dataComplete);
+
+		// replace the html with content in element
+		if (this.templateAppend === false)
+		{
+			this.html(templateAsHtml);
+		}
+		// append the html in element
+		else
+		{
+			this.htmlAppend(templateAsHtml);
+		}
 
 		// auto append templates
 		if (this.autoTemplatesAppend === true)
