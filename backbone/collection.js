@@ -122,25 +122,26 @@ define(
 				{
 					var attributeType = this.model.getPrototypeValue('attributeTypes')[this.comparator];
 
-					// initial direction is
-					this._direction = Collection.DIRECTION_ASC;
-
-					// sort by another collection can not work
-					if (attributeType === Model.ATTRIBUTE_TYPE_COLLECTION)
+					switch (true)
 					{
-						throw new Error('Sorting for an attribute of type collection is not allowed.');
-					}
+						// sort by another collection can not work
+						case attributeType === Model.ATTRIBUTE_TYPE_COLLECTION:
+							throw new Error('Sorting for an attribute of type collection is not allowed.');
 
-					// sort by another model can not work
-					else if (attributeType === Model.ATTRIBUTE_TYPE_MODEL)
-					{
-						throw new Error('Sorting for an attribute of type model is not allowed.');
-					}
+						// sort by another model can not work
+						case attributeType === Model.ATTRIBUTE_TYPE_MODEL:
+							throw new Error('Sorting for an attribute of type model is not allowed.');
 
-					// sort by date always sort DESC
-					else if (attributeType === Model.ATTRIBUTE_TYPE_DATE)
-					{
-						this._direction = Collection.DIRECTION_DESC;
+						// sort by date always sort DESC
+						case attributeType === Model.ATTRIBUTE_TYPE_DATE:
+						case attributeType === Model.ATTRIBUTE_TYPE_DATETIME:
+						case attributeType === Model.ATTRIBUTE_TYPE_TIME:
+							this._direction = Collection.DIRECTION_DESC;
+							break;
+
+						// initial direction is
+						default:
+							this._direction = Collection.DIRECTION_ASC;
 					}
 				}
 
