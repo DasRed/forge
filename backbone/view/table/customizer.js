@@ -46,13 +46,7 @@ define(
 			elementColumn = elementDataModels.eq(i);
 
 			// set original position
-			positionOriginal = elementColumn.attr('data-customizer-position-original');
-			if (positionOriginal === undefined)
-			{
-				positionOriginal = i;
-				elementColumn.attr('data-customizer-position-original', positionOriginal);
-			}
-
+			positionOriginal = elementColumn.attr('data-column-position');
 			updateElementToCorrectPositionAndVisibility(viewCustomizer, elementParent, elementColumn, positionOriginal);
 		}
 	}
@@ -478,6 +472,8 @@ define(
 		var modelColumn = undefined;
 		var collectionColumnsMustBeSynced = false;
 		var i = 0;
+		var sortComparator = undefined;
+		var sortDirection = undefined;
 
 		// fill up collectionColumns with not existing columns oir calculate current position and set original position
 		for (i = 0; i < elementColumnsLength; i++)
@@ -510,6 +506,12 @@ define(
 			{
 				modelColumn.attributes.positionOriginal = i;
 				modelColumn.attributes.positionCurrent = i + modelColumn.attributes.positionRelative;
+
+				if (modelColumn.attributes.sorted === true)
+				{
+					sortComparator = modelColumn.attributes.column;
+					sortDirection = modelColumn.attributes.sortDirection;
+				}
 			}
 		}
 
@@ -519,8 +521,14 @@ define(
 			this.collectionColumns.save();
 		}
 
-		// after once fetching we can bind
+		// set correct sorting
+		//this.viewTable.collection.comparator = sortComparator;
+		//this.viewTable.collection.direction = sortDirection;
+
+		// after once fetching we can bind - bind to sort
 		this.collectionColumns.on('sort', this.update, this);
+
+		// update everything
 		this.update();
 
 		// bind drag and drop

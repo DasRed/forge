@@ -276,6 +276,31 @@ define(
 	};
 
 	/**
+	 *
+	 * @returns {ViewTable}
+	 */
+	ViewTable.prototype.renderColumnPosition = function()
+	{
+		var elementDataModels = this.$el.find('thead th');
+		var elementColumnsLength = elementDataModels.length;
+		var elementColumn = undefined;
+		var positionOriginal = undefined;
+
+		var i = undefined;
+		for (i = 0; i < elementColumnsLength; i++)
+		{
+			elementColumn = elementDataModels.eq(i);
+			positionOriginal = elementColumn.attr('data-column-position');
+			if (positionOriginal === undefined)
+			{
+				elementColumn.attr('data-column-position', i);
+			}
+		}
+
+		return this;
+	};
+
+	/**
 	 * renders the customizer
 	 * @returns {ViewTable}
 	 */
@@ -351,15 +376,12 @@ define(
 	 */
 	ViewTable.prototype.renderRequirements = function()
 	{
-		this.renderHoverColumn();
+		this.renderHoverColumn().renderColumnPosition();
 
 		if (this.autoCustomize === false && (this.customizerOptions instanceof Object) === false)
 		{
 			return ViewList.prototype.renderRequirements.call(this);
 		}
-
-		// render the sorter
-		this.renderSorter();
 
 		// render customizer
 		this.renderCustomizer();

@@ -36,5 +36,31 @@ define(
 		}
 	});
 
+	/**
+	 * @returns {ViewTableEntry}
+	 */
+	ViewTableEntry.prototype.render = function()
+	{
+		ViewListEntry.prototype.render.apply(this, arguments);
+
+		var elementDataModels = this.$el.find('th, td');
+		var elementColumnsLength = elementDataModels.length;
+		var elementColumn = undefined;
+		var positionOriginal = undefined;
+
+		var i = undefined;
+		for (i = 0; i < elementColumnsLength; i++)
+		{
+			elementColumn = elementDataModels.eq(i);
+			positionOriginal = elementColumn.attr('data-column-position');
+			if (positionOriginal === undefined)
+			{
+				elementColumn.attr('data-column-position', i);
+			}
+		}
+
+		return this;
+	};
+
 	return compatibility(ViewTableEntry);
 });

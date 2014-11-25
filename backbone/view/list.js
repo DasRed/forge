@@ -1057,9 +1057,6 @@ define(
 	 */
 	ViewList.prototype.renderRequirements = function()
 	{
-		// render the sorter
-		this.renderSorter();
-
 		return this.renderRequirementsFinished();
 	};
 
@@ -1074,6 +1071,9 @@ define(
 
 		// render the filter
 		this.renderFilter();
+
+		// render the sorter
+		this.renderSorter();
 
 		return this;
 	};

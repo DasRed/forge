@@ -82,7 +82,6 @@ define(
 			for (i = 0; i < elementsSortLength; i++)
 			{
 				elementToSort = elementsSort.eq(i);
-				elementToSort.attr('data-sorter-position', i);
 				if (elementToSort.data('model-sortable') !== false)
 				{
 					elementToSort
@@ -100,8 +99,6 @@ define(
 			for (i = 0; i < elementsSortLength; i++)
 			{
 				elementToSort = elementsSort.eq(i);
-				elementToSort.attr('data-sorter-position', i);
-
 				if (elementToSort.data('model-sortable') !== false)
 				{
 					propertyNameToSort = elementToSort.data('model');
@@ -326,22 +323,6 @@ define(
 	 */
 	ViewTableSorter.prototype.renderEntry = function(viewTable, viewTableEntry, model)
 	{
-		var elementDataModels = viewTableEntry.$el.find('td');
-		var elementColumnsLength = elementDataModels.length;
-		var elementColumn = undefined;
-		var positionOriginal = undefined;
-
-		var i = undefined;
-		for (i = 0; i < elementColumnsLength; i++)
-		{
-			elementColumn = elementDataModels.eq(i);
-			positionOriginal = elementColumn.attr('data-sorter-position');
-			if (positionOriginal === undefined)
-			{
-				elementColumn.attr('data-sorter-position', i);
-			}
-		}
-
 		return this.updateSortedColumn(viewTable, viewTableEntry, model);
 	};
 
@@ -371,7 +352,7 @@ define(
 			element = jQuery(element);
 			if (element.hasClass('sorted') === true)
 			{
-				this.sortedColumnIndex = element.attr('data-sorter-position');
+				this.sortedColumnIndex = element.attr('data-column-position');
 				return true;
 			}
 		}, this);
@@ -406,7 +387,7 @@ define(
 		viewToHandle.$el.find(selectorPrefix + 'td.sorted').removeClass('sorted');
 		if (this.sortedColumnIndex !== null)
 		{
-			viewToHandle.$el.find(selectorPrefix + 'td[data-sorter-position="' + this.sortedColumnIndex + '"]').addClass('sorted');
+			viewToHandle.$el.find(selectorPrefix + 'td[data-column-position="' + this.sortedColumnIndex + '"]').addClass('sorted');
 		}
 
 		// footer
@@ -422,7 +403,7 @@ define(
 		viewToHandle.$el.find(selectorPrefix + 'th.sorted').removeClass('sorted');
 		if (this.sortedColumnIndex !== null)
 		{
-			viewToHandle.$el.find(selectorPrefix + 'th[data-sorter-position="' + this.sortedColumnIndex + '"]').addClass('sorted');
+			viewToHandle.$el.find(selectorPrefix + 'th[data-column-position="' + this.sortedColumnIndex + '"]').addClass('sorted');
 		}
 
 		return this;
