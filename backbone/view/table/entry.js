@@ -43,6 +43,14 @@ define(
 	{
 		ViewListEntry.prototype.render.apply(this, arguments);
 
+		return this.updateDataAttributes();
+	};
+
+	/**
+	 * @returns {ViewTableEntry}
+	 */
+	ViewTableEntry.prototype.updateDataAttributes = function()
+	{
 		var elementDataModels = this.$el.find('th, td');
 		var elementColumnsLength = elementDataModels.length;
 		var elementColumn = undefined;

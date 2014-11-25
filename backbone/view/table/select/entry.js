@@ -30,5 +30,16 @@ define(
 	// mixin of ViewTableEntry
 	lodash.extend(ViewTableSelectEntry.prototype, ViewTableEntry.prototype);
 
+	/**
+	 * @returns {ViewTableEntry}
+	 */
+	ViewTableSelectEntry.prototype.render = function()
+	{
+		ViewListSelectEntry.prototype.render.apply(this, arguments);
+
+		return this.updateDataAttributes();
+	};
+
+
 	return compatibility(ViewTableSelectEntry);
 });
