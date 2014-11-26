@@ -67,6 +67,16 @@ define(
 	});
 
 	/**
+	 * returns true if the element is marked as selected. if not, false will be returned
+	 *
+	 * @returns {Boolean}
+	 */
+	ViewListSelectEntry.prototype.isMarkedAsSelected = function()
+	{
+		return this.$el.hasClass(this.classNameSelected);
+	};
+
+	/**
 	 * mark as selected
 	 *
 	 * @returns {ViewListSelectEntry}
