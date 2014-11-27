@@ -140,7 +140,8 @@ define(
 			{
 				date: null,
 				running: false,
-				totalTime: 0
+				totalTime: 0,
+				countStart: 0
 			};
 		}
 
@@ -173,6 +174,34 @@ define(
 		}
 
 		return time;
+	};
+
+	/**
+	 * retrieves the current time without stopping
+	 *
+	 * @param {String} id
+	 * @param {Boolean} clear default is FALSE
+	 * @returns {Number}
+	 */
+	Profiler.prototype.getTimeAvg = function(id, clear)
+	{
+		if (this.profiles[id] === undefined)
+		{
+			return 0;
+		}
+
+		var time = this.profiles[id].totalTime;
+		if (this.profiles[id].running === true)
+		{
+			time += (new Date()) - this.profiles[id].date;
+		}
+
+		if (clear === true)
+		{
+			this.clear(id);
+		}
+
+		return time / this.profiles[id].countStart;
 	};
 
 	/**
@@ -304,6 +333,7 @@ define(
 
 		this.profiles[id].date = new Date();
 		this.profiles[id].running = true;
+		this.profiles[id].countStart++;
 
 		this.startTimer();
 

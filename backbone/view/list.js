@@ -189,6 +189,17 @@ define(
 		},
 
 		/**
+		 * @var {jQuery}
+		 */
+		elementContainerEntry:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * @var {ViewListEndlessScroll}
 		 */
 		endlessScroll:
@@ -443,25 +454,25 @@ define(
 	/**
 	 * reorder an entry to an index
 	 *
-	 * @param {Model} model
+	 * @param {ViewListEntry} viewEntry
 	 * @param {Number} index
 	 * @returns {ViewList}
 	 */
-	ViewList.prototype.appendEntryToIndex = function(model, index)
+	ViewList.prototype.appendEntryToIndex = function(viewEntry, index)
 	{
-		var elementParent = this.getElementContainerEntry();
-		var elementEntry = this.getViewEntryByModel(model).$el.detach();
-		var elementChilds = elementParent.find('>');
+		var elementParent = this.getElementContainerEntry()[0];
+		var elementEntry = viewEntry.$el[0];
+		var elementChilds = elementParent.childNodes;
 
 		// append
 		if (elementChilds.length == 0 || elementChilds.length - 1 <= index)
 		{
-			elementEntry.appendTo(elementParent);
+			elementParent.appendChild(elementEntry);
 		}
 		// insert at position
 		else
 		{
-			elementEntry.insertBefore(elementChilds[index]);
+			elementParent.insertBefore(elementEntry, elementChilds[index]);
 		}
 
 		return this;
@@ -507,17 +518,22 @@ define(
 	 */
 	ViewList.prototype.getElementContainerEntry = function(throwError)
 	{
-		var elementParent = this.selectorContainer === null || this.selectorContainer === undefined ? this.$el : this.$el.find(this.selectorContainer);
-		if (elementParent.length === 0)
+		if (this.elementContainerEntry === undefined || this.elementContainerEntry === null)
 		{
-			if (throwError === undefined || throwError === true)
+			var elementParent = this.selectorContainer === null || this.selectorContainer === undefined ? this.$el : this.$el.find(this.selectorContainer);
+			if (elementParent.length === 0)
 			{
-				throw new Error('Can not find parent element "' + this.selectorContainer + '" for view list.');
+				if (throwError === undefined || throwError === true)
+				{
+					throw new Error('Can not find parent element "' + this.selectorContainer + '" for view list.');
+				}
+				return undefined;
 			}
-			return undefined;
+
+			this.elementContainerEntry = elementParent;
 		}
 
-		return elementParent;
+		return this.elementContainerEntry;
 	};
 
 	/**
@@ -966,7 +982,7 @@ define(
 		}
 
 		// append to index
-		this.appendEntryToIndex(model, index);
+		this.appendEntryToIndex(this.viewEntries[model.cid], index);
 
 		return this;
 	};

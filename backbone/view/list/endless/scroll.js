@@ -280,6 +280,13 @@ define(
 	 */
 	ViewListEndlessScroll.prototype.renderEntries = function()
 	{
+		// remove all views
+		lodash.each(this.viewList.viewEntries, function(view)
+		{
+			view.remove();
+		});
+		this.viewList.viewEntries = {};
+
 		// clean all cached information
 		this.cleanup();
 
