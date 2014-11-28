@@ -139,7 +139,10 @@ define(
 	 */
 	function propertyChangeHandlerHtml(view, elements, newValue, newValueFormatted)
 	{
-		elements.html(newValueFormatted);
+		for (var i = 0, length = elements.length; i < length; i++)
+		{
+			elements[i].innerHTML = newValueFormatted;
+		}
 	}
 
 	/**
