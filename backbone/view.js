@@ -137,6 +137,11 @@ define(
 	 */
 	function propertyChangeHandlerHtml(view, element, newValue, newValueFormatted)
 	{
+		if (newValueFormatted === null || newValueFormatted === undefined)
+		{
+			newValueFormatted = '';
+		}
+
 		element.innerHTML = newValueFormatted;
 	}
 

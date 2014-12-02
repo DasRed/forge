@@ -43,7 +43,7 @@ define(
 			{
 				for (var i = 0; i < length; i++)
 				{
-					addOriginal.apply(this, tokens[i]);
+					addOriginal.call(this, tokens[i]);
 				}
 				return;
 			}
@@ -68,7 +68,7 @@ define(
 			{
 				for (var i = 0; i < length; i++)
 				{
-					removeOriginal.apply(this, tokens[i]);
+					removeOriginal.call(this, tokens[i]);
 				}
 				return;
 			}

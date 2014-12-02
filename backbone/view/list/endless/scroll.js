@@ -18,7 +18,7 @@ define(
 	 */
 	function elementInViewport(element, partial)
 	{
-		var viewTop = window.scrollY;
+		var viewTop = window.scrollY || window.pageYOffset;
 		var viewBottom = viewTop + window.document.documentElement.clientHeight;
 		var elementBoundingClientRect = element.getBoundingClientRect();
 		var top = elementBoundingClientRect.top;
@@ -291,6 +291,11 @@ define(
 			while (this.elementScrollContainer != null && window.getComputedStyle(this.elementScrollContainer).overflowY === 'visible')
 			{
 				this.elementScrollContainer = this.elementScrollContainer.parentNode;
+			}
+
+			if (this.elementScrollContainer === null)
+			{
+				this.elementScrollContainer = this.viewList.el.parentNode;
 			}
 
 			this.elementScrollContainer.addEventListener('scroll', this.onScroll.bind(this));
