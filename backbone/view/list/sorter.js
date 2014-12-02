@@ -4,7 +4,6 @@ define(
 [
 	'require',
 	'lodash',
-	'jQuery',
 	'forge/backbone/compatibility',
 	'forge/backbone/collection',
 	'forge/backbone/view',
@@ -13,7 +12,6 @@ define(
 ], function(
 	require,
 	lodash,
-	jQuery,
 	compatibility,
 	Collection,
 	View,
@@ -147,7 +145,7 @@ define(
 	/**
 	 * on click to toggle the direction
 	 *
-	 * @param {jQuery.Event} event
+	 * @param {Event} event
 	 * @returns {ViewListSorter}
 	 */
 	ViewListSorter.prototype.onClickDirection = function(event)
@@ -164,7 +162,7 @@ define(
 	 */
 	ViewListSorter.prototype.onClickSelection = function(event)
 	{
-		this.setProperty(jQuery(event.target).data('property'));
+		this.setProperty(event.target.getAttribute('data-property'));
 
 		return this;
 	};
@@ -176,15 +174,23 @@ define(
 	 */
 	ViewListSorter.prototype.onClickSelector = function(event)
 	{
+		var fn = 'add';
+
 		if (this.isOpen === true)
 		{
+			fn = 'remove';
 			this.isOpen = false;
-			this.$el.find('.selection').removeClass('show');
 		}
 		else
 		{
-			this.$el.find('.selection').addClass('show');
+			fn = 'add';
 			this.isOpen = true;
+		}
+
+		var elements = this.el.querySelectorAll('.selection');
+		for (var i = 0, length = elements.length; i < length; i++)
+		{
+			elements[i].classList[fn]('show');
 		}
 
 		return this;
@@ -207,24 +213,30 @@ define(
 		// on entry... no field selection
 		if (lodash.size(this.properties) <= 1)
 		{
-			this.$el.find('.selector').hide();
+			var elements = this.el.querySelectorAll('.selector');
+			for (var i = 0, length = elements.length; i < length; i++)
+			{
+				elements[i].style.display = 'none';
+			}
 		}
 		// with more then one property
 		else
 		{
-			jQuery(document).on('click', function(event)
+			document.addEventListener('click', function(event)
 			{
 				if (self.isOpen === true)
 				{
-					var element = jQuery(event.target);
-
-					if (element.hasClass('selectLink') === false)
+					if (event.target.classList.contains('selectLink') === false)
 					{
 						return;
 					}
 
 					self.isOpen = false;
-					self.$el.find('.selection').removeClass('show');
+					var elements = self.el.querySelectorAll('.selection');
+					for (var i = 0, length = elements.length; i < length; i++)
+					{
+						elements[i].classList.remove('show');
+					}
 				}
 			});
 		}
@@ -237,7 +249,12 @@ define(
 	 */
 	ViewListSorter.prototype.setDirection = function(direction)
 	{
-		this.$el.find('.direction').removeClass(Collection.DIRECTION_ASC + ' ' + Collection.DIRECTION_DESC).addClass(direction);
+		var elements = this.el.querySelectorAll('.direction');
+		for (var i = 0, length = elements.length; i < length; i++)
+		{
+			elements[i].classList.remove(Collection.DIRECTION_ASC, Collection.DIRECTION_DESC);
+			elements[i].classList.add(direction);
+		}
 
 		this.collection.direction = direction;
 
@@ -252,8 +269,17 @@ define(
 	{
 		this.isOpen = false;
 
-		this.$el.find('.selection').removeClass('show');
-		this.$el.find('.fieldName').html(this.properties[property]);
+		var elements = this.el.querySelectorAll('.selection');
+		for (var i = 0, length = elements.length; i < length; i++)
+		{
+			elements[i].classList.remove('show');
+		}
+
+		elements = this.el.querySelectorAll('.fieldName');
+		for (i = 0, length = elements.length; i < length; i++)
+		{
+			elements[i].innerHTML = this.properties[property];
+		}
 
 		this.collection.comparator = property;
 

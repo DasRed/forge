@@ -124,7 +124,7 @@ define(
 	/**
 	 * returns the container for selectable
 	 *
-	 * @returns {jQuery}
+	 * @returns {Element}
 	 */
 	ViewListSelectMulti.prototype.getElementContainerSelectable = function()
 	{
@@ -382,7 +382,7 @@ define(
 
 		if (this.selectable === true)
 		{
-			this.getElementContainerSelectable().addClass('selectable');
+			this.getElementContainerSelectable().classList.add('selectable');
 		}
 
 		this.onSelectedChange();

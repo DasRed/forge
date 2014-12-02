@@ -3,13 +3,11 @@
 define(
 [
 	'lodash',
-	'jQuery',
 	'backbone',
 	'forge/backbone/compatibility',
 	'forge/backbone/model'
 ], function(
 	lodash,
-	jQuery,
 	Backbone,
 	compatibility,
 	Model
@@ -133,85 +131,94 @@ define(
 
 	/**
 	 * @param {View} view
-	 * @param {jQuery} element
+	 * @param {Element} element
 	 * @param {Mixed} newValue
 	 * @param {String} newValueFormatted
 	 */
-	function propertyChangeHandlerHtml(view, elements, newValue, newValueFormatted)
+	function propertyChangeHandlerHtml(view, element, newValue, newValueFormatted)
 	{
-		for (var i = 0, length = elements.length; i < length; i++)
-		{
-			elements[i].innerHTML = newValueFormatted;
-		}
+		element.innerHTML = newValueFormatted;
 	}
 
 	/**
 	 * @param {View} view
-	 * @param {jQuery} element
+	 * @param {Element} element
 	 * @param {Mixed} newValue
 	 * @param {String} newValueFormatted
 	 */
-	function propertyChangeHandlerInputWithValue(view, elements, newValue, newValueFormatted)
+	function propertyChangeHandlerInputWithValue(view, element, newValue, newValueFormatted)
 	{
-		if (elements.is('[type=number]') === true || elements.is('select') === true)
+		if (newValue === undefined || newValue === null)
 		{
-			elements.val(newValue);
+			newValue = '';
+		}
+
+		if (newValueFormatted === undefined || newValueFormatted === null)
+		{
+			newValueFormatted = '';
+		}
+
+		if (element.type === 'number' || element.tagName.toLowerCase() === 'select' === true)
+		{
+			element.value = newValue;
 		}
 		else
 		{
-			elements.val(newValueFormatted);
+			element.value = newValueFormatted;
 		}
 	}
 
 	/**
 	 * @param {View} view
-	 * @param {jQuery} element
+	 * @param {Element} element
 	 * @param {Mixed} newValue
 	 * @param {String} newValueFormatted
 	 */
-	function propertyChangeHandlerInputTypeRadio(view, elements, newValue, newValueFormatted)
+	function propertyChangeHandlerInputTypeRadio(view, element, newValue, newValueFormatted)
 	{
-		elements.val([newValue]);
+		element.checked = (element.value == newValue);
 	}
 
 	/**
 	 * @param {View} view
-	 * @param {jQuery} element
+	 * @param {Element} element
 	 * @param {Boolean} newValue
 	 * @param {String} newValueFormatted
 	 */
-	function propertyChangeHandlerInputTypeCheckbox(view, elements, newValue, newValueFormatted)
+	function propertyChangeHandlerInputTypeCheckbox(view, element, newValue, newValueFormatted)
 	{
-		elements.prop('checked', newValue);
+		element.checked = newValue;
 	}
 
 	/**
-	 * handles the model property value of type date to put in into an input[type=date], input[type=time}, input[type=datetime]
+	 * handles the model property value of type date to put in into an input[type=date], input[type=time], input[type=datetime]
 	 *
 	 * @param {View} view
-	 * @param {jQuery} element
+	 * @param {Element} element
 	 * @param {Date} newValue
 	 * @param {String} newValueFormatted
 	 */
-	function propertyChangeHandlerInputTypeDateTime(view, elements, newValue, newValueFormatted)
+	function propertyChangeHandlerInputTypeDateTime(view, element, newValue, newValueFormatted)
 	{
-		var newValueIsADate = newValue instanceof Date;
-
-		if (newValueIsADate === true)
+		if (newValue === undefined || newValue === null)
 		{
-			if (
-					elements.is('[type=date]') === true ||
-					elements.is('[type=time]') === true ||
-					elements.is('[type=datetime-local]') === true ||
-					elements.is('[type=datetime]') === true
-				)
-			{
-				elements.prop('valueAsDate', newValue);
-			}
+			newValue = '';
 		}
 
+		if (newValueFormatted === undefined || newValueFormatted === null)
+		{
+			newValueFormatted = '';
+		}
+
+		if (newValue instanceof Date && (element.type == 'date' || element.type == 'time' || element.type == 'datetime-local' || element.type == 'datetime'))
+		{
+			element.valueAsDate = newValue;
+		}
 		// fallback
-		elements.val(newValueFormatted);
+		else
+		{
+			element.value = newValueFormatted;
+		}
 	}
 
 	/**
@@ -275,8 +282,10 @@ define(
 		{
 			selector = selectors[i];
 
-			result.html.selector += createSelectorForPropertyChangePrefix(result.html.selector, selector, selectorDataModel) + ':not(:input)';
-			result.val.selector += createSelectorForPropertyChangePrefix(result.val.selector, selector, selectorDataModel) + ':input'
+			result.html.selector += createSelectorForPropertyChangePrefix(result.html.selector, selector, selectorDataModel) + ':not(input):not(textarea):not(select):not(button)';
+			result.val.selector += createSelectorForPropertyChangePrefix(result.val.selector, selector, 'textarea' + selectorDataModel);
+			result.val.selector += createSelectorForPropertyChangePrefix(result.val.selector, selector, 'select' + selectorDataModel);
+			result.val.selector += createSelectorForPropertyChangePrefix(result.val.selector, selector, 'input' + selectorDataModel)
 									+ ':not([type=radio])'
 									+ ':not([type=checkbox])'
 									+ ':not([type=file])'
@@ -286,12 +295,12 @@ define(
 									+ ':not([type=datetime])'
 			;
 
-			result.dateTime.selector += createSelectorForPropertyChangePrefix(result.dateTime.selector, selector, selectorDataModel) + ':input[type=date]';
-			result.dateTime.selector += createSelectorForPropertyChangePrefix(result.dateTime.selector, selector, selectorDataModel) + ':input[type=time]';
-			result.dateTime.selector += createSelectorForPropertyChangePrefix(result.dateTime.selector, selector, selectorDataModel) + ':input[type=datetime-local]';
+			result.dateTime.selector += createSelectorForPropertyChangePrefix(result.dateTime.selector, selector, 'input' + selectorDataModel) + '[type=date]';
+			result.dateTime.selector += createSelectorForPropertyChangePrefix(result.dateTime.selector, selector, 'input' + selectorDataModel) + '[type=time]';
+			result.dateTime.selector += createSelectorForPropertyChangePrefix(result.dateTime.selector, selector, 'input' + selectorDataModel) + '[type=datetime-local]';
 
-			result.radio.selector += createSelectorForPropertyChangePrefix(result.radio.selector, selector, selectorDataModel) + '[type=radio]';
-			result.checkbox.selector += createSelectorForPropertyChangePrefix(result.checkbox.selector, selector, selectorDataModel) + '[type=checkbox]';
+			result.radio.selector += createSelectorForPropertyChangePrefix(result.radio.selector, selector, 'input' + selectorDataModel) + '[type=radio]';
+			result.checkbox.selector += createSelectorForPropertyChangePrefix(result.checkbox.selector, selector, 'input' + selectorDataModel) + '[type=checkbox]';
 		}
 
 		return result;
@@ -379,7 +388,7 @@ define(
 		bindingOptions.formatter.get = getFormatterFunctionGet(view, model, propertyName, bindingOptions.formatter.get);
 		bindingOptions.formatter.set = getFormatterFunctionSet(view, model, propertyName, bindingOptions.formatter.set);
 
-		// in the options is an selector define. find HTMLElement and update the html with the new value
+		// in the options is an selector define. find Element and update the html with the new value
 		if (bindingOptions.selector !== undefined)
 		{
 			// create specific selectors
@@ -462,16 +471,16 @@ define(
 	}
 
 	/**
-	 * if a HTMLElement change his value for a model property
+	 * if a Element change his value for a model property
 	 *
-	 * @param {jQuery.Event} event
 	 * @param {View} view
+	 * @param {Event} event
 	 */
-	function onHtmlElementPropertyChangeHandler(event, view)
+	function onHtmlElementPropertyChangeHandler(view, event)
 	{
 		// find element and property
-		var element = jQuery(event.target);
-		var propertyName = element.data('model');
+		var element = event.target;
+		var propertyName = element.getAttribute('data-model');
 
 		// no property nothing to do
 		if (propertyName === undefined)
@@ -497,29 +506,29 @@ define(
 		var newValue = undefined;
 
 		// input is checkbox
-		if (element.is(':checkbox') === true)
+		if (element.type == 'checkbox')
 		{
-			newValue = element.prop('checked');
+			newValue = !!element.checked;
 		}
 		// input is radio element
-		else if (element.is(':radio') === true)
+		else if (element.type == 'radio')
 		{
-			newValue = view.$el.find('[name=' + element.attr('name') + ']:checked').val();
+			newValue = view.el.querySelector('[name=' + element.name + ']:checked').value;
 		}
 		// input is number element
-		else if (element.is('[type=number]') === true)
+		else if (element.type == 'number')
 		{
-			newValue = element.prop('valueAsNumber');
+			newValue = element.valueAsNumber;
 		}
 		// input is date element
-		else if (element.is('[type=date]') === true || element.is('[type=time]') === true || element.is('[type=datetime-local]') === true || element.is('[type=datetime]') === true)
+		else if (element.type == 'date' || element.type == 'time' || element.type == 'datetime-local' || element.type == 'datetime')
 		{
-			newValue = element.prop('valueAsDate');
+			newValue = element.valueAsDate;
 		}
 		// other inputs
 		else
 		{
-			newValue = element.val();
+			newValue = element.value;
 		}
 
 		// format the value
@@ -591,17 +600,23 @@ define(
 		var selectorType = undefined;
 		var options = undefined;
 		var elements = undefined;
+		var i = undefined;
+		var length = undefined;
+
 		for (selectorType in bindingOptions.selectors)
 		{
 			options = bindingOptions.selectors[selectorType];
-			elements = view.$el.find(options.selector);
+			elements = view.el.querySelectorAll(options.selector);
 			if (elements.length === 0)
 			{
 				continue;
 			}
 
 			// direct callback
-			options.callback.call(view, view, elements, value, valueFormatted);
+			for (i = 0, length = elements.length; i < length; i++)
+			{
+				options.callback.call(view, view, elements[i], value, valueFormatted);
+			}
 		};
 	}
 
@@ -791,9 +806,9 @@ define(
 		}
 
 		// container element
-		if (this.container !== null && this.container !== undefined)
+		if (typeof this.container === 'string')
 		{
-			this.container = jQuery(this.container);
+			this.container = document.querySelector(this.container);
 		}
 
 		// do pre init
@@ -819,19 +834,6 @@ define(
 		 * @var {jQuery}
 		 */
 		$el:
-		{
-			value: null,
-			enumerable: true,
-			configurable: true,
-			writable: true
-		},
-
-		/**
-		 * a cached jQuery object for the parent of this.$el
-		 *
-		 * @var {jQuery}
-		 */
-		$elParent:
 		{
 			value: null,
 			enumerable: true,
@@ -949,7 +951,7 @@ define(
 		/**
 		 * container element to append the view
 		 *
-		 * @var {jQuery}|{HTMLElement}|{String}
+		 * @var {Element}|{String}
 		 */
 		container:
 		{
@@ -968,9 +970,22 @@ define(
 		 * is created from the view's tagName, className, id and attributes
 		 * properties, if specified. If not, el is an empty div.
 		 *
-		 * @var {HTMLElement}
+		 * @var {Element}
 		 */
 		el:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * the parent node of element
+		 *
+		 * @var {Element}
+		 */
+		elParent:
 		{
 			value: null,
 			enumerable: true,
@@ -1155,7 +1170,6 @@ define(
 		 *
 		 * the result is always a template function
 		 *
-		 * @structure {key: { template: {String}|{Function}, selector: {String}|{jQuery}|{HTMLElement} }
 		 * @var {Object}|{String}|{Function}
 		 */
 		template:
@@ -1211,6 +1225,7 @@ define(
 		/**
 		 * additional templates which will be automatic converted to function
 		 *
+		 * @structure {key: { template: {String}|{Function}, selector: {String}|{Element} }
 		 * @var {Object}
 		 */
 		templates:
@@ -1284,16 +1299,17 @@ define(
 	 */
 	View.prototype.attach = function()
 	{
-		if (this.$el.parent().length !== 0)
+		if (this.el.parentNode !== null)
 		{
 			throw new Error('Can not attach the view to dom, because the view is located in the dom.');
 		}
-		if (this.$elParent.length === 0)
+
+		if (this.elParent === null)
 		{
 			throw new Error('Can not attach the view to dom, because there is no parent element defined.');
 		}
 
-		this.$el.appendTo(this.$elParent);
+		this.parent.appendChild(this.el);
 
 		return this;
 	};
@@ -1305,12 +1321,12 @@ define(
 	 */
 	View.prototype.detach = function()
 	{
-		if (this.$el.parent().length === 0)
+		if (this.elParent === null)
 		{
 			throw new Error('Can not detach the view to dom, because the view is not located in the dom.');
 		}
 
-		this.$el.detach();
+		this.elParent.removeChild(this.el);
 
 		return this;
 	};
@@ -1396,8 +1412,8 @@ define(
 	{
 		if (this._elementCurrentSaving !== undefined)
 		{
-			this._elementCurrentSaving.saving.remove();
-			this._elementCurrentSaving.element.removeClass('data-model-saving');
+			this._elementCurrentSaving.saving.parentNode.removeChild(this._elementCurrentSaving.saving);
+			this._elementCurrentSaving.element.classList.remove('data-model-saving');
 			delete this._elementCurrentSaving;
 		}
 
@@ -1413,7 +1429,7 @@ define(
 	 */
 	View.prototype.html = function(html)
 	{
-		this.$el.html(html);
+		this.el.innerHTML = html;
 
 		return this;
 	};
@@ -1423,7 +1439,7 @@ define(
 	 * this function is needed so that other can overload and "translate"
 	 *
 	 * @param {String} html
-	 * @param {String}|{jQuery}|{HTMLElement} selector
+	 * @param {String}|{Element} selector
 	 * @returns {View}
 	 */
 	View.prototype.htmlAppend = function(html, selector)
@@ -1431,15 +1447,15 @@ define(
 		var element = undefined;
 		if (selector !== null && selector !== undefined)
 		{
-			element = jQuery(selector);
+			element = document.querySelector(selector);
 		}
 
 		if (element === null || element === undefined || element.length === 0)
 		{
-			element = this.$el;
+			element = this.el;
 		}
 
-		element.append(html);
+		element.insertAdjacentHTML('beforeEnd', html);
 
 		return this;
 	};
@@ -1491,18 +1507,18 @@ define(
 		// remove class name
 		if (this.className !== null)
 		{
-			this.$el.removeClass(this.className);
+			this.el.classList.remove(this.className);
 		}
 
 		this.trigger('remove', this);
 
-		if (this.$el.attr('id') === 'content')
+		if (this.el.id === 'content')
 		{
-			this.$el.html('');
+			this.html('');
 		}
-		else
+		else if (this.el.parentNode !== null)
 		{
-			this.$el.remove();
+			this.el.parentNode.removeChild(this.el);
 		}
 
 		this.stopListening();
@@ -1538,17 +1554,18 @@ define(
 		}
 
 		// append to container
-		if (this.container instanceof jQuery)
+		if (this.container instanceof window.Element)
 		{
-			this.container.empty().append(this.$el);
+			this.container.innerHTML = '';
+			this.container.appendChild(this.el);
 		}
 
-		this.$elParent = this.$el.parent();
+		this.elParent = this.el.parentNode;
 
 		// add class name
 		if (this.className !== null)
 		{
-			this.$el.addClass(this.className);
+			this.el.classList.add(this.className);
 		}
 
 		// nothing to do
@@ -1612,11 +1629,13 @@ define(
 		// create observing of inputs for observed modelBindings
 		if (this.autoModelUpdate === true)
 		{
-			var self = this;
-			this.$el.find(this.selectorDataModel + ':input').on('change.model', function(event)
+			//var self = this;
+			var elements = this.el.querySelectorAll('input' + this.selectorDataModel + ', textarea' + this.selectorDataModel + ', select' + this.selectorDataModel + ', button' + this.selectorDataModel);
+			var changeEventHandlerCallback = onHtmlElementPropertyChangeHandler.bind(this, this);
+			for (var i = 0, length = elements.length; i < length; i++)
 			{
-				onHtmlElementPropertyChangeHandler(event, self);
-			});
+				elements[i].addEventListener('change', changeEventHandlerCallback);
+			}
 		}
 
 		// fill in the model data into template
@@ -1632,21 +1651,23 @@ define(
 	 */
 	View.prototype.renderRemapViewSelector = function()
 	{
-		var elementDataModels = this.$el.find('[data-model]');
+		var elementDataModels = this.el.querySelectorAll('[data-model]');
 		var elementDataModelsLength = elementDataModels.length;
 		var elementDataModel = undefined;
 		var elementDataModelPropertyName = undefined;
 		var modelAttributeTypes = this.model !== undefined && this.model !== null ? this.model.attributeTypes : undefined;
 		var i = undefined;
+
 		for (i = 0; i < elementDataModelsLength; i++)
 		{
-			elementDataModel = elementDataModels.eq(i);
-			elementDataModel.attr(this.selectorDataModelAttributeName, elementDataModel.data('model'));
+			elementDataModel = elementDataModels[i];
+
+			elementDataModelPropertyName = elementDataModel.getAttribute('data-model');
+			elementDataModel.setAttribute(this.selectorDataModelAttributeName, elementDataModelPropertyName);
 
 			if (modelAttributeTypes !== undefined)
 			{
-				elementDataModelPropertyName = elementDataModel.attr('data-model');
-				elementDataModel.attr('data-type', modelAttributeTypes[elementDataModelPropertyName]);
+				elementDataModel.setAttribute('data-type', modelAttributeTypes[elementDataModelPropertyName]);
 			}
 		}
 
@@ -1656,18 +1677,20 @@ define(
 	/**
 	 * show saving
 	 *
-	 * @param {jQuery}|{HTMLElement} element
+	 * @param {Element} element
 	 * @returns {View}
 	 */
 	View.prototype.showSaving = function(element)
 	{
 		this.hideSaving();
 
-		element = jQuery(element);
+		element.classList.add('data-model-saving');
+		element.insertAdjacentHTML('afterEnd', this.templateSaving);
+
 		this._elementCurrentSaving =
 		{
-			element: element.addClass('data-model-saving'),
-			saving: jQuery(this.templateSaving).insertAfter(element)
+			element: element,
+			saving: element.nextSibling
 		};
 
 		return this;

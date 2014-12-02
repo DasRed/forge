@@ -243,7 +243,7 @@ define(
 		 */
 		filterContainer:
 		{
-			value: '> .bar > .filterContainer',
+			value: '.bar > .filterContainer',
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -279,13 +279,13 @@ define(
 
 		/**
 		 * css selector for the container which gets all entries append if this is null or undefined
-		 * this.$el will be taken
+		 * this.el will be taken
 		 *
 		 * @var {String}
 		 */
 		selectorContainer:
 		{
-			value: '> ul',
+			value: 'ul',
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -460,8 +460,8 @@ define(
 	 */
 	ViewList.prototype.appendEntryToIndex = function(viewEntry, index)
 	{
-		var elementParent = this.getElementContainerEntry()[0];
-		var elementEntry = viewEntry.$el[0];
+		var elementParent = this.getElementContainerEntry();
+		var elementEntry = viewEntry.el;
 		var elementChilds = elementParent.childNodes;
 
 		// append
@@ -514,14 +514,14 @@ define(
 	 * returns the parent element for entries
 	 *
 	 * @param {Boolean} throwError default TRUE
-	 * @returns {jQuery}
+	 * @returns {Element}
 	 */
 	ViewList.prototype.getElementContainerEntry = function(throwError)
 	{
 		if (this.elementContainerEntry === undefined || this.elementContainerEntry === null)
 		{
-			var elementParent = this.selectorContainer === null || this.selectorContainer === undefined ? this.$el : this.$el.find(this.selectorContainer);
-			if (elementParent.length === 0)
+			var elementParent = this.selectorContainer === null || this.selectorContainer === undefined ? this.el : this.el.querySelector(this.selectorContainer);
+			if (elementParent === null)
 			{
 				if (throwError === undefined || throwError === true)
 				{
@@ -540,12 +540,12 @@ define(
 	 * returns the parent element for loading
 	 *
 	 * @param {Boolean} throwError default TRUE
-	 * @returns {jQuery}
+	 * @returns {Element}
 	 */
 	ViewList.prototype.getElementContainerLoading = function(throwError)
 	{
 		var elementParent = null;
-		if (this.$el === null)
+		if (this.el === null)
 		{
 			return undefined;
 		}
@@ -553,28 +553,29 @@ define(
 		// loading screen container is defined
 		if (this.selectorLoading !== null && this.selectorLoading !== undefined)
 		{
-			elementParent = this.$el.find(this.selectorLoading);
+			elementParent = this.el.querySelector(this.selectorLoading);
 		}
 
-		// not found or not defined with selector start on this $el. maybe this.$el is the selector for loading element
-		if ((elementParent === null || elementParent.length === 0) && this.$el.is(this.selectorLoading) === true)
+		// not found or not defined with selector start on this el. maybe this.el is the selector for loading element
+		if (elementParent === null && this.el.matches(this.selectorLoading) === true)
 		{
-			elementParent = this.$el;
+			elementParent = this.el;
 		}
 
 		// not found or not defined take the container
 		if (elementParent === null || elementParent.length === 0)
 		{
-			elementParent = this.getElementContainerEntry(false) || this.$el;
+			elementParent = this.getElementContainerEntry(false) || this.el;
 		}
 
 		// try to find element with height and not elements with UL
 		var elementParentPrev = elementParent;
-		while ((elementParent.height() === 0 || elementParent.is('ul') === true) && elementParent.get(0) !== window && elementParent.get(0) !== document)
+		while ((parseInt(window.getComputedStyle(elementParent).height) === 0 || elementParent.tagName.toLowerCase() === 'ul') && elementParent !== window && elementParent !== document)
 		{
-			elementParent = elementParent.parent();
+			elementParent = elementParent.parentNode;
 		}
-		if (elementParent.get(0) === window || elementParent.get(0) === document)
+
+		if (elementParent === window || elementParent === document)
 		{
 			elementParent = elementParentPrev;
 		}
@@ -651,14 +652,14 @@ define(
 	{
 		if (this.showLoadingElement)
 		{
-			this.showLoadingElement.remove();
+			this.showLoadingElement.parentNode.removeChild(this.showLoadingElement);
 			delete this.showLoadingElement;
 		}
 
 		var element = this.getElementContainerLoading();
-		if (element !== undefined)
+		if (element !== null)
 		{
-			element.removeClass('fetching');
+			element.classList.remove('fetching');
 		}
 
 		return this;
@@ -1046,18 +1047,18 @@ define(
 		// set container
 		if (typeof options.container === 'string')
 		{
-			options.container = this.$el.find(options.container);
+			options.container = this.el.querySelector(options.container);
 		}
 		// set element
 		if (typeof options.el === 'string')
 		{
-			options.el = this.$el.find(options.el);
+			options.el = this.el.querySelector(options.el);
 		}
 
 		//select by layout
 		if (typeof options.layoutContainer === 'string' && this.layout !== undefined)
 		{
-			options.container = this.layout.$el.find(options.layoutContainer);
+			options.container = this.layout.el.querySelector(options.layoutContainer);
 			delete options.layoutContainer;
 		}
 
@@ -1122,18 +1123,18 @@ define(
 		// set container
 		if (typeof options.container === 'string')
 		{
-			options.container = this.$el.find(options.container);
+			options.container = this.el.querySelector(options.container);
 		}
 		// set element
 		if (typeof options.el === 'string')
 		{
-			options.el = this.$el.find(options.el);
+			options.el = this.el.querySelector(options.el);
 		}
 
 		//select by layout
 		if (typeof options.layoutContainer === 'string' && this.layout !== undefined)
 		{
-			options.container = this.layout.$el.find(options.layoutContainer);
+			options.container = this.layout.el.querySelector(options.layoutContainer);
 			delete options.layoutContainer;
 		}
 
@@ -1150,12 +1151,12 @@ define(
 	{
 		this.hideLoadingScreen();
 
-		this.showLoadingElement = jQuery(this.templateLoading);
-
 		var element = this.getElementContainerLoading();
-		if (element !== undefined)
+		if (element !== null)
 		{
-			element.addClass('fetching').append(this.showLoadingElement);
+			element.classList.add('fetching');
+			element.insertAdjacentHTML('beforeEnd', this.templateLoading);
+			this.showLoadingElement = element.childNodes[element.childNodes.length - 1];
 		}
 
 		return this;

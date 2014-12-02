@@ -51,19 +51,17 @@ define(
 	 */
 	ViewTableEntry.prototype.updateDataAttributes = function()
 	{
-		var elementDataModels = this.$el.find('th, td');
-		var elementColumnsLength = elementDataModels.length;
+		var elementDataModels = this.el.querySelectorAll('th, td');
 		var elementColumn = undefined;
 		var positionOriginal = undefined;
 
-		var i = undefined;
-		for (i = 0; i < elementColumnsLength; i++)
+		for (var i = 0, length = elementDataModels.length; i < length; i++)
 		{
-			elementColumn = elementDataModels.eq(i);
-			positionOriginal = elementColumn.attr('data-column-position');
-			if (positionOriginal === undefined)
+			elementColumn = elementDataModels[i];
+			positionOriginal = elementColumn.getAttribute('data-column-position');
+			if (positionOriginal === null || positionOriginal == '')
 			{
-				elementColumn.attr('data-column-position', i);
+				elementColumn.setAttribute('data-column-position', i);
 			}
 		}
 

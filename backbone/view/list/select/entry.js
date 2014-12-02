@@ -2,11 +2,9 @@
 
 define(
 [
-	'jQuery',
 	'forge/backbone/compatibility',
 	'forge/backbone/view/list/entry'
 ], function(
-	jQuery,
 	compatibility,
 	ViewListEntry
 )
@@ -53,7 +51,7 @@ define(
 
 		/**
 		 * css selector to select elements for eventToSelect binding
-		 * if the value is null || undefined, this.$el will be taken
+		 * if the value is null || undefined, this.el will be taken
 		 *
 		 * @var {String}
 		 */
@@ -73,7 +71,7 @@ define(
 	 */
 	ViewListSelectEntry.prototype.isMarkedAsSelected = function()
 	{
-		return this.$el.hasClass(this.classNameSelected);
+		return this.el.classList.contains(this.classNameSelected);
 	};
 
 	/**
@@ -83,7 +81,7 @@ define(
 	 */
 	ViewListSelectEntry.prototype.markAsSelected = function()
 	{
-		this.$el.addClass(this.classNameSelected);
+		this.el.classList.add(this.classNameSelected);
 
 		return this;
 	};
@@ -95,7 +93,7 @@ define(
 	 */
 	ViewListSelectEntry.prototype.markAsUnselected = function()
 	{
-		this.$el.removeClass(this.classNameSelected);
+		this.el.classList.remove(this.classNameSelected);
 
 		return this;
 	};
@@ -103,18 +101,14 @@ define(
 	/**
 	 * on Event to select
 	 *
-	 * @param {jQuery.Event} event
+	 * @param {Event} event
 	 * @returns {ViewListSelectEntry}
 	 */
 	ViewListSelectEntry.prototype.onEventToSelect = function(event)
 	{
-		var element = jQuery(event.target);
-
-		switch (true)
+		if (event.target.matches('input, textarea, select, button, a') === true)
 		{
-			case element.is(':input'):
-			case element.is('a'):
-				return this;
+			return this;
 		}
 
 		return this.triggerSelect();
@@ -129,10 +123,10 @@ define(
 	{
 		ViewListEntry.prototype.render.apply(this, arguments);
 
-		var element = this.selectorToSelect !== undefined && this.selectorToSelect !== null ? this.$el.find(this.selectorToSelect) : this.$el;
-		element.on(this.eventToSelect, this.onEventToSelect.bind(this));
+		var element = this.selectorToSelect !== undefined && this.selectorToSelect !== null ? this.el.querySelector(this.selectorToSelect) : this.el;
+		element.addEventListener(this.eventToSelect, this.onEventToSelect.bind(this));
 
-		this.$el.data('modelCid', this.model.cid);
+		this.el.setAttribute('data-model-cid', this.model.cid);
 
 		return this;
 	};

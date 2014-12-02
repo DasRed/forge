@@ -2,33 +2,27 @@
 
 define(
 [
-	'jQuery',
 	'lodash',
 	'forge/object/base'
 ], function(
-	jQuery,
 	lodash,
 	Base
 )
 {
-	var elementWindow = jQuery(window);
-
 	/**
 	 * test if an element is in viewport or not
 	 *
-	 * @param {jQuery} element
+	 * @param {Element} element
 	 * @param {Boolean} partial
 	 * @returns {Boolean}
 	 */
 	function elementInViewport(element, partial)
 	{
-		element = element.eq(0);
-
-		var viewTop = elementWindow.scrollTop();
-		var viewBottom = viewTop + elementWindow.height();
-
-		var top = element.offset().top;
-		var bottom = top + element.height();
+		var viewTop = window.scrollY;
+		var viewBottom = viewTop + window.document.documentElement.clientHeight;
+		var elementBoundingClientRect = element.getBoundingClientRect();
+		var top = elementBoundingClientRect.top;
+		var bottom = top + elementBoundingClientRect.height;
 
 		var compareTop = partial === true ? bottom : top;
 		var compareBottom = partial === true ? top : bottom;
@@ -241,7 +235,7 @@ define(
 		}
 
 		// the scroll position is on bottom. so add scrollTop and height of scrolling container
-		var scrollPositionBottom = this.elementScrollContainer.scrollTop() + this.elementScrollContainer.height();
+		var scrollPositionBottom = this.elementScrollContainer.scrollTop + this.elementScrollContainer.getBoundingClientRect().height;
 
 		// test if remembered scroll position is in view or was overscrolled.
 		if (this.lastRenderPosition !== null && scrollPositionBottom > this.lastRenderPosition)
@@ -293,13 +287,14 @@ define(
 		// find scroll container and bind scroll events
 		if (this.elementScrollContainer === null || this.elementScrollContainer === undefined)
 		{
-			this.elementScrollContainer = this.viewList.$el.parents().filter(function()
+			this.elementScrollContainer = this.viewList.el.parentNode;
+			while (this.elementScrollContainer != null && window.getComputedStyle(this.elementScrollContainer).overflowY === 'visible')
 			{
-				return jQuery(this).css('overflow-y') !== 'visible';
-			}).first();
+				this.elementScrollContainer = this.elementScrollContainer.parentNode;
+			}
 
-			this.elementScrollContainer.scroll(this.onScroll.bind(this));
-			elementWindow.resize(this.onScroll.bind(this));
+			this.elementScrollContainer.addEventListener('scroll', this.onScroll.bind(this));
+			window.addEventListener('resize', this.onScroll.bind(this));
 		}
 
 		return this.viewListFunctionRenderEntries.apply(this.viewList, arguments);
@@ -329,7 +324,7 @@ define(
 		var viewEntry = this.viewList.getViewEntryByModel(model);
 
 		// test if view is in browser visible in viewport
-		if (elementInViewport(viewEntry.$el, true) === false)
+		if (elementInViewport(viewEntry.el, true) === false)
 		{
 			// not visible... count invisible entries
 			this.countOfInvisbleEntries++;
@@ -337,7 +332,7 @@ define(
 			// store current "invisible position" to trigger the rendering of cached entries
 			if (this.countOfInvisbleEntries === this.countOfPrerenderingToTriggerRendering)
 			{
-				this.lastRenderPosition = this.elementScrollContainer.scrollTop() + this.elementScrollContainer.height();
+				this.lastRenderPosition = this.elementScrollContainer.scrollTop + this.elementScrollContainer.getBoundingClientRect().height;
 			}
 
 			// rendering limit of invisible entries was reached... stop rendering

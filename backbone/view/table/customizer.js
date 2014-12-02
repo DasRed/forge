@@ -22,31 +22,32 @@ define(
 	tplViewTableCustomizerTemplateVisibilitySelector
 )
 {
+	var tplViewTableCustomizerTemplateVisibilityHandleString = tplViewTableCustomizerTemplateVisibilityHandle();
+	var tplViewTableCustomizerTemplateDragHandleString = tplViewTableCustomizerTemplateDragHandle();
+
 	/**
 	 * collect all elements in a tr and reorder an entry to an index
 	 *
-	 * @param {jQuery} elementDataModels
+	 * @param {NodeList} elementDataModels
 	 * @param {ViewTableCustomizer} viewCustomizer
-	 * @param {jQuery} elementParent
+	 * @param {Element} elementParent
 	 */
 	function updateElements(elementDataModels, viewCustomizer, elementParent)
 	{
-		var elementColumnsLength = elementDataModels.length;
 		var elementColumn = undefined;
 		var positionOriginal = undefined;
 
-		if (elementParent.is('tr') === false)
+		if (elementParent.tagName.toLowerCase() !== 'tr')
 		{
-			elementParent = elementParent.find('tr');
+			elementParent = elementParent.querySelector('tr');
 		}
 
-		var i = undefined;
-		for (i = 0; i < elementColumnsLength; i++)
+		for (var i = 0, length = elementDataModels.length; i < length; i++)
 		{
-			elementColumn = elementDataModels.eq(i);
+			elementColumn = elementDataModels[i];
 
 			// set original position
-			positionOriginal = elementColumn.attr('data-column-position');
+			positionOriginal = elementColumn.getAttribute('data-column-position');
 			updateElementToCorrectPositionAndVisibility(viewCustomizer, elementParent, elementColumn, positionOriginal);
 		}
 	}
@@ -55,8 +56,8 @@ define(
 	 * reorder an entry to an index if the entry is not an td or th, then the closest th or td parent will be taken
 	 *
 	 * @param {ViewTableCustomizer} viewCustomizer
-	 * @param {jQuery} elementParent
-	 * @param {jQuery} elementToAppend
+	 * @param {Element} elementParent
+	 * @param {Element} elementToAppend
 	 * @param {Number} positionOriginal
 	 */
 	function updateElementToCorrectPositionAndVisibility(viewCustomizer, elementParent, elementToAppend, positionOriginal)
@@ -70,14 +71,10 @@ define(
 			return;
 		}
 
-		if (elementToAppend.is('td') === false && elementToAppend.is('th') === false)
+		if (elementToAppend.tagName.toLowerCase() !== 'td' && elementToAppend.tagName.toLowerCase() !== 'th')
 		{
 			var element = elementToAppend.closest('td');
-			if (element.length === 0)
-			{
-				element = elementToAppend.closest('td');
-			}
-			if (element.length === 0)
+			if (element === null)
 			{
 				throw new Error('Can not move element in columns to other position. Can not find the TD or TH element.');
 			}
@@ -87,34 +84,34 @@ define(
 		// display column or not
 		if (modelColumn.attributes.visible === true)
 		{
-			elementToAppend.removeClass('hidden');
+			elementToAppend.classList.remove('hidden');
 		}
 		else if (modelColumn.attributes.visible === false)
 		{
-			elementToAppend.addClass('hidden');
+			elementToAppend.classList.add('hidden');
 		}
 
-		var elementChilds = elementParent.find('>');
-		if (elementChilds[modelColumn.attributes.positionCurrent] === elementToAppend[0])
+		var elementChilds = elementParent.childNodes;
+		if (elementChilds[modelColumn.attributes.positionCurrent] === elementToAppend)
 		{
 			return;
 		}
 
 		// remove elementToAppend from DOM
-		elementToAppend.detach();
+		elementToAppend.parentNode.removeChild(elementToAppend);
 
 		// remove elementToAppend from elementChilds
-		elementChilds = elementParent.find('>');
+		elementChilds = elementParent.childNodes;
 
 		// append
 		if (elementChilds.length == 0 || elementChilds.length - 1 <= modelColumn.attributes.positionCurrent)
 		{
-			elementToAppend.appendTo(elementParent);
+			elementParent.appendChild(elementToAppend);
 		}
 		// insert at position
 		else
 		{
-			elementToAppend.insertBefore(elementChilds[modelColumn.attributes.positionCurrent]);
+			elementChilds[modelColumn.attributes.positionCurrent].insertBefore(elementToAppend);
 		}
 	}
 
@@ -245,9 +242,9 @@ define(
 		},
 
 		/**
-		 * jQuery element of the table to use
+		 * element of the table to use
 		 *
-		 * @var {jQuery}
+		 * @var {Element}
 		 */
 		elementTable:
 		{
@@ -258,9 +255,9 @@ define(
 		},
 
 		/**
-		 * jQuery element of the table thead to use
+		 * element of the table thead to use
 		 *
-		 * @var {jQuery}
+		 * @var {Element}
 		 */
 		elementTableThead:
 		{
@@ -271,9 +268,9 @@ define(
 		},
 
 		/**
-		 * jQuery element of the table thead first tr to use
+		 *  element of the table thead first tr to use
 		 *
-		 * @var {jQuery}
+		 * @var {Element}
 		 */
 		elementTableTheadTr:
 		{
@@ -284,9 +281,9 @@ define(
 		},
 
 		/**
-		 * jQuery elements of all columns in table > thead > tr:first
+		 * elements of all columns in table > thead > tr:first
 		 *
-		 * @var {jQuery}
+		 * @var {Element}
 		 */
 		elementTableTheadTrColumns:
 		{
@@ -299,7 +296,7 @@ define(
 		/**
 		 * rendered tplViewTableCustomizerTemplateVisibilitySelector
 		 *
-		 * @var {jQuery}
+		 * @var {Element}
 		 */
 		elementVisibilitySelector:
 		{
@@ -356,7 +353,7 @@ define(
 	ViewTableCustomizer.prototype.createDragable = function()
 	{
 		// bind drag and drop
-		this.elementTable.dragtable(
+		jQuery(this.elementTable).dragtable(
 		{
 			dragHandle: '.' + this.classNameDragHandle,
 			revert: 300,
@@ -370,62 +367,69 @@ define(
 
 	/**
 	 * onclick for visibility handler
-	 * @param {jQuery.Event} event
+	 * @param {Event} event
 	 * @returns {ViewTableCustomizer}
 	 */
 	ViewTableCustomizer.prototype.onClickVisibilityHandle = function(event)
 	{
-		var elementVisibilityHandle = jQuery(event.target);
+		var elementVisibilityHandle = event.target;
+		var i;
+		var length;
 
 		// prerender template for selection
 		if (this.elementVisibilitySelector === null)
 		{
-			this.elementVisibilitySelector = jQuery(tplViewTableCustomizerTemplateVisibilitySelector(
+			var elementHelper = document.createElement('div');
+			elementHelper.insertAdjacentHTML('afterBegin', tplViewTableCustomizerTemplateVisibilitySelector(
 			{
 				view: this
 			}));
-			this.elementVisibilitySelector.find('[type=checkbox]').on('click', this.onClickVisibilitySelector.bind(this));
-			jQuery(document).on('click', this.removeVisibilitySelector);
+			this.elementVisibilitySelector = elementHelper.childNodes[0];
+			elementHelper.removeChild(this.elementVisibilitySelector);
+			elementHelper = null;
+
+			var elements = this.elementVisibilitySelector.querySelectorAll('[type=checkbox]');
+			for (i = 0, length = elements.length; i < length; i++)
+			{
+				elements[i].addEventListener('click', this.onClickVisibilitySelector.bind(this));
+			}
+			document.addEventListener('click', this.removeVisibilitySelector);
 		}
 
 		// click to remove
-		if (this.elementVisibilitySelector.parent().length !== 0 && this.elementVisibilitySelector.next()[0] === elementVisibilityHandle[0])
+		if (this.elementVisibilitySelector.parentNode !== null && this.elementVisibilitySelector.nextSibling === elementVisibilityHandle)
 		{
 			this.removeVisibilitySelector();
 			return this;
 		}
 
 		// prepare element
-		var self = this;
-		var elementCheckboxChecked = this.elementVisibilitySelector.find('input[type=checkbox][data-customizer-property]:checked');
-		if (elementCheckboxChecked.length === 1)
+		var elementCheckboxChecked = this.elementVisibilitySelector.querySelectorAll('input[type=checkbox][data-customizer-property]:checked');
+		var stateDisabled = (elementCheckboxChecked.length === 1);
+		for (i = 0, length = elementCheckboxChecked.length; i < length; i++)
 		{
-			elementCheckboxChecked.prop('disabled', true);
+			elementCheckboxChecked[i].disabled = stateDisabled;
 		}
-		else
+		this.elementVisibilitySelector.classList.remove('show');
+		lodash.defer(function(element)
 		{
-			elementCheckboxChecked.prop('disabled', false);
-		}
-		this.elementVisibilitySelector.removeClass('show').delay(0).promise().done(function()
-		{
-			self.elementVisibilitySelector.addClass('show');
-		});
+			element.classList.add('show');
+		}, this.elementVisibilitySelector);
 
 		// append element
-		elementVisibilityHandle.before(this.elementVisibilitySelector);
+		elementVisibilityHandle.parentNode.insertBefore(this.elementVisibilitySelector, elementVisibilityHandle);
 
 		return this;
 	};
 
 	/**
 	 * onclick for visibility selector
-	 * @param {jQuery.Event} event
+	 * @param {Event} event
 	 * @returns {ViewTableCustomizer}
 	 */
 	ViewTableCustomizer.prototype.onClickVisibilitySelector = function(event)
 	{
-		var elementTarget = jQuery(event.target);
-		var elementColumnName = elementTarget.data('customizer-property');
+		var elementColumnName = event.target.getAttribute('data-customizer-property');
 		var modelColumn = undefined;
 
 		modelColumn = this.collectionColumns.get(elementColumnName);
@@ -434,18 +438,21 @@ define(
 			return this;
 		}
 
-		var elementColumn = elementTarget.closest('th[' + this.viewTable.selectorDataModelAttributeName + '="' + elementColumnName + '"]');
+		var elementColumn = event.target.closest('th[' + this.viewTable.selectorDataModelAttributeName + '="' + elementColumnName + '"]');
 
-		var elementCheckbox = this.elementVisibilitySelector.find('input[type=checkbox][data-customizer-property="' + elementColumnName + '"]');
-		var elementCheckboxChecked = undefined;
+		var elementCheckbox = this.elementVisibilitySelector.querySelector('input[type=checkbox][data-customizer-property="' + elementColumnName + '"]');
 
-		modelColumn.attributes.visible = elementCheckbox.prop('checked');//!modelColumn.attributes.visible;
+		modelColumn.attributes.visible = elementCheckbox.checked;//!modelColumn.attributes.visible;
 
-		elementCheckboxChecked = this.elementVisibilitySelector.find('input[type=checkbox][data-customizer-property]:checked');
-		elementCheckboxChecked.prop('disabled', elementCheckboxChecked.length === 1);
+		var elementCheckboxChecked = this.elementVisibilitySelector.querySelectorAll('input[type=checkbox][data-customizer-property]:checked');
+		var stateDisabled = (elementCheckboxChecked.length === 1);
+		for (var i = 0, length = elementCheckboxChecked.length; i < length; i++)
+		{
+			elementCheckboxChecked[i].disabled = stateDisabled;
+		}
 
 		// remove current
-		if (elementColumn[0] === this.elementVisibilitySelector.closest('th')[0])
+		if (elementColumn === this.elementVisibilitySelector.closest('th'))
 		{
 			this.removeVisibilitySelector();
 		}
@@ -472,18 +479,18 @@ define(
 		var modelColumn = undefined;
 		var collectionColumnsMustBeSynced = false;
 		var i = 0;
-		var sortComparator = undefined;
-		var sortDirection = undefined;
+		//var sortComparator = undefined;
+		//var sortDirection = undefined;
 
 		// fill up collectionColumns with not existing columns oir calculate current position and set original position
 		for (i = 0; i < elementColumnsLength; i++)
 		{
-			elementColumn = this.elementTableTheadTrColumns.eq(i);
-			if (elementColumn.is(this.viewTable.selectorDataModel) === false)
+			elementColumn = this.elementTableTheadTrColumns[i];
+			if (elementColumn.matches(this.viewTable.selectorDataModel) === false)
 			{
 				continue;
 			}
-			elementColumnName = elementColumn.attr(this.viewTable.selectorDataModelAttributeName);
+			elementColumnName = elementColumn.getAttribute(this.viewTable.selectorDataModelAttributeName);
 			modelColumn = this.collectionColumns.get(elementColumnName);
 
 			// create a none existing column
@@ -507,11 +514,11 @@ define(
 				modelColumn.attributes.positionOriginal = i;
 				modelColumn.attributes.positionCurrent = i + modelColumn.attributes.positionRelative;
 
-				if (modelColumn.attributes.sorted === true)
-				{
-					sortComparator = modelColumn.attributes.column;
-					sortDirection = modelColumn.attributes.sortDirection;
-				}
+			//	if (modelColumn.attributes.sorted === true)
+			//	{
+			//		sortComparator = modelColumn.attributes.column;
+			//		sortDirection = modelColumn.attributes.sortDirection;
+			//	}
 			}
 		}
 
@@ -547,7 +554,7 @@ define(
 	 */
 	ViewTableCustomizer.prototype.onDragFinished = function()
 	{
-		this.elementTableTheadTrColumns = this.elementTableTheadTr.find('th');
+		this.elementTableTheadTrColumns = this.elementTableTheadTr.querySelectorAll('th');
 
 		var elementColumnsLength = this.elementTableTheadTrColumns.length;
 		var elementColumn = undefined;
@@ -556,12 +563,12 @@ define(
 		var i = undefined;
 		for (i = 0; i < elementColumnsLength; i++)
 		{
-			elementColumn = this.elementTableTheadTrColumns.eq(i);
-			if (elementColumn.is(this.viewTable.selectorDataModel) === false)
+			elementColumn = this.elementTableTheadTrColumns[i];
+			if (elementColumn.matches(this.viewTable.selectorDataModel) === false)
 			{
 				continue;
 			}
-			elementColumnName = elementColumn.attr(this.viewTable.selectorDataModelAttributeName);
+			elementColumnName = elementColumn.getAttribute(this.viewTable.selectorDataModelAttributeName);
 
 			modelColumn = this.collectionColumns.get(elementColumnName);
 			modelColumn.attributes.positionCurrent = i;
@@ -662,26 +669,33 @@ define(
 
 		// find some elements
 		this.elementTable = this.viewTable.getElementContainerEntry().closest('table');
-		this.elementTableThead = this.elementTable.find('thead');
-		this.elementTableTheadTr = this.elementTableThead.find('tr').eq(0);
-		this.elementTableTheadTrColumns = this.elementTableTheadTr.find('th');
+		this.elementTableThead = this.elementTable.querySelector('thead');
+		this.elementTableTheadTr = this.elementTableThead.querySelector('tr');
+		this.elementTableTheadTrColumns = this.elementTableTheadTr.querySelectorAll('th');
 
 		// set element container that is it customizable
-		this.elementTableThead.closest('table').addClass('customizable');
+		this.elementTableThead.closest('table').classList.add('customizable');
 
-		var elementTableTheadTrTh = this.elementTableTheadTr.find('th' + this.viewTable.selectorDataModel);
 		// inject visibility handle to Columns
-		elementTableTheadTrTh.append(tplViewTableCustomizerTemplateVisibilityHandle);
-
-		// should we use a own symbole as drag handle?
-		if (this.useVisibilityHandleAsDragHandle === false)
+		var elementTableTheadTrTh = this.elementTableTheadTr.querySelectorAll('th' + this.viewTable.selectorDataModel);
+		for (var i = 0, length = elementTableTheadTrTh.length; i < length; i++)
 		{
-			// inject drag handle to Columns
-			elementTableTheadTrTh.append(tplViewTableCustomizerTemplateDragHandle);
+			elementTableTheadTrTh[i].insertAdjacentHTML('beforeEnd', tplViewTableCustomizerTemplateVisibilityHandleString);
+
+			// should we use a own symbole as drag handle?
+			if (this.useVisibilityHandleAsDragHandle === false)
+			{
+				// inject drag handle to Columns
+				elementTableTheadTrTh[i].insertAdjacentHTML('beforeEnd', tplViewTableCustomizerTemplateDragHandleString);
+			}
 		}
 
 		// bind to handler
-		this.elementTableTheadTr.find('th' + this.viewTable.selectorDataModel + ' .' + this.classNameVisibilityHandle).on('click', this.onClickVisibilityHandle.bind(this));
+		var elements = this.elementTableTheadTr.querySelectorAll('th' + this.viewTable.selectorDataModel + ' .' + this.classNameVisibilityHandle);
+		for (i = 0, length = elements.length; i < length; i++)
+		{
+			elements[i].addEventListener('click', this.onClickVisibilityHandle.bind(this));
+		}
 
 		// listen to view table if the view table will be create a view table sorter
 		this.viewTable.once('sorter:create:before', function(viewTable, viewTableSorterOptions)
@@ -731,15 +745,19 @@ define(
 	};
 
 	/**
-	 * @param {jQuery.Event} event
+	 * @param {Event} event
 	 * @returns {ViewTableCustomizer}
 	 */
 	ViewTableCustomizer.prototype.removeVisibilitySelector = function(event)
 	{
 		if (event !== undefined)
 		{
-			var element = jQuery(event.target);
-			if (element.hasClass(this.classNameVisibilityHandle) === true || element.hasClass(this.classNameVisibilitySelector) === true || element.closest('.' + this.classNameVisibilitySelector).length !== 0)
+			var element = event.target;
+			if (
+				event.target.classList.contains(this.classNameVisibilityHandle) === true ||
+				event.target.classList.contains(this.classNameVisibilitySelector) === true ||
+				element.closest('.' + this.classNameVisibilitySelector) != null
+			)
 			{
 				//do nothing;
 				return this;
@@ -748,11 +766,11 @@ define(
 
 		if (this.elementVisibilitySelector !== undefined && this.elementVisibilitySelector !== null)
 		{
-			this.elementVisibilitySelector.remove();
+			this.elementVisibilitySelector.parentNode.removeChild(this.elementVisibilitySelector);
 		}
 		this.elementVisibilitySelector = null;
 
-		jQuery(document).off('click', this.removeVisibilitySelector);
+		document.removeEventListener('click', this.removeVisibilitySelector);
 
 		return this;
 	};
@@ -813,18 +831,16 @@ define(
 	 */
 	ViewTableCustomizer.prototype.updateEntry = function(viewTable, viewTableEntry)
 	{
-		if (viewTableEntry.$el.is('tr') === true)
+		if (viewTableEntry.el.tagName.toLowerCase() === 'tr')
 		{
-			updateElements(viewTableEntry.$el.find('td'), this, viewTableEntry.$el);
+			updateElements(viewTableEntry.el.querySelectorAll('td'), this, viewTableEntry.el);
 			return this;
 		}
 
-		var elements = viewTableEntry.$el.find('tr');
-		var length = elements.length;
-		var i = 0;
-		for (i = 0; i < length; i++)
+		var elements = viewTableEntry.el.querySelectorAll('tr');
+		for (var i = 0, length = elements.length; i < length; i++)
 		{
-			updateElements(elements.eq(i).find('td'), this, elements.eq(i));
+			updateElements(elements[i].querySelectorAll('td'), this, elements[i]);
 		}
 
 		return this;

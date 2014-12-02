@@ -28,12 +28,15 @@ define(
 	ViewTableSelect.prototype = Object.create(ViewListSelect.prototype);
 
 	// mixin of ViewTable
-	lodash.extend(ViewTableSelect.prototype, ViewTable.prototype);
+	lodash.extend(ViewTableSelect.prototype, ViewTable.___wrapped ? ViewTable.prototype.__proto__ : ViewTable.prototype,
+	{
+		constructor: undefined
+	});
 
 	/**
 	 * returns the container for selectable
 	 *
-	 * @returns {jQuery}
+	 * @returns {Element}
 	 */
 	ViewTableSelect.prototype.getElementContainerSelectable = function()
 	{

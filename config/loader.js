@@ -54,7 +54,7 @@ define([], function()
 					{
 						if (this.throwError === true)
 						{
-							throw new Error('Can not find the HTMLElement "' + this.element + '" for configuration.');
+							throw new Error('Can not find the Element "' + this.element + '" for configuration.');
 						}
 
 						return {};
@@ -69,7 +69,7 @@ define([], function()
 					{
 						if (this.throwError === true)
 						{
-							throw new Error('Can not parse the data from HTMLElement "' + this.element + '" for configuration.\n' + (exception.message || e));
+							throw new Error('Can not parse the data from Element "' + this.element + '" for configuration.\n' + (exception.message || e));
 						}
 
 						return {};

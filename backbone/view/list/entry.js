@@ -58,7 +58,7 @@ define(
 	{
 		View.prototype.render.apply(this, arguments);
 
-		this.$el.attr('data-model-cid', this.model.cid);
+		this.el.setAttribute('data-model-cid', this.model.cid);
 
 		return this;
 	};
@@ -72,19 +72,25 @@ define(
 	{
 		View.prototype.renderRemapViewSelector.call(this);
 
-		var elementDataModels = this.$el.find(this.selectorDataModel + '[data-type]:not(td)');
+		var elementDataModels = this.el.querySelectorAll(this.selectorDataModel + '[data-type]:not(td)');
 		var elementDataModelsLength = elementDataModels.length;
 		var elementDataModel = undefined;
 		var elementDataModelDataType = undefined;
+		var elementClosest = undefined;
 		var i = undefined;
+
 		for (i = 0; i < elementDataModelsLength; i++)
 		{
-			elementDataModel = elementDataModels.eq(i);
-			elementDataModelDataType = elementDataModel.attr('data-type');
+			elementDataModel = elementDataModels[i];
+			elementDataModelDataType = elementDataModel.getAttribute('data-type');
 
-			if (elementDataModelDataType !== undefined)
+			if (elementDataModelDataType !== undefined || elementDataModelDataType !== null)
 			{
-				elementDataModel.closest('td').attr('data-type', elementDataModelDataType);
+				elementClosest = elementDataModel.closest('td');
+				if (elementClosest !== null)
+				{
+					elementClosest.setAttribute('data-type', elementDataModelDataType);
+				}
 			}
 		}
 

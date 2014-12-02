@@ -2,10 +2,12 @@
 define(
 [
 	'lodash',
-	'backbone'
+	'backbone',
+	'forge/profile/backbone'
 ], function(
 	lodash,
-	Backbone
+	Backbone,
+	ProfileBackbone
 )
 {
 	var cache = {};
@@ -41,9 +43,10 @@ define(
 	 *
 	 * @param {Object} prototypeProperties
 	 * @param {Object} staticProperties
+	 * @param {Boolean} profileOfBackboneEnabled (default TRUE)
 	 * @returns {Object}
 	 */
-	function extend(prototypeProperties, staticProperties)
+	function extend(prototypeProperties, staticProperties, profileOfBackboneEnabled)
 	{
 		var parent = this;
 		var preDefinedValues = {};
@@ -90,6 +93,10 @@ define(
 			// defined as function not as property... can be defined
 			if (descriptor.value instanceof Function)
 			{
+				if (profileOfBackboneEnabled === undefined || profileOfBackboneEnabled === true)
+				{
+					ProfileBackbone.extendedObject(prototypeProperties, prototypePropertyName);
+				}
 				continue;
 			}
 

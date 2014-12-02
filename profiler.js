@@ -149,6 +149,22 @@ define(
 	};
 
 	/**
+	 * retrieves stats of entry
+	 *
+	 * @param {String} id
+	 * @returns {Object}
+	 */
+	Profiler.prototype.getStats = function(id)
+	{
+		if (this.profiles[id] === undefined)
+		{
+			return undefined;
+		}
+
+		return this.profiles[id];
+	};
+
+	/**
 	 * retrieves the current time without stopping
 	 *
 	 * @param {String} id
@@ -398,6 +414,22 @@ define(
 		}
 
 		return this;
+	};
+
+	/**
+	 * toggle start and pause
+	 *
+	 * @param {String} id
+	 * @returns {Profiler}
+	 */
+	Profiler.prototype.toggle = function(id)
+	{
+		if (this.profiles[id] === undefined || this.profiles[id].running === false)
+		{
+			return this.start(id);
+		}
+
+		return this.pause(id);
 	};
 
 	/**

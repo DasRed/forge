@@ -139,7 +139,7 @@ define(
 	/**
 	 * returns the container for selectable
 	 *
-	 * @returns {jQuery}
+	 * @returns {Element}
 	 */
 	ViewListSelect.prototype.getElementContainerSelectable = function()
 	{
@@ -333,7 +333,7 @@ define(
 
 		if (this.selectable === true)
 		{
-			this.getElementContainerSelectable().addClass('selectable');
+			this.getElementContainerSelectable().classList.add('selectable');
 		}
 
 		if (this.autoSelect === true && this.selected === undefined && this.collection.length > 0)

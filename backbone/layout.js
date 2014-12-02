@@ -69,8 +69,8 @@ define(
 		 * @var {Object}
 		 * 		{
 		 * 			view: {View} undefined
-		 *			container: {String}|{HTLMElement}|{jQuery}|{Undefined} undefined
-		 *			el: {String}|{HTLMElement}|{jQuery}|{Undefined} undefined
+		 *			container: {String}|{Element}|{jQuery}|{Undefined} undefined
+		 *			el: {String}|{Element}|{jQuery}|{Undefined} undefined
 		 *			autoCreate: {Boolean} true
 		 *			autoRender: {Boolean} true
 		 *			options: {Object}|{Function} {},
@@ -314,14 +314,14 @@ define(
 			}
 
 			// set container
-			if (config.container !== undefined)
+			if (typeof config.container === 'string')
 			{
-				options.container = this.$el.find(config.container);
+				options.container = this.el.querySelector(config.container);
 			}
 			// set element
 			if (config.el !== undefined)
 			{
-				options.el = this.$el.find(config.el);
+				options.el = this.el.querySelector(config.el);
 			}
 
 			// set default options

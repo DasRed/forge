@@ -1,7 +1,6 @@
 'use strict';
 define(
 [
-	'jQuery',
 	'lodash',
 	'forge/backbone/compatibility',
 	'forge/backbone/view/list',
@@ -9,7 +8,6 @@ define(
 	'forge/backbone/view/table/sorter',
 	'forge/backbone/view/table/customizer'
 ], function(
-	jQuery,
 	lodash,
 	compatibility,
 	ViewList,
@@ -103,7 +101,7 @@ define(
 
 		/**
 		 * css selector for the container which gets all entries append if this is null or undefined
-		 * this.$el will be taken
+		 * this.el will be taken
 		 *
 		 * @var {String}
 		 */
@@ -204,12 +202,12 @@ define(
 	 * returns the parent element for loading
 	 *
 	 * @param {Boolean} throwError default TRUE
-	 * @returns {jQuery}
+	 * @returns {Element}
 	 */
 	ViewTable.prototype.getElementContainerLoading = function(throwError)
 	{
 		var elementParent = null;
-		if (this.$el === null)
+		if (this.el === null)
 		{
 			return undefined;
 		}
@@ -217,28 +215,29 @@ define(
 		// loading screen container is defined
 		if (this.selectorLoading !== null && this.selectorLoading !== undefined)
 		{
-			elementParent = this.$el.find(this.selectorLoading);
+			elementParent = this.el.querySelector(this.selectorLoading);
 		}
 
-		// not found or not defined with selector start on this $el. maybe this.$el is the selector for loading element
-		if ((elementParent === null || elementParent.length === 0) && this.$el.is(this.selectorLoading) === true)
+		// not found or not defined with selector start on this el. maybe this.el is the selector for loading element
+		if (elementParent === null && this.el.matches(this.selectorLoading) === true)
 		{
-			elementParent = this.$el;
+			elementParent = this.el;
 		}
 
 		// not found or not defined find next scrolling element
 		if (elementParent === null || elementParent.length === 0)
 		{
-			elementParent = this.$el.parents().filter(function()
+			elementParent = this.el.parentNode;
+			while (elementParent != null && window.getComputedStyle(elementParent).overflowY === 'visible')
 			{
-				return jQuery(this).css('overflow-y') !== 'visible';
-			}).first();
+				elementParent = elementParent.parentNode;
+			}
 		}
 
 		// not found or not defined take the container
-		if (elementParent === null || elementParent.length === 0)
+		if (elementParent === null)
 		{
-			elementParent = this.getElementContainerEntry(false) || this.$el;
+			elementParent = this.getElementContainerEntry(false) || this.el;
 		}
 
 		return elementParent;
@@ -281,19 +280,17 @@ define(
 	 */
 	ViewTable.prototype.renderColumnPosition = function()
 	{
-		var elementDataModels = this.$el.find('thead th');
-		var elementColumnsLength = elementDataModels.length;
+		var elementDataModels = this.el.querySelectorAll('thead th');
 		var elementColumn = undefined;
 		var positionOriginal = undefined;
 
-		var i = undefined;
-		for (i = 0; i < elementColumnsLength; i++)
+		for (var i = 0, length = elementDataModels.length; i < length; i++)
 		{
-			elementColumn = elementDataModels.eq(i);
-			positionOriginal = elementColumn.attr('data-column-position');
-			if (positionOriginal === undefined)
+			elementColumn = elementDataModels[i];
+			positionOriginal = elementColumn.getAttribute('data-column-position');
+			if (positionOriginal === null || positionOriginal === '')
 			{
-				elementColumn.attr('data-column-position', i);
+				elementColumn.setAttribute('data-column-position', i);
 			}
 		}
 
@@ -349,23 +346,40 @@ define(
 		}
 
 		var self = this;
-		var elementTable = this.$el.find('table');
+		var elementTable = this.el.querySelector('table');
+
+		var handler = function(event)
+		{
+			var element = event.target.closest('th, td');
+
+			if (element !== null)
+			{
+				var index = 1;
+				var elementPrevious = element;
+				while (elementPrevious.previousSibling != null)
+				{
+					elementPrevious = elementPrevious.previousSibling;
+					index++;
+				}
+
+				var elementCells = elementTable.querySelectorAll('tr th:nth-child(' + index + '), tr td:nth-child(' + index + ')');
+				var fn = 'add';
+
+				if (event.type != 'mouseover')
+				{
+					fn = 'remove';
+				}
+
+				for (var i = 0, length = elementCells.length; i < length; i++)
+				{
+					elementCells[i].classList[fn](self.classNameColumnHover);
+				}
+			}
+		};
 
 		// bind to every th and td to set hover class
-		elementTable.delegate('th, td', 'mouseover mouseout', function(event)
-		{
-			var index = jQuery(this).index() + 1;
-
-			var elementCells = elementTable.find('tr th:nth-child(' + index + '), tr td:nth-child(' + index + ')');
-			if (event.type == 'mouseover')
-			{
-				elementCells.addClass(self.classNameColumnHover);
-			}
-			else
-			{
-				elementCells.removeClass(self.classNameColumnHover);
-			}
-		});
+		elementTable.addEventListener('mouseover', handler);
+		elementTable.addEventListener('mouseout', handler);
 
 		return this;
 	};
@@ -452,18 +466,17 @@ define(
 		// remap to unique view selector
 		if (this.collection !== null && this.collection !== undefined)
 		{
-			var elementDataModels = this.$el.find(this.selectorDataModel);
-			var elementDataModelsLength = elementDataModels.length;
+			var elementDataModels = this.el.querySelectorAll(this.selectorDataModel);
 			var elementDataModel = undefined;
 			var elementDataModelPropertyName = undefined;
 			var modelAttributeTypes = this.collection.model.getPrototypeValue('attributeTypes');
-			var i = undefined;
-			for (i = 0; i < elementDataModelsLength; i++)
-			{
-				elementDataModel = elementDataModels.eq(i);
-				elementDataModelPropertyName = elementDataModel.attr('data-model');
 
-				elementDataModel.attr('data-type', modelAttributeTypes[elementDataModelPropertyName]);
+			for (var i = 0, length = elementDataModels.length; i < length; i++)
+			{
+				elementDataModel = elementDataModels[i];
+				elementDataModelPropertyName = elementDataModel.getAttribute('data-model');
+
+				elementDataModel.setAttribute('data-type', modelAttributeTypes[elementDataModelPropertyName]);
 			}
 		}
 

@@ -3,7 +3,6 @@
 define(
 [
 	'lodash',
-	'jQuery',
 	'forge/backbone/compatibility',
 	'forge/backbone/collection',
 	'forge/backbone/view',
@@ -12,7 +11,6 @@ define(
 	'tpl!forge/backbone/view/table/sorter/template/sorterHandle',
 ], function(
 	lodash,
-	jQuery,
 	compatibility,
 	Collection,
 	View,
@@ -51,14 +49,7 @@ define(
 		this.selectorDataModel = this.view.selectorDataModel;
 		this.collection = this.view.collection;
 		// find element
-		if (this.view.$el.is(this.selector) === true)
-		{
-			this.$element = this.view.$el.find(this.selector);
-		}
-		else
-		{
-			this.$element = this.view.$el.find(this.selector);
-		}
+		this.elementSort = this.view.el.querySelector(this.selector);
 
 		// validate
 		if ((this.collection instanceof Collection) === false)
@@ -67,13 +58,14 @@ define(
 		}
 
 		// set element container that is it sortable
-		this.$element.closest('table').addClass('sortable');
+		this.elementSort.closest('table').classList.add('sortable');
 
 		// bind sort
 		var elementToSort = undefined;
-		var elementsSort = this.$element.find('[data-model-sort]');
+		var elementsSort = this.elementSort.querySelectorAll('[data-model-sort]');
 		var elementsSortLength = elementsSort.length;
 		var propertyNameToSort = undefined;
+		var tplViewTableSorterTemplateSorterHandleString = tplViewTableSorterTemplateSorterHandle();
 		var i = undefined;
 
 		// sorting is defined by template with data-model-sort attribute
@@ -81,12 +73,11 @@ define(
 		{
 			for (i = 0; i < elementsSortLength; i++)
 			{
-				elementToSort = elementsSort.eq(i);
-				if (elementToSort.data('model-sortable') !== false)
+				elementToSort = elementsSort[i];
+				if (elementToSort.getAttribute('data-model-sortable') !== 'false')
 				{
-					elementToSort
-						.append(tplViewTableSorterTemplateSorterHandle)
-						.on('click', this.onClick.bind(this, elementToSort.data('model-sort')));
+					elementToSort.insertAdjacentHTML('beforeEnd', tplViewTableSorterTemplateSorterHandleString);
+					elementToSort.addEventListener('click', this.onClick.bind(this, elementToSort.getAttribute('data-model-sort')));
 				}
 			}
 		}
@@ -94,18 +85,17 @@ define(
 		// sorting is not defined by template with data-model-sort attribute. sort all columns with this.selectorDataModel
 		else
 		{
-			elementsSort = this.$element.find(this.selectorDataModel);
+			elementsSort = this.elementSort.querySelectorAll(this.selectorDataModel);
 			elementsSortLength = elementsSort.length;
 			for (i = 0; i < elementsSortLength; i++)
 			{
-				elementToSort = elementsSort.eq(i);
-				if (elementToSort.data('model-sortable') !== false)
+				elementToSort = elementsSort[i];
+				if (elementToSort.getAttribute('data-model-sortable') !== 'false')
 				{
-					propertyNameToSort = elementToSort.data('model');
-					elementToSort
-						.attr('data-model-sort', propertyNameToSort)
-						.append(tplViewTableSorterTemplateSorterHandle)
-						.on('click', this.onClick.bind(this, propertyNameToSort));
+					propertyNameToSort = elementToSort.getAttribute('data-model');
+					elementToSort.setAttribute('data-model-sort', propertyNameToSort);
+					elementToSort.insertAdjacentHTML('beforeEnd', tplViewTableSorterTemplateSorterHandleString);
+					elementToSort.addEventListener('click', this.onClick.bind(this, propertyNameToSort));
 				}
 			}
 		}
@@ -126,9 +116,9 @@ define(
 		// set sort by html
 		if (propertyNameToSort === undefined || directionToSort === undefined)
 		{
-			elementToSort = this.$element.find('[data-model-sorted]');
-			propertyNameToSort = propertyNameToSort || elementToSort.data('model-sort');
-			directionToSort = directionToSort || elementToSort.data('model-sorted');
+			elementToSort = this.elementSort.querySelector('[data-model-sorted]');
+			propertyNameToSort = propertyNameToSort || elementToSort.getAttribute('data-model-sort');
+			directionToSort = directionToSort || elementToSort.getAttribute('data-model-sorted');
 		}
 
 		// set founded values for sorting
@@ -175,9 +165,9 @@ define(
 		},
 
 		/**
-		 * @returns {jQuery}
+		 * @returns {Element}
 		 */
-		$element:
+		elementSort:
 		{
 			value: null,
 			enumerable: true,
@@ -253,14 +243,14 @@ define(
 	 * on click to sort or to toggle the direction
 	 *
 	 * @param {String} propertyNameNew
-	 * @param {jQuery.Event} event
+	 * @param {Event} event
 	 * @returns {ViewTableSorter}
 	 */
 	ViewTableSorter.prototype.onClick = function(propertyNameNew, event)
 	{
-		var eventTarget = jQuery(event.target);
+		var eventTarget = event.target;
 
-		if (eventTarget.is('th[data-model-sort], .sorterHandle') === false)
+		if (eventTarget.matches('th[data-model-sort], .sorterHandle') === false)
 		{
 			return this;
 		}
@@ -337,25 +327,30 @@ define(
 		// column not changed only change direction
 		if (columnChanged === false)
 		{
-			this.$element.find('.sorted' + this.selectorDataModel).removeClass(Collection.DIRECTION_ASC + ' ' + Collection.DIRECTION_DESC).addClass(this.collection.direction);
+			var elementSorted = this.elementSort.querySelector('.sorted' + this.selectorDataModel);
+			elementSorted.classList.remove(Collection.DIRECTION_ASC, Collection.DIRECTION_DESC);
+			elementSorted.classList.add(this.collection.direction);
 			return this;
 		}
 
 		// everything is changing
-		this.$element.find(this.selectorDataModel).removeClass('sorted ' + Collection.DIRECTION_ASC + ' ' + Collection.DIRECTION_DESC);
-		this.$element.find('[' + this.selectorDataModelAttributeName + '=' + this.collection.comparator + ']').addClass('sorted ' + this.collection.direction);
+		var elements = this.elementSort.querySelectorAll(this.selectorDataModel);
+		for (var i = 0, length = elements.length; i < length; i++)
+		{
+			elements[i].classList.remove('sorted', Collection.DIRECTION_ASC, Collection.DIRECTION_DESC);
+		}
+		this.elementSort.querySelector('[' + this.selectorDataModelAttributeName + '=' + this.collection.comparator + ']').classList.add('sorted', this.collection.direction);
 
 		// find column to highlight in body
 		this.sortedColumnIndex = null;
-		lodash.find(this.$element.find('th'), function(element, index)
+		elements = this.elementSort.querySelectorAll('th');
+		for (i = 0, length = elements.length; i < length && this.sortedColumnIndex === null; i++)
 		{
-			element = jQuery(element);
-			if (element.hasClass('sorted') === true)
+			if (elements[i].classList.contains('sorted') === true)
 			{
-				this.sortedColumnIndex = element.attr('data-column-position');
-				return true;
+				this.sortedColumnIndex = elements[i].getAttribute('data-column-position');
 			}
-		}, this);
+		}
 
 		this.updateSortedColumn();
 
@@ -384,10 +379,19 @@ define(
 			selectorPrefix = '';
 		}
 
-		viewToHandle.$el.find(selectorPrefix + 'td.sorted').removeClass('sorted');
+		var elements = viewToHandle.el.querySelectorAll(selectorPrefix + 'td.sorted');
+		for (var i = 0, length = elements.length; i < length; i++)
+		{
+			elements[i].classList.remove('sorted');
+		}
+
 		if (this.sortedColumnIndex !== null)
 		{
-			viewToHandle.$el.find(selectorPrefix + 'td[data-column-position="' + this.sortedColumnIndex + '"]').addClass('sorted');
+			elements = viewToHandle.el.querySelectorAll(selectorPrefix + 'td[data-column-position="' + this.sortedColumnIndex + '"]');
+			for (i = 0, length = elements.length; i < length; i++)
+			{
+				elements[i].classList.add('sorted');
+			}
 		}
 
 		// footer
@@ -400,10 +404,18 @@ define(
 			selectorPrefix = '';
 		}
 
-		viewToHandle.$el.find(selectorPrefix + 'th.sorted').removeClass('sorted');
+		elements = viewToHandle.el.querySelectorAll(selectorPrefix + 'th.sorted');
+		for (i = 0, length = elements.length; i < length; i++)
+		{
+			elements[i].classList.remove('sorted');
+		}
 		if (this.sortedColumnIndex !== null)
 		{
-			viewToHandle.$el.find(selectorPrefix + 'th[data-column-position="' + this.sortedColumnIndex + '"]').addClass('sorted');
+			elements = viewToHandle.el.querySelectorAll(selectorPrefix + 'th[data-column-position="' + this.sortedColumnIndex + '"]');
+			for (i = 0, length = elements.length; i < length; i++)
+			{
+				elements[i].classList.add('sorted');
+			}
 		}
 
 		return this;

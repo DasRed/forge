@@ -2,18 +2,21 @@
 
 define(
 [
-	'forge/backbone/extend'
+	'forge/backbone/extend',
+	'forge/profile/backbone'
 ], function(
-	extend
+	extend,
+	ProfileBackbone
 )
 {
 	/**
 	 * makes the object to backbone compatible
 	 *
 	 * @param {Object} ObjectConstructor
+	 * @param {Boolean} profileOfBackboneEnabled (default is true)
 	 * @returns {Object}
 	 */
-	function compatibility(ObjectConstructor)
+	function compatibility(ObjectConstructor, profileOfBackboneEnabled)
 	{
 		ObjectConstructor.extend = extend;
 		ObjectConstructor.prototype.constructor = ObjectConstructor;
@@ -40,6 +43,11 @@ define(
 
 			return undefined;
 		};
+
+		if (profileOfBackboneEnabled === undefined || profileOfBackboneEnabled === true)
+		{
+			return ProfileBackbone.nativeObject(ObjectConstructor);
+		}
 
 		return ObjectConstructor;
 	};

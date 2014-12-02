@@ -28,7 +28,10 @@ define(
 	ViewTableSelectMulti.prototype = Object.create(ViewListSelectMulti.prototype);
 
 	// mixin of ViewTableSelect
-	lodash.extend(ViewTableSelectMulti.prototype, ViewTableSelect.prototype);
+	lodash.extend(ViewTableSelectMulti.prototype, ViewTableSelect.___wrapped ? ViewTableSelect.prototype.__proto__ : ViewTableSelect.prototype,
+	{
+		constructor: undefined
+	});
 
 	/**
 	 * render some requirements

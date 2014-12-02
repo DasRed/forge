@@ -82,7 +82,7 @@ define(
 		/**
 		 * element with the list
 		 *
-		 * @var {jQuery}
+		 * @var {Element}
 		 */
 		containerList:
 		{
@@ -90,7 +90,7 @@ define(
 			configurable: true,
 			get: function()
 			{
-				return this.view.$el;
+				return this.view.el;
 			}
 		},
 
@@ -160,7 +160,12 @@ define(
 	 */
 	ViewListFilter.prototype.filter = function()
 	{
-		this.containerList.find('[data-model-cid]').removeClass('filtered');
+		var elements = this.containerList.querySelectorAll('[data-model-cid]');
+		for (var i = 0, length = elements.length; i < length; i++)
+		{
+			elements[i].classList.remove('filtered');
+		}
+
 		if (this.current === '')
 		{
 			return this;
@@ -187,7 +192,11 @@ define(
 			// model does not match... hide view
 			if (result === undefined)
 			{
-				this.containerList.find('[data-model-cid="' + collectionModel.cid + '"]').addClass('filtered');
+				elements = this.containerList.querySelectorAll('[data-model-cid="' + collectionModel.cid + '"]');
+				for (i = 0, length = elements.length; i < length; i++)
+				{
+					elements[i].classList.add('filtered');
+				}
 			}
 		}
 
@@ -224,7 +233,7 @@ define(
 	ViewListFilter.prototype.onClickClear = function(event)
 	{
 		this.current = '';
-		this.$el.find('input').val(this.current);
+		this.el.querySelector('input').value = this.current;
 
 		this.filter();
 
@@ -238,7 +247,7 @@ define(
 	 */
 	ViewListFilter.prototype.onKeyUpInput = function(event)
 	{
-		this.current = this.$el.find('input').val();
+		this.current = this.el.querySelector('input').value;
 		this.filter();
 
 		return this;
