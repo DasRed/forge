@@ -117,8 +117,8 @@ define(
 		if (propertyNameToSort === undefined || directionToSort === undefined)
 		{
 			elementToSort = this.elementSort.querySelector('[data-model-sorted]');
-			propertyNameToSort = propertyNameToSort || elementToSort.getAttribute('data-model-sort');
-			directionToSort = directionToSort || elementToSort.getAttribute('data-model-sorted');
+			propertyNameToSort = propertyNameToSort || elementToSort !== null ? elementToSort.getAttribute('data-model-sort') : undefined;
+			directionToSort = directionToSort || elementToSort !== null ? elementToSort.getAttribute('data-model-sorted') : undefined;
 		}
 
 		// set founded values for sorting
