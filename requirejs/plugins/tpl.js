@@ -11,6 +11,8 @@ define(
 	text
 )
 {
+	var translator = lodash.uniqueId('___translator');
+
 	var htmlStripWhitespacesRegEx =
 	{
 		' ': /(\n)|(\r)/gi,
@@ -88,9 +90,28 @@ define(
 				}
 				// convert template into lodash.template function
 				var templatePrepared = String(lodash.template(contentReplaced));
-				templatePrepared = templatePrepared.replace('return __p', 'return translation.translateInline(__p)');
+				templatePrepared = templatePrepared.replace('return __p', 'return ' + translator + '.translateInline(__p)');
 
-				write('define("' + pluginName + '!' + moduleName + '", ["lodash", "cfg!translation"], function (_, translation) {return ' + templatePrepared + '});');
+				write(
+				[
+					'define("' + pluginName + '!' + moduleName + '", ["lodash", "cfg!translation"], function (lodash, ' + translator + ') {',
+						'var importsKeys = lodash.keys(lodash.templateSettings.imports);',
+						'var importsValues = lodash.values(lodash.templateSettings.imports);',
+						'var source = \'' + text.jsEscape(templatePrepared) + '\';',
+						'',
+						'importsKeys.push(\'' + translator + '\');',
+						'importsValues.push(' + translator + ');',
+						'',
+						'try {',
+							'var result = Function(importsKeys, \'return \' + source).apply(undefined, importsValues);',
+						'} catch(e) {',
+							'e.source = source;',
+							'throw e;',
+						'}',
+						'result.source = source;',
+						'return result;',
+					'});'
+				].join('\n'));
 			},
 			{
 				isBuild: false
