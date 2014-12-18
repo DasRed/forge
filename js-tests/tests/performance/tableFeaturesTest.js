@@ -293,7 +293,8 @@ require(
 						{
 							autoRender: false,
 							collection: collection,
-							container: '#content'
+							container: '#content',
+							endlessScrollEnabled: false
 						});
 						timeData.viewCreate += profiler.getTime('viewCreate', true);
 

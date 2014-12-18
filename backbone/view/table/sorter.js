@@ -339,7 +339,12 @@ define(
 		{
 			elements[i].classList.remove('sorted', Collection.DIRECTION_ASC, Collection.DIRECTION_DESC);
 		}
-		this.elementSort.querySelector('[' + this.selectorDataModelAttributeName + '=' + this.collection.comparator + ']').classList.add('sorted', this.collection.direction);
+
+		var elementSortShowSort = this.elementSort.querySelector('[' + this.selectorDataModelAttributeName + '=' + this.collection.comparator + ']');
+		if (elementSortShowSort !== undefined && elementSortShowSort !== null)
+		{
+			elementSortShowSort.classList.add('sorted', this.collection.direction);
+		}
 
 		// find column to highlight in body
 		this.sortedColumnIndex = null;

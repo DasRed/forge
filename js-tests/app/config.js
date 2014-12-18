@@ -40,7 +40,9 @@ require.config(
 			deps:
 			[
 				'forge/native/function',
-				'forge/native/intl'
+				'forge/native/intl',
+				'forge/native/dom/element/classList',
+				'forge/native/dom/element/closest'
 			]
 		},
 		jQuery: {exports: 'jQuery'}

@@ -49,15 +49,13 @@ define(
 					contentReplaced = contentReplaced.replace(htmlStripWhitespacesRegEx[replacement], replacement);
 				}
 
-				var contentTranslated = translation.translateInline(contentReplaced);
-
 				// convert template into lodash.template function
-				var template = lodash.template(contentTranslated);
-				template.content =
+				var templatePrepared = lodash.template(contentReplaced);
+
+				// create function for translation AFTER template executing
+				var template = function(obj)
 				{
-					original: content,
-					replaced: contentReplaced,
-					translated: contentTranslated
+					return translation.translateInline(templatePrepared(obj));
 				};
 
 				// return it
@@ -88,24 +86,11 @@ define(
 				{
 					contentReplaced = contentReplaced.replace(htmlStripWhitespacesRegEx[replacement], replacement);
 				}
+				// convert template into lodash.template function
+				var templatePrepared = String(lodash.template(contentReplaced));
+				templatePrepared = templatePrepared.replace('return __p', 'return translation.translateInline(__p)');
 
-				write((
-				[
-					'define("' + pluginName + '!' + moduleName + '", ["lodash", "cfg!translation"], function (lodash, translation) {',
-						'var contentReplaced = \'' + text.jsEscape(contentReplaced) + '\';',
-						'var contentTranslated = translation.translateInline(contentReplaced);',
-						'var template = lodash.template(contentTranslated);',
-
-						'template.content =',
-						'{',
-							'original: \'' + text.jsEscape(content) + '\',',
-							'replaced: contentReplaced,',
-							'translated: contentTranslated',
-						'};',
-
-						'return template;',
-					'});'
-				]).join('\n'));
+				write('define("' + pluginName + '!' + moduleName + '", ["lodash", "cfg!translation"], function (_, translation) {return ' + templatePrepared + '});');
 			},
 			{
 				isBuild: false
