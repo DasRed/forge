@@ -39,11 +39,15 @@ define(
 		/**
 		 * list of events to handle for selections
 		 *
-		 * @var {String}
+		 * @var {Array}
 		 */
 		eventToSelect:
 		{
-			value: 'click tap',
+			value:
+			[
+				'click',
+				'tap'
+			],
 			enumerable: true,
 			configureable: true,
 			writable: true
@@ -124,7 +128,12 @@ define(
 		ViewListEntry.prototype.render.apply(this, arguments);
 
 		var element = this.selectorToSelect !== undefined && this.selectorToSelect !== null ? this.el.querySelector(this.selectorToSelect) : this.el;
-		element.addEventListener(this.eventToSelect, this.onEventToSelect.bind(this));
+		var callback = this.onEventToSelect.bind(this);
+
+		for (var i = 0, length = this.eventToSelect.length; i < length; i++)
+		{
+			element.addEventListener(this.eventToSelect[i], callback);
+		}
 
 		this.el.setAttribute('data-model-cid', this.model.cid);
 
