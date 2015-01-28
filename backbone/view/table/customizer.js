@@ -111,7 +111,7 @@ define(
 		// insert at position
 		else
 		{
-			elementChilds[modelColumn.attributes.positionCurrent].insertBefore(elementToAppend);
+			elementParent.insertBefore(elementToAppend, elementChilds[modelColumn.attributes.positionCurrent]);
 		}
 	}
 
