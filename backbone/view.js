@@ -13,6 +13,35 @@ define(
 	Model
 )
 {
+
+	/**
+	 * @param {View} view
+	 * @param {Object} data
+	 * @returns {Object}
+	 */
+	function getCompleteDataForTemplate(view, data)
+	{
+		// get model data if there is a model
+		var dataModelFormatted = getFormattedModelProperties(view);
+
+		// get template Data
+		var dataTemplate = view.templateData;
+		if ((dataTemplate instanceof Object) === view)
+		{
+			dataTemplate = {};
+		}
+
+		// create data for template
+		return lodash.extend(
+		{
+			modelFormatted: dataModelFormatted,
+			model: view.model !== null && view.model !== undefined ? view.model.attributes : {},
+			template: dataTemplate,
+			data: data,
+			view: view
+		}, dataTemplate, dataModelFormatted, data);
+	}
+
 	/**
 	 * returns a get formatter
 	 *
@@ -1573,63 +1602,16 @@ define(
 			this.el.classList.add(this.className);
 		}
 
-		// nothing to do
-		if ((this.template instanceof Function) === false)
-		{
-			return this;
-		}
-
-		// get model data if there is a model
-		var dataModelFormatted = getFormattedModelProperties(this);
-
 		// get template Data
-		var dataTemplate = this.templateData;
-		if ((dataTemplate instanceof Object) === false)
-		{
-			dataTemplate = {};
-		}
-
 		// create data for template
-		var dataComplete = lodash.extend(
-		{
-			modelFormatted: dataModelFormatted,
-			model: this.model !== null && this.model !== undefined ? this.model.attributes : {},
-			template: dataTemplate,
-			data: data,
-			view: this
-		}, dataTemplate, dataModelFormatted, data);
+		var dataComplete = getCompleteDataForTemplate(this, data);
 
-		// get the html from template
-		var templateAsHtml = this.template(dataComplete);
-
-		// replace the html with content in element
-		if (this.templateAppend === false)
-		{
-			this.html(templateAsHtml);
-		}
-		// append the html in element
-		else
-		{
-			this.htmlAppend(templateAsHtml);
-		}
-
-		// auto append templates
-		if (this.autoTemplatesAppend === true)
-		{
-			var templateKey = undefined;
-			var template = undefined;
-			for (templateKey in this.templates)
-			{
-				template = this.templates[templateKey];
-				if (template.template instanceof Function)
-				{
-					this.htmlAppend(template.template(dataComplete), template.selector);
-				}
-			}
-		}
-
-		// remap to unique view selector
-		this.renderRemapViewSelector();
+		// render a template
+		this.renderTemplate(dataComplete)
+			// template to append
+			.renderTemplatesAppend(dataComplete)
+			// remap to unique view selector
+			.renderRemapViewSelector();
 
 		// create observing of inputs for observed modelBindings
 		if (this.autoModelUpdate === true)
@@ -1645,6 +1627,63 @@ define(
 
 		// fill in the model data into template
 		updateModelPropertiesToHtml(this);
+
+		return this;
+	};
+
+	/**
+	 *
+	 * @param {Object} data
+	 * @returns {View}
+	 */
+	View.prototype.renderTemplate = function(data)
+	{
+		// do nothing
+		if ((this.template instanceof Function) === false)
+		{
+			return this;
+		}
+
+		// get the html from template
+		var templateAsHtml = this.template(data);
+
+		// replace the html with content in element
+		if (this.templateAppend === false)
+		{
+			this.html(templateAsHtml);
+		}
+		// append the html in element
+		else
+		{
+			this.htmlAppend(templateAsHtml);
+		}
+
+		return this;
+	};
+
+	/**
+	 *
+	 * @param {Object} data
+	 * @returns {View}
+	 */
+	View.prototype.renderTemplatesAppend = function(data)
+	{
+		// do nothing
+		if (this.autoTemplatesAppend === false)
+		{
+			return this;
+		}
+
+		var templateKey = undefined;
+		var template = undefined;
+		for (templateKey in this.templates)
+		{
+			template = this.templates[templateKey];
+			if (template.template instanceof Function)
+			{
+				this.htmlAppend(template.template(data), template.selector);
+			}
+		}
 
 		return this;
 	};
