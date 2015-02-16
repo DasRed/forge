@@ -318,10 +318,18 @@ define(
 			{
 				options.container = this.el.querySelector(config.container);
 			}
+			else if (config.container instanceof Function)
+			{
+				options.container = config.container.call(this);
+			}
 			// set element
-			if (config.el !== undefined)
+			if (typeof config.el === 'string')
 			{
 				options.el = this.el.querySelector(config.el);
+			}
+			else if (config.el instanceof Function)
+			{
+				options.el = config.el.call(this);
 			}
 
 			// set default options

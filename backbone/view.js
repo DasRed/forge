@@ -515,6 +515,7 @@ define(
 		// find element and property
 		var element = event.target;
 		var propertyName = element.getAttribute('data-model');
+		var propertyNameUcFirst = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
 
 		// no property nothing to do
 		if (propertyName === undefined)
@@ -569,6 +570,71 @@ define(
 		newValue = formatModelProperty(view, propertyName, newValue, 'set');
 		var oldValue = view.model.attributes[propertyName];
 
+		// validation
+		if (view.validations[propertyName] !== undefined)
+		{
+			if (lodash.isPlainObject(view.validations[propertyName]) === false)
+			{
+				view.validations[propertyName] =
+				{
+					validate: view.validations[propertyName]
+				};
+			}
+
+			var validationResult = true;
+			var validationFunction = view.validations[propertyName].validate;
+
+			//remove from validationErrors
+			delete view.validationErrors[propertyName];
+			element.classList.remove(view.validationErrorClassName);
+
+			// test
+			if (validationFunction instanceof Function)
+			{
+				validationResult = validationFunction.call(view, view, view.model, newValue, oldValue, element);
+			}
+			else if (typeof validationFunction === 'string')
+			{
+				validationResult = view[validationFunction].call(view, view, view.model, newValue, oldValue, element);
+			}
+			else
+			{
+				throw new Error('Validation option of property "' + propertyName + '" must be a function or a name of a function of the view!');
+			}
+
+			// failed
+			if (validationResult !== true && validationResult !== undefined)
+			{
+				element.classList.add(view.validationErrorClassName);
+				view.validationErrors[propertyName] = validationResult;
+
+				if (view.validations[propertyName].onError instanceof Function)
+				{
+					view.validations[propertyName].onError.call(view, element, validationResult, newValue, oldValue);
+				}
+
+				// trigger event for property
+				view.trigger('validationError:' + propertyNameUcFirst, newValue, oldValue, element, validationResult);
+
+				// method for property
+				if (view['validationError' + propertyNameUcFirst] instanceof Function)
+				{
+					view['validationError' + propertyNameUcFirst](newValue, oldValue, element, validationResult);
+				}
+
+				// trigger event
+				view.trigger('validationError', view, view.model, propertyName, newValue, oldValue, element, validationResult);
+
+				// method for
+				if (view.onValidationError instanceof Function)
+				{
+					view.onValidationError(view, view.model, propertyName, newValue, oldValue, element, validationResult);
+				}
+
+				return;
+			}
+		}
+
 		// set it
 		var methodToSet = 'set';
 		// save it
@@ -585,8 +651,6 @@ define(
 		{
 			complete: function()
 			{
-				var propertyNameUcFirst = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
-
 				// trigger event for property
 				view.trigger('htmlPropertyChange:' + propertyNameUcFirst, newValue, oldValue);
 
@@ -752,8 +816,13 @@ define(
 	 *
 	 * @event {void} htmlPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue, {Mixed} oldValue)
 	 * @event {void} htmlPropertyChange[:PROPERTYNAME]({Mixed} newValue, {Mixed} oldValue)
-	 * @eventMethodObject onHtmlPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue, {Mixed} oldValue)
-	 * @eventMethodObject onHtmlPropertyChange[:PROPERTYNAME]({Mixed} newValue, {Mixed} oldValue)
+	 * @eventMethodObject {void} onHtmlPropertyChange({View} view, {Model} model, {String} propertyName, {Mixed} newValue, {Mixed} oldValue)
+	 * @eventMethodObject {void} onHtmlPropertyChange[:PROPERTYNAME]({Mixed} newValue, {Mixed} oldValue)
+	 *
+	 * @event {void} validationError({View} view, {Model} model, {String} propertyName, {Mixed} newValue, {Mixed} oldValue, {Element} element, {Mixed} validationMessage)
+	 * @event {void} validationError[:PROPERTYNAME]({Mixed} newValue, {Mixed} oldValue, {Element} element, {Mixed} validationMessage)
+	 * @eventMethodObject {void} onValidationError({View} view, {Model} model, {String} propertyName, {Mixed} newValue, {Mixed} oldValue, {Element} element, {Mixed} validationMessage)
+	 * @eventMethodObject {void} onValidationError[:PROPERTYNAME]({Mixed} newValue, {Mixed} oldValue, {Element} element, {Mixed} validationMessage)
 	 *
 	 * @param {Object} options
 	 */
@@ -774,6 +843,16 @@ define(
 		if (this.formatter === null)
 		{
 			this.formatter = {};
+		}
+
+		// model validations
+		if (this.validations === null)
+		{
+			this.validations = {};
+		}
+		if (this.validationErrors === null)
+		{
+			this.validationErrors = {};
 		}
 
 		// defaults events object
@@ -990,6 +1069,19 @@ define(
 		container:
 		{
 			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * container element to append the view
+		 *
+		 * @var {Boolean}
+		 */
+		containerClearOnRender:
+		{
+			value: false,
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -1281,6 +1373,48 @@ define(
 			enumerable: true,
 			configurable: true,
 			writable: true
+		},
+
+		/**
+		 * object of model properties to validate after set by HTML
+		 * @example 'modelAttributeValue': {Boolean}{Undefined}{String} {Function | 'function of this'}({View view}, {Model} model, {Mixed} newValue, {Mixed} oldValue, {Element} element) ... function returns a error Message if error or returns TRUE || UNDEFINED if success
+		 * @example 'modelAttributeValue':
+		 * {
+		 * 		validate: {Boolean}{Undefined}{String} {Function | 'function of this'}({View view}, {Model} model, {Mixed} newValue, {Mixed} oldValue, {Element} element) ... function returns a error Message if error or returns TRUE || UNDEFINED if success
+		 * 		onError: {void} FUNCTION({Element} element, {Mixed} validationMessage, {Mixed} newValue, {Mixed} oldValue) ... function returns a error Message if error or returns TRUE || UNDEFINED if success
+		 * }
+		 * @see View::modelBindings
+		 */
+		validations:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * defines all properties with validation errors if setted by input
+		 *
+		 * @var {Object}
+		 */
+		validationErrors:
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
+		 * defines the css class name to set on the input for errors
+		 */
+		validationErrorClassName:
+		{
+			value: 'error',
+			enumerable: true,
+			configurable: true,
+			writable: true
 		}
 	});
 
@@ -1438,6 +1572,16 @@ define(
 	};
 
 	/**
+	 * returns the count of validation errors
+	 *
+	 * @returns {Number}
+	 */
+	View.prototype.getValidationErrorCount = function()
+	{
+		return lodash.keys(this.validationErrors).length;
+	};
+
+	/**
 	 * hide last show saving
 	 *
 	 * @returns {View}
@@ -1502,6 +1646,21 @@ define(
 	 * @returns {View}
 	 */
 	View.prototype.onModelPropertyChange = function(propertyName, newValue)
+	{
+		return this;
+	};
+
+	/**
+	 * @param {View} view
+	 * @param {Model} model
+	 * @param {String} propertyName
+	 * @param {Mixed} newValue
+	 * @param {Mixed} oldValue
+	 * @param {Element} element
+	 * @param {Mixed} validationMessage
+	 * @returns {View}
+	 */
+	View.prototype.onValidationError = function(view, model, propertyName, newValue, oldValue, element, validationMessage)
 	{
 		return this;
 	};
@@ -1590,7 +1749,10 @@ define(
 		// append to container
 		if (this.container instanceof window.Element)
 		{
-			this.container.innerHTML = '';
+			if (this.containerClearOnRender === true)
+			{
+				this.container.innerHTML = '';
+			}
 			this.container.appendChild(this.el);
 		}
 
