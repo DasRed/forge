@@ -288,12 +288,12 @@ define(
 		if (this.elementScrollContainer === null || this.elementScrollContainer === undefined)
 		{
 			this.elementScrollContainer = this.viewList.el.parentNode;
-			while (this.elementScrollContainer != null && window.getComputedStyle(this.elementScrollContainer).overflowY === 'visible')
+			while (this.elementScrollContainer != null && this.elementScrollContainer != document && window.getComputedStyle(this.elementScrollContainer).overflowY === 'visible')
 			{
 				this.elementScrollContainer = this.elementScrollContainer.parentNode;
 			}
 
-			if (this.elementScrollContainer === null)
+			if (this.elementScrollContainer === null || this.elementScrollContainer === document)
 			{
 				this.elementScrollContainer = this.viewList.el.parentNode;
 			}

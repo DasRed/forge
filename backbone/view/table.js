@@ -228,14 +228,14 @@ define(
 		if (elementParent === null || elementParent.length === 0)
 		{
 			elementParent = this.el.parentNode;
-			while (elementParent != null && window.getComputedStyle(elementParent).overflowY === 'visible')
+			while (elementParent != null && elementParent !== document && elementParent.tagName.toLowerCase() !== 'main' && window.getComputedStyle(elementParent).overflowY === 'visible')
 			{
 				elementParent = elementParent.parentNode;
 			}
 		}
 
 		// not found or not defined take the container
-		if (elementParent === null)
+		if (elementParent === null || elementParent === document)
 		{
 			elementParent = this.getElementContainerEntry(false) || this.el;
 		}

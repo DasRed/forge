@@ -1252,6 +1252,17 @@ define(
 		},
 
 		/**
+		 * @var {Numnber}
+		 */
+		savingDisplayDelayMin:
+		{
+			value: 500,
+			enumerable: false,
+			configurable: false,
+			writable: true
+		},
+
+		/**
 		 * returns the selector for data model elements for this view
 		 *
 		 * @returns {String}
@@ -1590,9 +1601,18 @@ define(
 	{
 		if (this._elementCurrentSaving !== undefined)
 		{
-			this._elementCurrentSaving.saving.parentNode.removeChild(this._elementCurrentSaving.saving);
-			this._elementCurrentSaving.element.classList.remove('data-model-saving');
-			delete this._elementCurrentSaving;
+			var dateEnd = new Date();
+			var delta = (new Date()).getTime() - this._elementCurrentSaving.start.getTime();
+			if (delta >= this.savingDisplayDelayMin)
+			{
+				this._elementCurrentSaving.saving.parentNode.removeChild(this._elementCurrentSaving.saving);
+				this._elementCurrentSaving.element.classList.remove('data-model-saving');
+				delete this._elementCurrentSaving;
+			}
+			else
+			{
+				setTimeout(this.hideSaving.bind(this), this.savingDisplayDelayMin - delta);
+			}
 		}
 
 		return this;
@@ -1896,7 +1916,8 @@ define(
 		this._elementCurrentSaving =
 		{
 			element: element,
-			saving: element.nextSibling
+			saving: element.nextSibling,
+			start: new Date()
 		};
 
 		return this;
