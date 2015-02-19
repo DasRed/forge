@@ -99,6 +99,21 @@ define(
 	 */
 	function formatterDataTypeBoolean(value)
 	{
+		if (typeof value === 'string')
+		{
+			switch(value.toLowerCase())
+			{
+				case 'true':
+				case '1':
+					value = true;
+					break;
+
+				case 'false':
+				case '0':
+					value = false;
+					break;
+			}
+		}
 		return !!value;
 	}
 
@@ -285,26 +300,31 @@ define(
 		{
 			html:
 			{
+				isInput: false,
 				selector: '',
 				callback: propertyChangeHandlerHtml
 			},
 			val:
 			{
+				isInput: true,
 				selector: '',
 				callback: propertyChangeHandlerInputWithValue
 			},
 			radio:
 			{
+				isInput: true,
 				selector: '',
 				callback: propertyChangeHandlerInputTypeRadio
 			},
 			checkbox:
 			{
+				isInput: true,
 				selector: '',
 				callback: propertyChangeHandlerInputTypeCheckbox
 			},
 			dateTime:
 			{
+				isInput: true,
 				selector: '',
 				callback: propertyChangeHandlerInputTypeDateTime
 			}
@@ -570,69 +590,10 @@ define(
 		newValue = formatModelProperty(view, propertyName, newValue, 'set');
 		var oldValue = view.model.attributes[propertyName];
 
-		// validation
-		if (view.validations[propertyName] !== undefined)
+		// validate
+		if (validateProperty(view, propertyName, element, newValue, oldValue) === false)
 		{
-			if (lodash.isPlainObject(view.validations[propertyName]) === false)
-			{
-				view.validations[propertyName] =
-				{
-					validate: view.validations[propertyName]
-				};
-			}
-
-			var validationResult = true;
-			var validationFunction = view.validations[propertyName].validate;
-
-			//remove from validationErrors
-			delete view.validationErrors[propertyName];
-			element.classList.remove(view.validationErrorClassName);
-
-			// test
-			if (validationFunction instanceof Function)
-			{
-				validationResult = validationFunction.call(view, view, view.model, newValue, oldValue, element);
-			}
-			else if (typeof validationFunction === 'string')
-			{
-				validationResult = view[validationFunction].call(view, view, view.model, newValue, oldValue, element);
-			}
-			else
-			{
-				throw new Error('Validation option of property "' + propertyName + '" must be a function or a name of a function of the view!');
-			}
-
-			// failed
-			if (validationResult !== true && validationResult !== undefined)
-			{
-				element.classList.add(view.validationErrorClassName);
-				view.validationErrors[propertyName] = validationResult;
-
-				if (view.validations[propertyName].onError instanceof Function)
-				{
-					view.validations[propertyName].onError.call(view, element, validationResult, newValue, oldValue);
-				}
-
-				// trigger event for property
-				view.trigger('validationError:' + propertyNameUcFirst, newValue, oldValue, element, validationResult);
-
-				// method for property
-				if (view['validationError' + propertyNameUcFirst] instanceof Function)
-				{
-					view['validationError' + propertyNameUcFirst](newValue, oldValue, element, validationResult);
-				}
-
-				// trigger event
-				view.trigger('validationError', view, view.model, propertyName, newValue, oldValue, element, validationResult);
-
-				// method for
-				if (view.onValidationError instanceof Function)
-				{
-					view.onValidationError(view, view.model, propertyName, newValue, oldValue, element, validationResult);
-				}
-
-				return;
-			}
+			return;
 		}
 
 		// set it
@@ -672,6 +633,87 @@ define(
 				view.hideSaving();
 			}
 		});
+	}
+
+	/**
+	 * @param {View} view
+	 * @param {String} propertyName
+	 * @param {Element} element
+	 * @param {Mixed} newValue
+	 * @param {Mixed} oldValue
+	 * @returns {Boolean}
+	 */
+	function validateProperty(view, propertyName, element, newValue, oldValue)
+	{
+		if (view.validations[propertyName] === undefined)
+		{
+			return true;
+		}
+
+		var propertyNameUcFirst = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
+
+		if (lodash.isPlainObject(view.validations[propertyName]) === false)
+		{
+			view.validations[propertyName] =
+			{
+				validate: view.validations[propertyName]
+			};
+		}
+
+		var validationResult = true;
+		var validationFunction = view.validations[propertyName].validate;
+
+		//remove from validationErrors
+		delete view.validationErrors[propertyName];
+		element.classList.remove(view.validationErrorClassName);
+
+		// test
+		if (validationFunction instanceof Function)
+		{
+			validationResult = validationFunction.call(view, view, view.model, newValue, oldValue, element);
+		}
+		else if (typeof validationFunction === 'string')
+		{
+			validationResult = view[validationFunction].call(view, view, view.model, newValue, oldValue, element);
+		}
+		else
+		{
+			throw new Error('Validation option of property "' + propertyName + '" must be a function or a name of a function of the view!');
+		}
+
+		// failed
+		if (validationResult !== true && validationResult !== undefined)
+		{
+			element.classList.add(view.validationErrorClassName);
+			view.validationErrors[propertyName] = validationResult;
+
+			if (view.validations[propertyName].onError instanceof Function)
+			{
+				view.validations[propertyName].onError.call(view, element, validationResult, newValue, oldValue);
+			}
+
+			// trigger event for property
+			view.trigger('validationError:' + propertyNameUcFirst, newValue, oldValue, element, validationResult);
+
+			// method for property
+			if (view['validationError' + propertyNameUcFirst] instanceof Function)
+			{
+				view['validationError' + propertyNameUcFirst](newValue, oldValue, element, validationResult);
+			}
+
+			// trigger event
+			view.trigger('validationError', view, view.model, propertyName, newValue, oldValue, element, validationResult);
+
+			// method for
+			if (view.onValidationError instanceof Function)
+			{
+				view.onValidationError(view, view.model, propertyName, newValue, oldValue, element, validationResult);
+			}
+
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -716,6 +758,47 @@ define(
 				options.callback.call(view, view, elements[i], value, valueFormatted);
 			}
 		};
+	}
+
+	/**
+	 * @param {View} view
+	 * @param {String} propertyName
+	 * @param {Boolean} inputsOnly
+	 * @returns {Array}
+	 */
+	function getElementsForModelProperty(view, propertyName, inputsOnly)
+	{
+		var bindingOptions = view.modelBindings[propertyName];
+		inputsOnly = inputsOnly !== undefined ? inputsOnly : false;
+
+		// nothing to do
+		if (bindingOptions === undefined)
+		{
+			return [];
+		}
+
+		// set on every selector the value
+		var selectorType = undefined;
+		var elements = undefined;
+		var options = undefined;
+		var result = [];
+
+		for (selectorType in bindingOptions.selectors)
+		{
+			options = bindingOptions.selectors[selectorType];
+			if (inputsOnly === true && options.isInput === false)
+			{
+				continue;
+			}
+			elements = view.el.querySelectorAll(options.selector);
+			if (elements.length === 0)
+			{
+				continue;
+			}
+			result = result.concat(Array.prototype.slice.call(elements, 0));
+		};
+
+		return result;
 	}
 
 	/**
@@ -1391,7 +1474,7 @@ define(
 		 * @example 'modelAttributeValue': {Boolean}{Undefined}{String} {Function | 'function of this'}({View view}, {Model} model, {Mixed} newValue, {Mixed} oldValue, {Element} element) ... function returns a error Message if error or returns TRUE || UNDEFINED if success
 		 * @example 'modelAttributeValue':
 		 * {
-		 * 		validate: {Boolean}{Undefined}{String} {Function | 'function of this'}({View view}, {Model} model, {Mixed} newValue, {Mixed} oldValue, {Element} element) ... function returns a error Message if error or returns TRUE || UNDEFINED if success
+		 * 		validate: {Boolean}{Undefined}{Mixed} {Function | 'function of this'}({View view}, {Model} model, {Mixed} newValue, {Mixed} oldValue, {Element} element) ... function returns a error Message if error or returns TRUE || UNDEFINED if success
 		 * 		onError: {void} FUNCTION({Element} element, {Mixed} validationMessage, {Mixed} newValue, {Mixed} oldValue) ... function returns a error Message if error or returns TRUE || UNDEFINED if success
 		 * }
 		 * @see View::modelBindings
@@ -1606,7 +1689,7 @@ define(
 			if (delta >= this.savingDisplayDelayMin)
 			{
 				this._elementCurrentSaving.saving.parentNode.removeChild(this._elementCurrentSaving.saving);
-				this._elementCurrentSaving.element.classList.remove('data-model-saving');
+				this._elementCurrentSaving.element.removeAttribute('data-model-saving');
 				delete this._elementCurrentSaving;
 			}
 			else
@@ -1908,9 +1991,13 @@ define(
 	 */
 	View.prototype.showSaving = function(element)
 	{
+		if (element === undefined)
+		{
+			element = this.el;
+		}
 		this.hideSaving();
 
-		element.classList.add('data-model-saving');
+		element.setAttribute('data-model-saving', '');
 		element.insertAdjacentHTML('afterEnd', this.templateSaving);
 
 		this._elementCurrentSaving =
@@ -1964,6 +2051,34 @@ define(
 
 		this.undelegateEvents();
 		Backbone.View.prototype.stopListening.apply(this, arguments);
+
+		return this;
+	};
+
+	/**
+	 * validates the inputs
+	 *
+	 * @returns {View}
+	 */
+	View.prototype.validate = function()
+	{
+		var propertyName = undefined;
+		var elements = undefined;
+		var i = 0;
+		var newValue = undefined;
+		var oldValue = undefined;
+
+		for (propertyName in this.validations)
+		{
+			elements = getElementsForModelProperty(this, propertyName, true);
+			for (i = 0; i < elements.length; i++)
+			{
+				oldValue = this.model.attributes[propertyName];
+				newValue = elements[i].value;
+
+				validateProperty(this, propertyName, elements[i], newValue, oldValue);
+			}
+		}
 
 		return this;
 	};

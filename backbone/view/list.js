@@ -216,7 +216,7 @@ define(
 		 */
 		endlessScrollEnabled:
 		{
-			value: true,
+			value: false,
 			enumerable: true,
 			configurable: true,
 			writable: true
@@ -229,7 +229,7 @@ define(
 		 */
 		filterEnabled:
 		{
-			value: true,
+			value: false,
 			enumerable: true,
 			configurable: true,
 			writable: true

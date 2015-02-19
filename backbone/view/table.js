@@ -38,7 +38,7 @@ define(
 		 */
 		autoCustomize:
 		{
-			value: true,
+			value: false,
 			enumerable: true,
 			configurable: true,
 			writable: true
