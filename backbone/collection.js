@@ -326,8 +326,8 @@ define(
 				result = completeCallback.call(self, jqXHR, textStatus);
 			}
 
-			self.isFetching = false;
 			self.trigger('fetched', self);
+			self.isFetching = false;
 
 			return result;
 		};

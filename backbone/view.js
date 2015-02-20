@@ -525,6 +525,46 @@ define(
 	}
 
 	/**
+	 * @param {View} view
+	 * @param {String} propertyName
+	 * @param {Element} element
+	 * @returns {Mixed}
+	 */
+	function getValueFromElement(view, propertyName, element)
+	{
+		var newValue = undefined;
+
+		// input is checkbox
+		if (element.type == 'checkbox')
+		{
+			newValue = !!element.checked;
+		}
+		// input is radio element
+		else if (element.type == 'radio')
+		{
+			newValue = view.el.querySelector('[name=' + element.name + ']:checked').value;
+		}
+		// input is number element
+		else if (element.type == 'number')
+		{
+			newValue = element.valueAsNumber;
+		}
+		// input is date element
+		else if (element.type == 'date' || element.type == 'time' || element.type == 'datetime-local' || element.type == 'datetime')
+		{
+			newValue = element.valueAsDate;
+		}
+		// other inputs
+		else
+		{
+			newValue = element.value;
+		}
+
+		// format the value
+		return formatModelProperty(view, propertyName, newValue, 'set');
+	}
+
+	/**
 	 * if a Element change his value for a model property
 	 *
 	 * @param {View} view
@@ -558,36 +598,7 @@ define(
 		}
 
 		// get the value from property
-		var newValue = undefined;
-
-		// input is checkbox
-		if (element.type == 'checkbox')
-		{
-			newValue = !!element.checked;
-		}
-		// input is radio element
-		else if (element.type == 'radio')
-		{
-			newValue = view.el.querySelector('[name=' + element.name + ']:checked').value;
-		}
-		// input is number element
-		else if (element.type == 'number')
-		{
-			newValue = element.valueAsNumber;
-		}
-		// input is date element
-		else if (element.type == 'date' || element.type == 'time' || element.type == 'datetime-local' || element.type == 'datetime')
-		{
-			newValue = element.valueAsDate;
-		}
-		// other inputs
-		else
-		{
-			newValue = element.value;
-		}
-
-		// format the value
-		newValue = formatModelProperty(view, propertyName, newValue, 'set');
+		var newValue = getValueFromElement(view, propertyName, element);
 		var oldValue = view.model.attributes[propertyName];
 
 		// validate
@@ -2074,7 +2085,7 @@ define(
 			for (i = 0; i < elements.length; i++)
 			{
 				oldValue = this.model.attributes[propertyName];
-				newValue = elements[i].value;
+				newValue = getValueFromElement(this, propertyName, elements[i]);
 
 				validateProperty(this, propertyName, elements[i], newValue, oldValue);
 			}
