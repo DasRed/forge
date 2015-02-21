@@ -15,6 +15,43 @@ define(
 	compatibility
 )
 {
+	/**
+	 * @param {Model} model
+	 * @param {String} propertyName
+	 * @param {String} propertyType
+	 * @returns {Model}|{Collection}
+	 * @throws Error
+	 */
+	function getInstanceForProperty(model, propertyName, propertyType)
+	{
+		// try it with a getter
+		var propertyNameGetter = 'get' + propertyName.charAt(0).toUpperCase() + propertyName.substr(1);
+		if (model[propertyNameGetter] instanceof Function)
+		{
+			return model[propertyNameGetter]();
+		}
+
+		if (model[propertyName] === undefined || model[propertyName] === null)
+		{
+			throw new Error('The model property "' + propertyName + '" must be defined to use for the attribute type "' + propertyType  + '" on the attribute "' + propertyName + '".');
+		}
+
+		// this can be a collection
+		if ((model[propertyName].toJSON instanceof Function) === true)
+		{
+			return model[propertyName];
+		}
+
+		// it can be an constructor
+		if (model[propertyName] instanceof Function && model[propertyName].__super__ !== undefined)
+		{
+			model[propertyName] = new model[propertyName]();
+			return model[propertyName];
+		}
+
+		throw new Error('The model property "' + propertyName + '" must be an instance or constructor to use the attribute type "' + propertyType  + '" on the attribute "' + propertyName + '".');
+	}
+
 	var excludeProperties =
 	{
 		collection: true,
@@ -361,6 +398,7 @@ define(
 		var propertyName = undefined;
 		var number = undefined;
 		var valueConverted = undefined;
+		var instanceForProperty = undefined;
 
 		// test properties in attributes if they are defined in attributeTypes
 		for (propertyName in attributes)
@@ -384,22 +422,14 @@ define(
 			// write to a collection property direct on the model
 			if (attributeType === Model.ATTRIBUTE_TYPE_COLLECTION)
 			{
-				if (this[propertyName] === undefined || this[propertyName] === null || (this[propertyName].reset instanceof Function) === false)
-				{
-					throw new Error('The model property "' + propertyName + '" must be an instance of Collection to use the attribute type "collection" on the attribute "' + propertyName + '".');
-				}
-				this[propertyName].reset(value);
+				getInstanceForProperty(this, propertyName, attributeType).reset(value);
 				delete attributes[propertyName];
 			}
 
 			// write to a model property direct on the model
 			else if (attributeType === Model.ATTRIBUTE_TYPE_MODEL)
 			{
-				if (this[propertyName] === undefined || this[propertyName] === null || (this[propertyName].set instanceof Function) === false)
-				{
-					throw new Error('The model property "' + propertyName + '" must be an instance of Model to use the attribute type "model" on the attribute "' + propertyName + '".');
-				}
-				this[propertyName].set(value);
+				getInstanceForProperty(this, propertyName, attributeType).set(value);
 				delete attributes[propertyName];
 			}
 
@@ -694,25 +724,11 @@ define(
 		attributes = lodash.reduce(this.attributeTypes, function(acc, propertyType, propertyName)
 		{
 			// convert back for JSON
-			switch (propertyType)
+			// write to a collection property direct on the model
+			// write to a model property direct on the model
+			if (propertyType === Model.ATTRIBUTE_TYPE_COLLECTION || propertyType === Model.ATTRIBUTE_TYPE_MODEL)
 			{
-				// write to a collection property direct on the model
-				case Model.ATTRIBUTE_TYPE_COLLECTION:
-					if (this[propertyName] === undefined || this[propertyName] === null || (this[propertyName].toJSON instanceof Function) === false)
-					{
-						throw new Error('The model property "' + propertyName + '" must be an instance of Collection to use the attribute type "collection" on the attribute "' + propertyName + '".');
-					}
-					acc[propertyName] = this[propertyName].toJSON(options);
-					break;
-
-				// write to a model property direct on the model
-				case Model.ATTRIBUTE_TYPE_MODEL:
-					if (this[propertyName] === undefined || this[propertyName] === null || (this[propertyName].toJSON instanceof Function) === false)
-					{
-						throw new Error('The model property "' + propertyName + '" must be an instance of Model to use the attribute type "model" on the attribute "' + propertyName + '".');
-					}
-					acc[propertyName] = this[propertyName].toJSON(options);
-					break;
+				acc[propertyName] = getInstanceForProperty(this, propertyName, propertyType).toJSON(options);
 			}
 
 			return acc;
