@@ -140,9 +140,9 @@ require(
 						expect(attributes.collection).toBeUndefined();
 					}
 				},
-				{parse: {collectionPropertyUndefined: {id: 1}}, error: 'The model property "collectionPropertyUndefined" must be an instance of Collection to use the attribute type "collection" on the attribute "collectionPropertyUndefined".'},
-				{parse: {collectionPropertyNull: {id: 1}}, error: 'The model property "collectionPropertyNull" must be an instance of Collection to use the attribute type "collection" on the attribute "collectionPropertyNull".'},
-				{parse: {collectionPropertyNotAModel: {id: 1}}, error: 'The model property "collectionPropertyNotAModel" must be an instance of Collection to use the attribute type "collection" on the attribute "collectionPropertyNotAModel".'},
+				{parse: {collectionPropertyUndefined: {id: 1}}, error: 'The model property "collectionPropertyUndefined" must be defined to use for the attribute type "collection" on the attribute "collectionPropertyUndefined".'},
+				{parse: {collectionPropertyNull: {id: 1}}, error: 'The model property "collectionPropertyNull" must be defined to use for the attribute type "collection" on the attribute "collectionPropertyNull".'},
+				{parse: {collectionPropertyNotAModel: {id: 1}}, error: 'The model property "collectionPropertyNotAModel" must be an instance or constructor to use the attribute type "collection" on the attribute "collectionPropertyNotAModel".'},
 			];
 
 			// testcase model
@@ -155,9 +155,9 @@ require(
 						expect(attributes.model).toBeUndefined();
 					}
 				},
-				{parse: {modelPropertyUndefined: {id: 1}}, error: 'The model property "modelPropertyUndefined" must be an instance of Model to use the attribute type "model" on the attribute "modelPropertyUndefined".'},
-				{parse: {modelPropertyNull: {id: 1}}, error: 'The model property "modelPropertyNull" must be an instance of Model to use the attribute type "model" on the attribute "modelPropertyNull".'},
-				{parse: {modelPropertyNotAModel: {id: 1}}, error: 'The model property "modelPropertyNotAModel" must be an instance of Model to use the attribute type "model" on the attribute "modelPropertyNotAModel".'},
+				{parse: {modelPropertyUndefined: {id: 1}}, error: 'The model property "modelPropertyUndefined" must be defined to use for the attribute type "model" on the attribute "modelPropertyUndefined".'},
+				{parse: {modelPropertyNull: {id: 1}}, error: 'The model property "modelPropertyNull" must be defined to use for the attribute type "model" on the attribute "modelPropertyNull".'},
+				{parse: {modelPropertyNotAModel: {id: 1}}, error: 'The model property "modelPropertyNotAModel" must be an instance or constructor to use the attribute type "model" on the attribute "modelPropertyNotAModel".'},
 			];
 
 			// testcase number
