@@ -167,6 +167,19 @@ define(
 		 *
 		 * @var {Boolean}
 		 */
+		fetched:
+		{
+			value: false,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+		
+		/**
+		 * option fetch silent
+		 *
+		 * @var {Boolean}
+		 */
 		fetchSilentDefault:
 		{
 			value: true,
@@ -326,6 +339,7 @@ define(
 				result = completeCallback.call(self, jqXHR, textStatus);
 			}
 
+			self.fetched = true;
 			self.trigger('fetched', self);
 			self.isFetching = false;
 

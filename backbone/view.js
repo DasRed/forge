@@ -195,6 +195,35 @@ define(
 	 * @param {Mixed} newValue
 	 * @param {String} newValueFormatted
 	 */
+	function propertyChangeHandlerAttribute(view, element, newValue, newValueFormatted)
+	{
+		var attributeName = element.getAttribute(view.selectorDataModelAttributeName + '-attribute-name');
+		var selector = element.getAttribute(view.selectorDataModelAttributeName + '-attribute-selector');
+
+		if (selector !== null)
+		{
+			element = view.el.querySelector(selector);
+
+			if (element === null && view.el.tagName.toLowerCase() === selector)
+			{
+				element = view.el;
+			}
+		}
+
+		if (element === null)
+		{
+			return;
+		}
+
+		element.setAttribute(attributeName, newValue);
+	}
+
+	/**
+	 * @param {View} view
+	 * @param {Element} element
+	 * @param {Mixed} newValue
+	 * @param {String} newValueFormatted
+	 */
 	function propertyChangeHandlerInputWithValue(view, element, newValue, newValueFormatted)
 	{
 		if (newValue === undefined || newValue === null)
@@ -288,14 +317,20 @@ define(
 	 *
 	 * @param {View} view
 	 * @param {String} propertyName
-	 * @param {String} selector
+	 * @param {String} selectorFromBindingOptions
 	 * @returns {Object}
 	 */
-	function createSelectorForPropertyChange(view, propertyName, selector)
+	function createSelectorForPropertyChange(view, propertyName, selectorFromBindingOptions)
 	{
+
+		// this is inline
 		var selectorDataModel = '[' + view.selectorDataModelAttributeName + '="' + propertyName + '"]';
-		var selectors = selector.split(',');
+		var selectorDataModelAttribute = '[' + view.selectorDataModelAttributeName + '-attribute-property="' + propertyName + '"][' + view.selectorDataModelAttributeName + '-attribute-name]';
+		var selectors = selectorFromBindingOptions.split(',');
 		var selectorsLength = selectors.length;
+		var i = undefined;
+		var selector = undefined;
+
 		var result  =
 		{
 			html:
@@ -327,11 +362,15 @@ define(
 				isInput: true,
 				selector: '',
 				callback: propertyChangeHandlerInputTypeDateTime
+			},
+			attribute:
+			{
+				isInput: false,
+				selector: '',
+				callback: propertyChangeHandlerAttribute
 			}
 		};
 
-		var i = undefined;
-		var selector = undefined;
 		for (i = 0; i < selectorsLength; i++)
 		{
 			selector = selectors[i];
@@ -355,6 +394,8 @@ define(
 
 			result.radio.selector += createSelectorForPropertyChangePrefix(result.radio.selector, selector, 'input' + selectorDataModel) + '[type=radio]';
 			result.checkbox.selector += createSelectorForPropertyChangePrefix(result.checkbox.selector, selector, 'input' + selectorDataModel) + '[type=checkbox]';
+
+			result.attribute.selector += createSelectorForPropertyChangePrefix(result.attribute.selector, selector, selectorDataModelAttribute) + ':not(input):not(textarea):not(select):not(button)';
 		}
 
 		return result;
@@ -1346,6 +1387,17 @@ define(
 		},
 
 		/**
+		 * @var {Boolean}
+		 */
+		removeOnlyInnerContent:
+		{
+			value: false,
+			enumerable: false,
+			configurable: false,
+			writable: true
+		},
+
+		/**
 		 * @var {Numnber}
 		 */
 		savingDisplayDelayMin:
@@ -1819,7 +1871,7 @@ define(
 
 		this.trigger('remove', this);
 
-		if (this.el.id === 'content')
+		if (this.removeOnlyInnerContent === true)
 		{
 			this.html('');
 		}
@@ -1971,23 +2023,40 @@ define(
 	 */
 	View.prototype.renderRemapViewSelector = function()
 	{
-		var elementDataModels = this.el.querySelectorAll('[data-model]');
-		var elementDataModelsLength = elementDataModels.length;
-		var elementDataModel = undefined;
-		var elementDataModelPropertyName = undefined;
 		var modelAttributeTypes = this.model !== undefined && this.model !== null ? this.model.attributeTypes : undefined;
+
+		var elementDataModels = this.el.querySelectorAll('[data-model]');
+		var elementDataModelPropertyName = undefined;
+
 		var i = undefined;
 
-		for (i = 0; i < elementDataModelsLength; i++)
+		for (i = 0; i < elementDataModels.length; i++)
 		{
-			elementDataModel = elementDataModels[i];
-
-			elementDataModelPropertyName = elementDataModel.getAttribute('data-model');
-			elementDataModel.setAttribute(this.selectorDataModelAttributeName, elementDataModelPropertyName);
+			elementDataModelPropertyName = elementDataModels[i].getAttribute('data-model');
+			elementDataModels[i].setAttribute(this.selectorDataModelAttributeName, elementDataModelPropertyName);
 
 			if (modelAttributeTypes !== undefined)
 			{
-				elementDataModel.setAttribute('data-type', modelAttributeTypes[elementDataModelPropertyName]);
+				elementDataModels[i].setAttribute('data-type', modelAttributeTypes[elementDataModelPropertyName]);
+			}
+		}
+
+		var elementDataModels = this.el.querySelectorAll('[data-model-attribute-property][data-model-attribute-name]');
+		var elementDataModelAttributeName = undefined;
+		var elementDataModelAttributeSelector = undefined;
+
+		for (i = 0; i < elementDataModels.length; i++)
+		{
+			elementDataModelPropertyName = elementDataModels[i].getAttribute('data-model-attribute-property');
+			elementDataModelAttributeName = elementDataModels[i].getAttribute('data-model-attribute-name');
+			elementDataModelAttributeSelector = elementDataModels[i].getAttribute('data-model-attribute-selector');
+
+			elementDataModels[i].setAttribute(this.selectorDataModelAttributeName + '-attribute-property', elementDataModelPropertyName);
+			elementDataModels[i].setAttribute(this.selectorDataModelAttributeName + '-attribute-name', elementDataModelAttributeName);
+
+			if (elementDataModelAttributeSelector !== null)
+			{
+				elementDataModels[i].setAttribute(this.selectorDataModelAttributeName + '-attribute-selector', elementDataModelAttributeSelector);
 			}
 		}
 

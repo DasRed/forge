@@ -33,6 +33,7 @@ define(
 	 * list of view
 	 *
 	 * @event {void} renderEntry({ViewList} viewList, {ViewListEntry} viewListEntry, {Model} model)
+	 * @event {void} entriesRendered({ViewList} viewList)
 	 * @param {Object} options
 	 */
 	function ViewList(options)
@@ -547,7 +548,7 @@ define(
 		var elementParent = null;
 		if (this.el === null)
 		{
-			return undefined;
+			return null;
 		}
 
 		// loading screen container is defined
@@ -568,11 +569,21 @@ define(
 			elementParent = this.getElementContainerEntry(false) || this.el;
 		}
 
+		if (elementParent === null)
+		{
+			return null;
+		}
+
 		// try to find element with height and not elements with UL
 		var elementParentPrev = elementParent;
-		while ((parseInt(window.getComputedStyle(elementParent).height) === 0 || elementParent.tagName.toLowerCase() === 'ul') && elementParent !== window && elementParent !== document)
+		while (elementParent !== null && (parseInt(window.getComputedStyle(elementParent).height) === 0 || elementParent.tagName.toLowerCase() === 'ul') && elementParent !== window && elementParent !== document)
 		{
 			elementParent = elementParent.parentNode;
+		}
+
+		if (elementParent === null)
+		{
+			return null;
 		}
 
 		if (elementParent === window || elementParent === document)
@@ -628,7 +639,7 @@ define(
 		var view = this.viewEntry;
 
 		// create the view and remember. note: auto render is on
-		var instance = new view(lodash.extend({}, options || {},
+		var instance = new view(lodash.extend({}, this.getViewInstanceOptions() || {}, options || {},
 		{
 			autoRender: true,
 			model: model,
@@ -646,13 +657,24 @@ define(
 	};
 
 	/**
+	 * @returns {Object}
+	 */
+	ViewList.prototype.getViewInstanceOptions = function()
+	{
+		return {};
+	}
+
+	/**
 	 * @returns {ViewList}
 	 */
 	ViewList.prototype.hideLoadingScreen = function()
 	{
 		if (this.showLoadingElement)
 		{
-			this.showLoadingElement.parentNode.removeChild(this.showLoadingElement);
+			if (this.showLoadingElement.parentNode !== null)
+			{
+				this.showLoadingElement.parentNode.removeChild(this.showLoadingElement);
+			}
 			delete this.showLoadingElement;
 		}
 
@@ -934,6 +956,11 @@ define(
 
 		this.appendDelegateEvents(events);
 
+		if (this.getElementContainerEntry(false) === undefined)
+		{
+			this.el.insertAdjacentHTML('beforeEnd', '<' + this.selectorContainer + '></' + this.selectorContainer + '>');
+		}
+
 		// show loading
 		if (this.showLoadingElement !== undefined)
 		{
@@ -954,7 +981,7 @@ define(
 	ViewList.prototype.renderEntries = function()
 	{
 		// fetch the data
-		if (this.autoFetch === true && this.collection.length == 0)
+		if (this.autoFetch === true && this.collection.fetched == false)
 		{
 			this.collection.fetch();
 		}
@@ -962,6 +989,8 @@ define(
 		{
 			// render each entry
 			this.collection.each(this.renderEntry, this);
+
+			this.trigger('entriesRendered', this);
 		}
 
 		return this;

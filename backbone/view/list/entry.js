@@ -60,6 +60,8 @@ define(
 
 		this.el.setAttribute('data-model-cid', this.model.cid);
 
+		this.list.getElementContainerEntry().appendChild(this.el);
+
 		return this;
 	};
 
