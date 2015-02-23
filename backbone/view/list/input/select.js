@@ -16,6 +16,18 @@ define(
 		selectorContainer: 'select',
 
 		/**
+		 * @returns {ViewListInputSelect}
+		 */
+		initialize: function()
+		{
+			ViewList.prototype.initialize.apply(this, arguments);
+
+			this.collection.fetch();
+
+			return this;
+		},
+
+		/**
 		 * @returns {Object}
 		 */
 		getViewInstanceOptions: function()

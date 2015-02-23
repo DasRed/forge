@@ -521,7 +521,7 @@ define(
 	{
 		if (this.elementContainerEntry === undefined || this.elementContainerEntry === null)
 		{
-			var elementParent = this.selectorContainer === null || this.selectorContainer === undefined || this.selectorContainer == this.el.tagName.toLowerCase() ? this.el : this.el.querySelector(this.selectorContainer);
+			var elementParent = this.selectorContainer === null || this.selectorContainer === undefined || this.el.matches(this.selectorContainer) === true ? this.el : this.el.querySelector(this.selectorContainer);
 			if (elementParent === null)
 			{
 				if (throwError === undefined || throwError === true)

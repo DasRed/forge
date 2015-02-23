@@ -204,7 +204,7 @@ define(
 		{
 			element = view.el.querySelector(selector);
 
-			if (element === null && view.el.tagName.toLowerCase() === selector)
+			if (element === null && view.el.matches(selector) === true)
 			{
 				element = view.el;
 			}
@@ -215,7 +215,14 @@ define(
 			return;
 		}
 
-		element.setAttribute(attributeName, newValue);
+		if (newValue !== null && newValue !== undefined)
+		{
+			element.setAttribute(attributeName, newValue);
+		}
+		else
+		{
+			element.removeAttribute(attributeName);
+		}
 	}
 
 	/**
@@ -236,7 +243,7 @@ define(
 			newValueFormatted = '';
 		}
 
-		if (element.type === 'number' || element.tagName.toLowerCase() === 'select' === true)
+		if (element.type === 'number' || element.tagName.toLowerCase() === 'select')
 		{
 			element.value = newValue;
 		}
@@ -322,8 +329,6 @@ define(
 	 */
 	function createSelectorForPropertyChange(view, propertyName, selectorFromBindingOptions)
 	{
-
-		// this is inline
 		var selectorDataModel = '[' + view.selectorDataModelAttributeName + '="' + propertyName + '"]';
 		var selectorDataModelAttribute = '[' + view.selectorDataModelAttributeName + '-attribute-property="' + propertyName + '"][' + view.selectorDataModelAttributeName + '-attribute-name]';
 		var selectors = selectorFromBindingOptions.split(',');
@@ -395,7 +400,7 @@ define(
 			result.radio.selector += createSelectorForPropertyChangePrefix(result.radio.selector, selector, 'input' + selectorDataModel) + '[type=radio]';
 			result.checkbox.selector += createSelectorForPropertyChangePrefix(result.checkbox.selector, selector, 'input' + selectorDataModel) + '[type=checkbox]';
 
-			result.attribute.selector += createSelectorForPropertyChangePrefix(result.attribute.selector, selector, selectorDataModelAttribute) + ':not(input):not(textarea):not(select):not(button)';
+			result.attribute.selector += createSelectorForPropertyChangePrefix(result.attribute.selector, selector, selectorDataModelAttribute);
 		}
 
 		return result;

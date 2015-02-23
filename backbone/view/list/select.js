@@ -84,6 +84,14 @@ define(
 						this.selected = modelSelected;
 					}, this);
 
+
+					if (this._selected !== null && this._selected !== undefined)
+					{
+						// call function for change. if return false nothing to do
+						this.onSelectedChange(this._selected, undefined);
+
+						this._selected = undefined;
+					}
 					return;
 				}
 
@@ -222,7 +230,7 @@ define(
 
 		if (this.selected === model)
 		{
-			this.selected = undefined;
+			this.selected = null;
 		}
 
 		if (this.autoSelect === true && this.selected === undefined && this.collection.length != 0)

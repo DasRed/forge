@@ -616,6 +616,11 @@ define(
 			this.attributesPrevious = lodash.clone(this.attributes);
 		}
 
+		if (options !== undefined && options.parse === true && typeof key === 'object')
+		{
+			key = this.parse(key);
+		}
+
 		// call original set
 		Backbone.Model.prototype.set.apply(this, arguments);
 
