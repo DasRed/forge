@@ -216,7 +216,7 @@ define(
 		// caching enabled?
 		if (this.layoutCachingEnabled === true)
 		{
-			this.layoutCache[hash];
+			layout = this.layoutCache[hash];
 		}
 
 		// layout from cache?
@@ -309,7 +309,14 @@ define(
 	{
 		if (this.layout instanceof View)
 		{
-			this.layout.detach();
+			if (this.layoutCachingEnabled === true)
+			{	
+				this.layout.detach();
+			}
+			else
+			{
+				this.layout.remove();
+			}
 			this.layout = null;
 		}
 

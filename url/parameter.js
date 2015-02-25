@@ -111,6 +111,15 @@ define(
 						return acc;
 					}
 
+					if (value === true)
+					{
+						value = 1;
+					}
+					else if (value === false)
+					{
+						value = 0;
+					}
+
 					// key value list
 					acc[this.parameters[indexOfArray].name] = value;
 
@@ -137,6 +146,16 @@ define(
 		{
 			// get the value
 			var value = values[parameterOptions.name];
+
+			if (value === true)
+			{
+				value = 1;
+			}
+			else if (value === false)
+			{
+				value = 0;
+			}
+
 			var valueEscaped = window.encodeURI(value);
 
 			// optional parameter

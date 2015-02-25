@@ -174,7 +174,7 @@ define(
 			configurable: true,
 			writable: true
 		},
-		
+
 		/**
 		 * option fetch silent
 		 *
