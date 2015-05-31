@@ -988,7 +988,10 @@ define(
 		// fetch the data
 		if (this.autoFetch === true && this.collection.fetched == false)
 		{
-			this.collection.fetch();
+			if (this.collection.isFetching !== true)
+			{
+				this.collection.fetch();
+			}
 		}
 		else
 		{
