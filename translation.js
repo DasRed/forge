@@ -206,9 +206,6 @@ define(
 			return self.translate(key, undefined, match);
 		});
 
-		// parameters conversion
-		text = text.replace(this.regexpParameters, '${$1}');
-
 		return text;
 	};
 

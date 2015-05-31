@@ -52,6 +52,37 @@ define(
 		throw new Error('The model property "' + propertyName + '" must be an instance or constructor to use the attribute type "' + propertyType  + '" on the attribute "' + propertyName + '".');
 	}
 
+	/**
+	 * @param {Model} model
+	 * @param {String} propertyName
+	 * @param {String} propertyType
+	 * @param {Model} value
+	 * @returns {Model}|{Collection}
+	 * @throws Error
+	 */
+	function setInstanceForProperty(model, propertyName, propertyType, value)
+	{
+		// try it with a getter
+		var propertyNameSetter = 'set' + propertyName.charAt(0).toUpperCase() + propertyName.substr(1);
+		if (model[propertyNameSetter] instanceof Function)
+		{
+			return model[propertyNameSetter](value);
+		}
+
+		if (model[propertyName] === undefined || model[propertyName] === null)
+		{
+			throw new Error('The model property "' + propertyName + '" must be defined to use for the attribute type "' + propertyType  + '" on the attribute "' + propertyName + '".');
+		}
+
+		// this can be a collection or model
+		if ((model[propertyName].toJSON instanceof Function) === true)
+		{
+			return model[propertyName];
+		}
+
+		throw new Error('The model property "' + propertyName + '" must be instance to use the attribute type "' + propertyType  + '" on the attribute "' + propertyName + '" with setter.');
+	}
+
 	var excludeProperties =
 	{
 		collection: true,
@@ -422,14 +453,27 @@ define(
 			// write to a collection property direct on the model
 			if (attributeType === Model.ATTRIBUTE_TYPE_COLLECTION)
 			{
-				getInstanceForProperty(this, propertyName, attributeType).reset(value);
+				getInstanceForProperty(this, propertyName, attributeType).reset(value,
+				{
+					parse: true
+				});
 				delete attributes[propertyName];
 			}
 
 			// write to a model property direct on the model
 			else if (attributeType === Model.ATTRIBUTE_TYPE_MODEL)
 			{
-				getInstanceForProperty(this, propertyName, attributeType).set(value);
+				if (value instanceof Model)
+				{
+					setInstanceForProperty(this, propertyName, attributeType, value);
+				}
+				else
+				{
+					getInstanceForProperty(this, propertyName, attributeType).set(value,
+					{
+						parse: true
+					});
+				}
 				delete attributes[propertyName];
 			}
 
@@ -733,7 +777,11 @@ define(
 			// write to a model property direct on the model
 			if (propertyType === Model.ATTRIBUTE_TYPE_COLLECTION || propertyType === Model.ATTRIBUTE_TYPE_MODEL)
 			{
-				acc[propertyName] = getInstanceForProperty(this, propertyName, propertyType).toJSON(options);
+				var instance = getInstanceForProperty(this, propertyName, propertyType);
+				if (instance !== null)
+				{
+					acc[propertyName] = getInstanceForProperty(this, propertyName, propertyType).toJSON(options);
+				}
 			}
 
 			return acc;

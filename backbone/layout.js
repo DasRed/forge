@@ -351,7 +351,7 @@ define(
 		this.views[key] = view;
 
 		// view is not autorender...
-		if (config.autoRender === true)
+		if (config.autoRender === true && config.view.prototype.autoRender !== false)
 		{
 			view.render();
 		}

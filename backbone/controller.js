@@ -205,7 +205,7 @@ define(
 		}
 
 		// auto layout remove?
-		this.removeLayout();
+		this.removeLayout(config, route);
 
 		// create a hash for actionMethod and parameters
 		var hash = actionMethod + '/' + parameters.join('/');
@@ -232,12 +232,12 @@ define(
 
 			// call action and retrieve layout instance
 			layout = this[actionMethod].apply(this, parameters);
-			
+
 			if (layout === undefined || layout === null)
 			{
 				return this;
 			}
-			
+
 			if ((layout instanceof View) === false)
 			{
 				throw new Error('Action method "' + actionMethod + '" must return a instance of View!');
@@ -303,14 +303,16 @@ define(
 	/**
 	 * removing layout
 	 *
+	 * @param {Object} config
+	 * @param {Object} route
 	 * @returns {Controller}
 	 */
-	Controller.prototype.removeLayout = function()
+	Controller.prototype.removeLayout = function(config, route)
 	{
 		if (this.layout instanceof View)
 		{
 			if (this.layoutCachingEnabled === true)
-			{	
+			{
 				this.layout.detach();
 			}
 			else

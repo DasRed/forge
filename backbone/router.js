@@ -291,7 +291,7 @@ define(
 		// remove previous controller
 		if (this.controller !== null && this.controller !== config.controller)
 		{
-			this.controller.removeLayout();
+			this.controller.removeLayout(config, route);
 			this.controller = null;
 		}
 

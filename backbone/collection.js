@@ -24,6 +24,85 @@ define(
 	};
 
 	/**
+	 * @param {Collection} collection
+	 */
+	function buildIndexMap(collection)
+	{
+		collection._indexMap = {};
+
+		for(var i = 0, length = collection.length; i < length; i++)
+		{
+			collection._indexMap[collection.models[i].cid] = i;
+		}
+	}
+
+	/**
+	 * @param {String} propertyName
+	 * @param {String} direction
+	 * @param {Model} modelA
+	 * @param {Model} modelB
+	 * @returns {Number}
+	 */
+	function compare(propertyName, direction, modelA, modelB)
+	{
+		var valueA = modelA.attributes[propertyName];
+		var valueB = modelB.attributes[propertyName];
+
+		var result = 0;
+
+		// use natural sort for strings
+		if (modelA.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_STRING || modelB.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_STRING)
+		{
+			if (collator === undefined)
+			{
+				collator = new Intl.Collator();
+			}
+
+			result = collator.compare(valueA, valueB);
+		}
+		// compare time
+		else if (modelA.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_TIME && modelB.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_TIME)
+		{
+			var valueATime = valueA.getHours() * 60 * 60 * 1000;
+			valueATime += valueA.getMinutes() *  60 * 1000;
+			valueATime += valueA.getSeconds() *  1000;
+			valueATime += valueA.getMilliseconds();
+
+			var valueBTime = valueB.getHours() * 60 * 60 * 1000;
+			valueBTime += valueB.getMinutes() *  60 * 1000;
+			valueBTime += valueB.getSeconds() *  1000;
+			valueBTime += valueB.getMilliseconds();
+
+			// use direct value compare
+			if (valueATime < valueBTime)
+			{
+				result = -1;
+			}
+			else if (valueATime > valueBTime)
+			{
+				result = 1;
+			}
+		}
+		// use direct value compare
+		else if (valueA < valueB)
+		{
+			result = -1;
+		}
+		else if (valueA > valueB)
+		{
+			result = 1;
+		}
+
+		// reverse sort?
+		if (direction == Collection.DIRECTION_DESC)
+		{
+			result *= -1;
+		}
+
+		return result;
+	}
+
+	/**
 	 * Collection for Models
 	 *
 	 * @event {void} fetching({Collection} collection)
@@ -66,6 +145,17 @@ define(
 	Collection.prototype = Object.create(Backbone.Collection.prototype,
 	{
 		/**
+		 * @var {Object}
+		 */
+		_indexMap: 
+		{
+			value: null,
+			enumerable: true,
+			configurable: true,
+			writable: true
+		},
+
+		/**
 		 * @var {String}
 		 */
 		cid:
@@ -77,7 +167,7 @@ define(
 		},
 
 		/**
-		 * @var {String}
+		 * @var {String}|{Array}
 		 */
 		comparator:
 		{
@@ -109,7 +199,7 @@ define(
 		/**
 		 * current direction
 		 *
-		 * @var {String}
+		 * @var {String}|{Array}
 		 */
 		direction:
 		{
@@ -120,6 +210,11 @@ define(
 				// set the direction if not setted
 				if (this._direction === undefined)
 				{
+					if (typeof this.comparator === 'array')
+					{
+						return [Collection.DIRECTION_ASC];
+					}
+
 					var attributeType = this.model.getPrototypeValue('attributeTypes')[this.comparator];
 
 					switch (true)
@@ -258,6 +353,27 @@ define(
 		}
 	});
 
+
+	/**
+	 * @param {Model} model
+	 * @param {Object} options
+	 */
+	Collection.prototype._addReference = function(model, options)
+	{
+		this._indexMap = null;
+		return Backbone.Collection.prototype._addReference.apply(this, arguments);
+	};
+
+	/**
+	 * @param {Model} model
+	 * @param {Object} options
+	 */
+	Collection.prototype._removeReference = function(model, options)
+	{
+		this._indexMap = null;
+		return Backbone.Collection.prototype._removeReference.apply(this, arguments);
+	};
+
 	/**
 	 * reset of collection with full model destroy
 	 *
@@ -265,6 +381,8 @@ define(
 	 */
 	Collection.prototype._reset = function()
 	{
+		this._indexMap = null;
+
 		if (this.models !== undefined && this.models !== null)
 		{
 			var i = 0;
@@ -351,6 +469,46 @@ define(
 		Backbone.Collection.prototype.fetch.call(this, options);
 
 		return this;
+	};
+
+	/**
+	 * @param {Model} model
+	 * @returns {Model}
+	 */
+	Collection.prototype.getNext = function(model)
+	{
+		if (this._indexMap === null)
+		{
+			buildIndexMap(this);
+		}
+
+		var index = this._indexMap[model.cid];
+		if (index === this.models.length - 1)
+		{
+			return undefined;
+		}
+
+		return this.models[index + 1];
+	};
+
+	/**
+	 * @param {Model} model
+	 * @returns {Model}
+	 */
+	Collection.prototype.getPrevious = function(model)
+	{
+		if (this._indexMap === null)
+		{
+			buildIndexMap(this);
+		}
+
+		var index = this._indexMap[model.cid];
+		if (index === 0)
+		{
+			return undefined;
+		}
+
+		return this.models[index - 1];
 	};
 
 	/**
@@ -604,66 +762,46 @@ define(
 			return this;
 		}
 
-		if (collator === undefined)
-		{
-			collator = new Intl.Collator();
-		}
+		this._indexMap = null;
 
 		var direction = this.direction;
 
-		this.models.sort(function(modelA, modelB)
+		if (typeof propertyName === 'string')
 		{
-			var valueA = modelA.attributes[propertyName];
-			var valueB = modelB.attributes[propertyName];
-
-			var result = 0;
-
-			// use natural sort for strings
-			if (modelA.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_STRING || modelB.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_STRING)
+			this.models.sort(compare.bind(this, propertyName, direction));
+		}
+		else if (propertyName instanceof Array)
+		{
+			if ((direction instanceof Array) === false)
 			{
-				result = collator.compare(valueA, valueB);
+				direction = [direction];
 			}
-			// compare time
-			else if (modelA.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_TIME && modelB.attributeTypes[propertyName] === Model.ATTRIBUTE_TYPE_TIME)
+
+			this.models.sort(function(modelA, modelB)
 			{
-				var valueATime = valueA.getHours() * 60 * 60 * 1000;
-				valueATime += valueA.getMinutes() *  60 * 1000;
-				valueATime += valueA.getSeconds() *  1000;
-				valueATime += valueA.getMilliseconds();
+				var result = undefined;
+				var propertyNameToSort = undefined;
+				var directionToSort = undefined;
 
-				var valueBTime = valueB.getHours() * 60 * 60 * 1000;
-				valueBTime += valueB.getMinutes() *  60 * 1000;
-				valueBTime += valueB.getSeconds() *  1000;
-				valueBTime += valueB.getMilliseconds();
-
-				// use direct value compare
-				if (valueATime < valueBTime)
+				for (var i = 0; i < propertyName.length; i++)
 				{
-					result = -1;
-				}
-				else if (valueATime > valueBTime)
-				{
-					result = 1;
-				}
-			}
-			// use direct value compare
-			else if (valueA < valueB)
-			{
-				result = -1;
-			}
-			else if (valueA > valueB)
-			{
-				result = 1;
-			}
+					propertyNameToSort = propertyName[i];
+					directionToSort = direction[0];
+					if (i < direction.length)
+					{
+						directionToSort = direction[i];
+					}
 
-			// reverse sort?
-			if (direction == Collection.DIRECTION_DESC)
-			{
-				result *= -1;
-			}
+					result = compare(propertyNameToSort, directionToSort, modelA, modelB);
+					if (result !== 0)
+					{
+						return result;
+					}
+				}
 
-			return result;
-		});
+				return 0;
+			});
+		}
 
 		options = options || {};
 		if (options.silent === undefined || options.silent === false)

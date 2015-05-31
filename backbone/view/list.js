@@ -463,6 +463,11 @@ define(
 	{
 		var elementParent = this.getElementContainerEntry();
 		var elementEntry = viewEntry.el;
+		if (elementEntry.parentNode === elementParent)
+		{
+			elementParent.removeChild(elementEntry);
+		}
+
 		var elementChilds = elementParent.childNodes;
 
 		// append
@@ -742,7 +747,7 @@ define(
 	 */
 	ViewList.prototype.onCollectionAdd = function(model, collection, options)
 	{
-		if (collection.isFetching === false)
+		if (collection.fetched === true)
 		{
 			this.renderEntry(model, collection.indexOf(model));
 		}

@@ -33,8 +33,20 @@ define(
 		getViewInstanceOptions: function()
 		{
 			return {
+				testDisplay: this.testDisplay.bind(this),
 				testSelected: this.testSelected.bind(this)
 			};
+		},
+
+		/**
+		 * test for display
+		 *
+		 * @param {Model} model
+		 * @returns {Boolean}
+		 */
+		testDisplay: function(model)
+		{
+			return true;
 		},
 
 		/**

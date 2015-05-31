@@ -1639,7 +1639,7 @@ define(
 			throw new Error('Can not attach the view to dom, because there is no parent element defined.');
 		}
 
-		this.parent.appendChild(this.el);
+		this.elParent.appendChild(this.el);
 
 		return this;
 	};
@@ -1756,7 +1756,10 @@ define(
 			var delta = (new Date()).getTime() - this._elementCurrentSaving.start.getTime();
 			if (delta >= this.savingDisplayDelayMin)
 			{
-				this._elementCurrentSaving.saving.parentNode.removeChild(this._elementCurrentSaving.saving);
+				if (this._elementCurrentSaving.saving !== undefined)
+				{
+					this._elementCurrentSaving.saving.parentNode.removeChild(this._elementCurrentSaving.saving);
+				}
 				this._elementCurrentSaving.element.removeAttribute('data-model-saving');
 				delete this._elementCurrentSaving;
 			}
@@ -2083,12 +2086,16 @@ define(
 		this.hideSaving();
 
 		element.setAttribute('data-model-saving', '');
-		element.insertAdjacentHTML('afterEnd', this.templateSaving);
+		
+		if (this.templateSaving !== false)
+		{
+			element.insertAdjacentHTML('afterEnd', this.templateSaving);
+		}
 
 		this._elementCurrentSaving =
 		{
 			element: element,
-			saving: element.nextSibling,
+			saving: this.templateSaving !== false ? element.nextSibling : undefined,
 			start: new Date()
 		};
 

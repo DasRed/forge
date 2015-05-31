@@ -23,18 +23,34 @@ define(
 
 			this.el.setAttribute('value', this.model.id);
 
+			if (this.testDisplay(this.model) === false)
+			{
+				this.el.style.display = 'none';
+			}
+
 			if (this.testSelected(this.model) === true)
 			{
 				this.el.setAttribute('selected', 'selected');
 
 				this.list.el.dispatchEvent(new Event('change',
-				{
+					{
 					'bubbles': true,
 					'cancelable': true
-				}));
+					}));
 			}
 
 			return this;
+		},
+
+		/**
+		 * test for display
+		 *
+		 * @param {Model} model
+		 * @returns {Boolean}
+		 */
+		testDisplay: function(model)
+		{
+			return true;
 		},
 
 		/**
