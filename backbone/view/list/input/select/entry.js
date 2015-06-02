@@ -30,14 +30,24 @@ define(
 
 			if (this.testSelected(this.model) === true)
 			{
-				this.el.setAttribute('selected', 'selected');
-
-				this.list.el.dispatchEvent(new Event('change',
-					{
-					'bubbles': true,
-					'cancelable': true
-					}));
+				this.select();
 			}
+
+			return this;
+		},
+
+		/**
+		 * @returns {ViewListInputSelectEntry}
+		 */
+		select: function()
+		{
+			this.el.setAttribute('selected', 'selected');
+
+			this.list.el.dispatchEvent(new Event('change',
+			{
+				'bubbles': true,
+				'cancelable': true
+			}));
 
 			return this;
 		},

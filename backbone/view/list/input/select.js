@@ -39,6 +39,27 @@ define(
 		},
 
 		/**
+		 * @param {Number} id
+		 * @returns {ViewListInputSelect}
+		 */
+		select: function(id)
+		{
+			var model = this.collection.find(function(model)
+			{
+				return model.id === id;
+			});
+
+			if (model === undefined)
+			{
+				return this;
+			}
+
+			this.getViewEntryByModel(model).select();
+
+			return this;
+		},
+
+		/**
 		 * test for display
 		 *
 		 * @param {Model} model
